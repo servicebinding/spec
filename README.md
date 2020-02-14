@@ -1,6 +1,6 @@
-# Service Binding RFC
+# Service Binding Specification
 
-RFC for binding services to runtime applications running in Kubernetes.  
+Specification for binding services to runtime applications running in Kubernetes.  
 
 ## Terminology definition
 
