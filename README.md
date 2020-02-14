@@ -19,10 +19,12 @@ Main section of the doc.  Has sub-section that outline the design.
 ### Making a service bindable
 
 *  What metadata is needed for a service to be bindable (e.g. name of fields it supports, name of secret it produces, etc)
+*  Where is this information located
 
 ### Service Binding Schema
 
 *  What is the schema of a Service Binding object / structure.
+*  What metadata goes along that describes it
 
 ### Requesting binding
 
@@ -30,8 +32,11 @@ Main section of the doc.  Has sub-section that outline the design.
 
 ### Injecting binding
 
-*  Where in the container do we inject binding information (e.g. what is the structure of the folders / files)
+*  Where in the container do we mount the binding information (e.g. what is the structure of the folders / files)
+*  Consideration with clusters, namespaces, or VMs
 
-### Consuming binding
+### Extra:  Consuming binding
 
-*  How are application expected to consume binding information (would be great if we could point to sample projects)
+*  How are application expected to consume binding information 
+*  Each framework may take a different approach, so this is about samples & recommendations (best practices)
+*  Validates the design
