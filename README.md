@@ -16,21 +16,21 @@ Define common terms used in this domain.
 
 Main section of the doc.  Has sub-section that outline the design.
 
-### 1:  Making a service bindable
+### 1.  Making a service bindable
 
 *  What metadata is needed for a service to be bindable (e.g. name of fields it supports, name of secret it produces, etc)
 *  Where is this information located
 
-### 2:  Service Binding Schema
+### 2.  Service Binding Schema
 
 *  What is the schema of a Service Binding object / structure.
 *  What metadata goes along that describes it
 
-### 3:  Request service binding
+### 3.  Request service binding
 
 *  How do we request a binding from a service (assume the service has been provisioned)
 
-### 4:  Mounting binding information
+### 4.  Mounting binding information
 
 *  Where in the container do we mount the binding information (e.g. what is the structure of the folders / files)
 *  Consideration with clusters, namespaces, or VMs
