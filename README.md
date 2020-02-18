@@ -22,8 +22,11 @@ Main section of the doc.  Has sub-section that outline the design.
 
 ### 1.  Making a service bindable
 
-*  What metadata is needed for a service to be bindable (e.g. name of fields it supports, name of secret it produces, etc)
-*  Where is this information located
+This specification aims to enable the following four scenarios of bindable services:
+1. Services deployed via an OLM-backed Operator
+1. Services deployed via an Operator (without OLM)
+1. Services deployed directly to k8s / OpenShift (using a k8s Deployment)
+1. Services deployed outside of k8s (in a VM or via a Cloud service)
 
 ### 2.  Service Binding Schema
 
@@ -33,6 +36,7 @@ Main section of the doc.  Has sub-section that outline the design.
 ### 3.  Request service binding
 
 *  How do we request a binding from a service (assume the service has been provisioned)
+*  How is that binding authorized?
 
 ### 4.  Mounting binding information
 
