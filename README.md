@@ -7,8 +7,8 @@ Specification for binding services to runtime applications running in Kubernetes
 *  **service** - any software that is exposing functionality.  Could be a RESTful application, a database, an event stream, etc.
 *  **application** - in this specification we refer to a single runtime-based microservice (e.g. MicroProfile app, or Node Express app) as an application.  This is different than an umbrella (SIG) _Application_ which refers to a set of microservices.
 *  **binding** - providing the necessary information for an application to connect to a service.
-*  **secret** - refers to a Kubernetes [Secret](https://kubernetes.io/docs/concepts/configuration/secret/).
-*  **config map** - refers to a Kubernetes [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/).
+*  **Secret** - refers to a Kubernetes [Secret](https://kubernetes.io/docs/concepts/configuration/secret/).
+*  **ConfigMap** - refers to a Kubernetes [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/).
 
 ## Motivation
 
