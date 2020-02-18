@@ -65,8 +65,18 @@ The reference's location and format depends on the scenarios (1-4 above)
 
 ### 2.  Service Binding Schema
 
-*  What is the schema of a Service Binding object / structure.
-*  What metadata goes along that describes it
+The core set of binding data is:
+* **name** - name of the service
+* **host** - host (IP or host name) where the service resides
+* **port** - the port to access the service
+* **protocol** - protocol of the service.  Examples: http, https, postgre, mysql, mongodb, amqp, mqtt, etc
+* **username** - username to log into the service.  Can be omitted if no authorization required, or if equivalent information is provided in the password as a token.
+* **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key (strongly recommended that the corresponding ConfigMap metadata properly describes this key)
+* **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no authorization required, or simply point to another Secret that holds the client certificate.  
+* **uri** - for convenience, the fulll URI of the service in the form of `<protocol>://<host>:<port>/<name>`
+
+Extra binding properties can also be defined (with corresponding metadata) in the bindable service's ConfigMap (or Secret).  For example, services may have credentials that are the same for any user (global setting) in addition to per-user credentials.
+
 
 ### 3.  Request service binding
 
