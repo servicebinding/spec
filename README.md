@@ -61,6 +61,7 @@ The reference's location and format depends on the scenarios (1-4 above)
     * `servicebinding/configMap: self`
     * `servicebinding/secret: self`   
 
+**Note**: Service binding implementations of this specification may extend the bindable scenarios to include auto-detection of Secrets or equivalent information, such as the service's route URL.  This is viewed as beyond the specification's scope, but recommended that the implementation transforms the auto-detected data into a Secret (or ConfigMap) that fits with the rest of the specification.  
 
 ### 2.  Service Binding Schema
 
