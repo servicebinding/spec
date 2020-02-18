@@ -32,31 +32,32 @@ For a service to be bindable it **should** provide:
 * a ConfigMap that contains the name (or pattern) of the Secret holding the binding data, and describes metadata associated with each of the items referenced in the Secret.  
 
 For a service to be bindable it **must** provide:
-* a Secret that contains the binding data (see section #2)
+* a Secret that contains the binding data (see section #2).
 * a reference in one of its deployable resources that points to either its ConfigMap (recommended) or Secret (minimum).
 
 The reference's location and format depends on the scenarios (1-4 above)
 
-1. OLM-based - Using a statusDescriptor in the CSV to hold the reference to the ConfigMap / Secret
-  * x-descriptors:
-    - urn:alm:descriptor:io.kubernetes:ConfigMap
-    - servicebinding:ConfigMap
-  * x-descriptors:
-    - urn:alm:descriptor:io.kubernetes:Secret
-    - servicebinding:Secret
+1. OLM-based - Using a `statusDescriptor` in the CSV to hold the reference to the ConfigMap / Secret
+  * The reference's `x-descriptors` with either:
+    * ConfigMap:
+      * urn:alm:descriptor:io.kubernetes:ConfigMap
+      * servicebinding:ConfigMap
+    * Secret:
+      * urn:alm:descriptor:io.kubernetes:Secret
+      * servicebinding:Secret
 
 2. Operator-based (without OLM) - An annotation in the Operator's CRD
-  * The annotation is in the form of:
+  * The annotation is in the form of either:
     * `servicebinding/configMap: <bindable-configmap>`
     * `servicebinding/secret: <bindable-secret>`
 
 3. Deploymented-based (no Operator) - An annotation in the Deployment's CR
-  * The annotation is in the form of:
+  * The annotation is in the form of either:
     * `servicebinding/configMap: <bindable-configmap>`
     * `servicebinding/secret: <bindable-secret>`
     
 4. External service - An annotation in the local ConfigMap or Secret that bridges the external service
-  * The annotation is in the form of:
+  * The annotation is in the form of either:
     * `servicebinding/configMap: self`
     * `servicebinding/secret: self`   
 
