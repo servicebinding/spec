@@ -80,13 +80,21 @@ Extra binding properties can also be defined (with corresponding metadata) in th
 
 ### 3.  Request service binding
 
-*  How do we request a binding from a service (assume the service has been provisioned)
-*  How is that binding authorized?
+* How do we request a binding from a service (assume the service has been provisioned)
+  * One option:
+    * apiVersion: apps.openshift.io/v1alpha1
+    * kind: ServiceBindingRequest
+
+* How is that binding authorized?
 
 ### 4.  Mounting binding information
 
-*  Where in the container do we mount the binding information (e.g. what is the structure of the folders / files)
-*  Consideration with clusters, namespaces, or VMs
+* Where in the container do we mount the binding information (e.g. what is the structure of the folders / files)
+  * One option:
+    * `platform/bindings/<service-id>/metadata`
+    * `platform/bindings/<service-id>/secret`
+
+* Consideration with clusters, namespaces, or VMs
 
 ### Extra:  Consuming binding
 
