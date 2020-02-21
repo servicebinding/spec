@@ -37,36 +37,36 @@ If not following the recommended path above, for a service to be bindable it **m
 The reference's location and format depends on the following scenarios:
 
 1. OLM-enabled Operator: Use the `statusDescriptor` part of the CSV to mark which `status` properties reference the binding data:
-  * The reference's `x-descriptors` with one-of:
-    * ConfigMap:
-      * servicebinding:ConfigMap
-    * Secret:
-      * servicebinding:Secret
-    * Individual binding items:
-      * servicebinding:Secret:host
-      * servicebinding:Secret:port
-      * servicebinding:Secret:uri
-      * servicebinding:Secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
+    * The reference's `x-descriptors` with one-of:
+      * ConfigMap:
+        * servicebinding:ConfigMap
+      * Secret:
+        * servicebinding:Secret
+      * Individual binding items:
+        * servicebinding:Secret:host
+        * servicebinding:Secret:port
+        * servicebinding:Secret:uri
+        * servicebinding:Secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
 
 2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the binding data:
-  * The annotation is one-of:
-    * ConfigMap:
-      * servicebinding/configMap: status.bindable.ConfigMap
-    * Secret:
-      * servicebinding/secret: status.bindable.Secret
-    * Individual binding items:
+    * The annotation is one-of:
+      * ConfigMap:
+        * servicebinding/configMap: status.bindable.ConfigMap
+      * Secret:
+        * servicebinding/secret: status.bindable.Secret
+      * Individual binding items:
+        * servicebinding/secret/host: status.address
+        * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
+
+3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding binding data:
+      * servicebinding/secret/host: status.ingress.host
       * servicebinding/secret/host: status.address
       * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
 
-3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding binding data:
-    * servicebinding/secret/host: status.ingress.host
-    * servicebinding/secret/host: status.address
-    * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
-
 4. External service - An annotation in the local ConfigMap or Secret that bridges the external service.
-  * The annotation is in the form of either:
-    * servicebinding/configMap: self
-    * servicebinding/secret: self
+    * The annotation is in the form of either:
+      * servicebinding/configMap: self
+      * servicebinding/secret: self
 
 ### 2.  Service Binding Schema
 
