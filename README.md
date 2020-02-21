@@ -22,46 +22,49 @@ Main section of the doc.  Has sub-section that outline the design.
 
 ### 1.  Making a service bindable
 
-This specification aims to enable the following four scenarios of bindable services:
-1. Services deployed via an OLM-backed Operator
-1. Services deployed via an Operator (without OLM)
-1. Services deployed directly to k8s / OpenShift (using a k8s Deployment)
-1. Services deployed outside of k8s (in a VM or via a Cloud service)
-
+#### Recommended
 For a service to be bindable it **should** provide:
-* a ConfigMap that contains the name (or pattern) of the Secret holding the binding data, and describes metadata associated with each of the items referenced in the Secret.  
+* a ConfigMap that contains the name of the Secret holding the binding data (see the `Service Binding Schema` section below), and describes metadata associated with each of the items referenced in the Secret, as well as a reference to this ConfigMap.
 
-For a service to be bindable it **must** provide:
-* a Secret that contains the binding data (see section #2).
-* a reference in one of its deployable resources that points to either its ConfigMap (recommended) or Secret (minimum).
+This pattern ensures the binding data is properly secured in a Secret and has corresponding metadata to enhance the consumption experience of the binding. 
 
-The reference's location and format depends on the scenarios (1-4 above)
+#### Minimum
+If not following the recommended path above, for a service to be bindable it **must** provide:
+* a Secret that contains the binding data and a reference to this Secret, OR, map its `status` properties to the corresponding binding data.
 
-1. OLM-based - Using a `statusDescriptor` in the CSV to hold the reference to the ConfigMap / Secret
-  * The reference's `x-descriptors` with either:
+#### Pointer to binding data
+
+The reference's location and format depends on the following scenarios:
+
+1. OLM-enabled Operator: Use the `statusDescriptor` part of the CSV to mark which `status` properties reference the binding data:
+  * The reference's `x-descriptors` with one-of:
     * ConfigMap:
-      * urn:alm:descriptor:io.kubernetes:ConfigMap
       * servicebinding:ConfigMap
     * Secret:
-      * urn:alm:descriptor:io.kubernetes:Secret
       * servicebinding:Secret
+    * Individual binding items:
+      * servicebinding:Secret:host
+      * servicebinding:Secret:port
+      * servicebinding:Secret:uri
+      * servicebinding:Secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
 
-2. Operator-based (without OLM) - An annotation in the Operator's CRD
-  * The annotation is in the form of either:
-    * `servicebinding/configMap: <bindable-configmap>`
-    * `servicebinding/secret: <bindable-secret>`
+2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the binding data:
+  * The annotation is in the form:
+    * servicebinding/configMap: status.bindable.ConfigMap
+    * servicebinding/secret: status.bindable.Secret
+    * servicebinding/secret/host: status.address
+    * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
 
-3. Deploymented-based (no Operator) - An annotation in the Deployment's CR
-  * The annotation is in the form of either:
-    * `servicebinding/configMap: <bindable-configmap>`
-    * `servicebinding/secret: <bindable-secret>`
-    
-4. External service - An annotation in the local ConfigMap or Secret that bridges the external service
+3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding binding data:
+  * The annotation is in the form:
+    * servicebinding/secret/host: status.ingress.host
+    * servicebinding/secret/host: status.address
+    * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
+
+4. External service - An annotation in the local ConfigMap or Secret that bridges the external service.
   * The annotation is in the form of either:
     * `servicebinding/configMap: self`
     * `servicebinding/secret: self`   
-
-**Note**: Service binding implementations of this specification may extend the bindable scenarios to include auto-detection of Secrets or equivalent information, such as the service's route URL.  This is viewed as beyond the specification's scope, but recommended that the implementation transforms the auto-detected data into a Secret (or ConfigMap) that fits with the rest of the specification.  
 
 ### 2.  Service Binding Schema
 
