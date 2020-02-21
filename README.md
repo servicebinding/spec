@@ -49,22 +49,24 @@ The reference's location and format depends on the following scenarios:
       * servicebinding:Secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
 
 2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the binding data:
-  * The annotation is in the form:
-    * servicebinding/configMap: status.bindable.ConfigMap
-    * servicebinding/secret: status.bindable.Secret
-    * servicebinding/secret/host: status.address
-    * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
+  * The annotation is one-of:
+    * ConfigMap:
+      * servicebinding/configMap: status.bindable.ConfigMap
+    * Secret:
+      * servicebinding/secret: status.bindable.Secret
+    * Individual binding items:
+      * servicebinding/secret/host: status.address
+      * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
 
 3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding binding data:
-  * The annotation is in the form:
     * servicebinding/secret/host: status.ingress.host
     * servicebinding/secret/host: status.address
     * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to a `status` property)
 
 4. External service - An annotation in the local ConfigMap or Secret that bridges the external service.
   * The annotation is in the form of either:
-    * `servicebinding/configMap: self`
-    * `servicebinding/secret: self`   
+    * servicebinding/configMap: self
+    * servicebinding/secret: self
 
 ### 2.  Service Binding Schema
 
