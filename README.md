@@ -28,6 +28,11 @@ For a service to be bindable it **should** provide:
 
 This pattern ensures the binding data is properly secured in a Secret and has corresponding metadata to enhance the consumption experience of the binding. 
 
+The key/value pairs insides this ConfigMap are:
+* A single `Secret=<name_of_secret>` - where `<name_of_secret>` is the qualified name (including the namespace) of the k8s Secret, which contains the binding data for this service.
+* A set of `Metadata.<property>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
+
+
 #### Minimum
 If not following the recommended path above, for a service to be bindable it **must** provide:
 * a Secret that contains the binding data and a reference to this Secret, OR, map its `status` properties to the corresponding binding data.
