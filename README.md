@@ -14,7 +14,7 @@ Specification for binding services to runtime applications running in Kubernetes
 
 *  Need a consistent way to bind k8s application to services (applications, databases, event streams, etc)
 *  A standard / spec / RFC will enable adoption from different service providers
-*  Cloud Foundry has done this well.  The equivalent is not available for k8s.
+*  Cloud Foundry has done this well using injection of a [VCAP_SERVICES environment variable](https://docs.cloudfoundry.org/devguide/deploy-apps/environment-variable.html#VCAP-SERVICES). The equivalent is not available for k8s.
 
 ## Proposal
 
