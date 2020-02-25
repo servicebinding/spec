@@ -24,7 +24,7 @@ Main section of the doc.  Has sub-section that outline the design.
 
 #### Recommended
 For a service to be bindable it **should** provide:
-* a ConfigMap that contains the name of the Secret holding the binding data (see the [Service Binding Schema](#service-binding-schema) section below), and describes metadata associated with each of the items referenced in the Secret, as well as a reference to this ConfigMap.
+* a ConfigMap that contains the name of the Secret holding the binding data (see the [Service Binding Schema](#service-binding-schema) section below), and describes metadata associated with each of the items referenced in the Secret, as well as a reference to this ConfigMap.  If there are different Secrets created for different CRs, then this ConfigMap should specify the pattern of the generated Secrets.
 
 This pattern ensures the binding data is properly secured in a Secret and has corresponding metadata to enhance the consumption experience of the binding. 
 
