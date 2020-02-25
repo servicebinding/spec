@@ -20,11 +20,11 @@ Specification for binding services to runtime applications running in Kubernetes
 
 Main section of the doc.  Has sub-section that outline the design.
 
-### 1.  Making a service bindable
+### Making a service bindable
 
 #### Recommended
 For a service to be bindable it **should** provide:
-* a ConfigMap that contains the name of the Secret holding the binding data (see the `Service Binding Schema` section below), and describes metadata associated with each of the items referenced in the Secret, as well as a reference to this ConfigMap.
+* a ConfigMap that contains the name of the Secret holding the binding data (see the [Service Binding Schema](#service-binding-schema) section below), and describes metadata associated with each of the items referenced in the Secret, as well as a reference to this ConfigMap.
 
 This pattern ensures the binding data is properly secured in a Secret and has corresponding metadata to enhance the consumption experience of the binding. 
 
@@ -73,7 +73,7 @@ The reference's location and format depends on the following scenarios:
       * servicebinding/configMap: self
       * servicebinding/secret: self
 
-### 2.  Service Binding Schema
+### Service Binding Schema
 
 The core set of binding data is:
 * **name** - name of the service.
@@ -88,7 +88,7 @@ The core set of binding data is:
 Extra binding properties can also be defined (with corresponding metadata) in the bindable service's ConfigMap (or Secret).  For example, services may have credentials that are the same for any user (global setting) in addition to per-user credentials.
 
 
-### 3.  Request service binding
+### Request service binding
 
 * How do we request a binding from a service (assume the service has been provisioned)
   * One option:
@@ -97,7 +97,7 @@ Extra binding properties can also be defined (with corresponding metadata) in th
 
 * How is that binding authorized?
 
-### 4.  Mounting binding information
+### Mounting binding information
 
 * Where in the container do we mount the binding information (e.g. what is the structure of the folders / files)
   * One option:
