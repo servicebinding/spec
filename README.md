@@ -80,7 +80,7 @@ The core set of binding data is:
 * **name** - name of the service.
 * **host** - host (IP or host name) where the service resides.
 * **port** - the port to access the service.
-* **protocol** - protocol of the service.  Examples: http, https, postgre, mysql, mongodb, amqp, mqtt, etc.
+* **protocol** - protocol of the service.  Examples: http, https, postgresql, mysql, mongodb, amqp, mqtt, etc.
 * **username** - username to log into the service.  Can be omitted if no authorization required, or if equivalent information is provided in the password as a token.
 * **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
 * **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
