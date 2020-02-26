@@ -34,8 +34,9 @@ The key/value pairs insides this ConfigMap are:
 
 
 #### Minimum
-If not following the recommended path above, for a service to be bindable it **MUST** provide:
-* a Secret that contains the binding data and a reference to this Secret, OR, map its `status` properties to the corresponding binding data.
+If not following the recommended path above, for a service to be bindable it **MUST** either:
+* provide a Secret that contains the binding data and reference this Secret using one of the patterns discussed [below](#pointer-to-binding-data).
+* map its `status` properties to the corresponding binding data, using one of the patterns discussed [below](#pointer-to-binding-data).
 
 #### Pointer to binding data
 
