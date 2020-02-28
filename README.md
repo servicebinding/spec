@@ -75,7 +75,7 @@ The reference's location and format depends on the following scenarios:
 ### Service Binding Schema
 
 The core set of binding data is:
-* **name** - name of the service.
+* **type** - the type of the service. Examples: openapi, db2, kafka, etc.
 * **host** - host (IP or host name) where the service resides.
 * **port** - the port to access the service.
 * **protocol** - protocol of the service.  Examples: http, https, postgresql, mysql, mongodb, amqp, mqtt, etc.
