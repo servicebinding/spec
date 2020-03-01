@@ -18,7 +18,7 @@ Specification for binding services to runtime applications running in Kubernetes
 
 ## Proposal
 
-Main section of the doc.  Has sub-section that outline the design.
+Main section of the doc.  Has sub-sections that outline the design.
 
 ### Making a service bindable
 
