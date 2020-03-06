@@ -140,12 +140,21 @@ Example of a partial CR:
 
 ### Mounting binding information
 
-* Where in the container do we mount the binding information (e.g. what is the structure of the folders / files)
-  * One option:
-    * `platform/bindings/<service-id>/metadata`
-    * `platform/bindings/<service-id>/secret`
+Implementations of this specification must bind the Secret containing binding data using the following format:
 
-* Consideration with clusters, namespaces, or VMs
+```
+<path>/bindings/<service-id>/metadata/configMap/<persisted_configMap>
+<path>/bindings/<service-id>/metadata/request/<ServiceBindingData_CR>
+<path>/bindings/<service-id>/secret/<persisted_secret>
+```
+
+Where:
+* `<path>` defaults to `platform` if not specified in the `ServiceBindingRequest` CR.
+* `<service-id>` equals the `metadata.name` field from the `ServiceBindingRequest` CR.
+* `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.
+* `<ServiceBindingData_CR>` represents the requested `ServiceBindingRequest` CR
+* `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
+
 
 ### Extra:  Consuming binding
 
