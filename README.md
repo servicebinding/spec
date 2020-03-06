@@ -23,11 +23,10 @@ Main section of the doc.  Has sub-sections that outline the design.
 ### Making a service bindable
 
 #### Minimum
-For a service to be bindable it **MUST** either:
+For a service to be bindable it **MUST** comply with one-of:
 * provide a Secret that contains the binding data and reference this Secret using one of the patterns discussed [below](#pointer-to-binding-data). 
 * map its `status` properties to the corresponding binding data, using one of the patterns discussed [below](#pointer-to-binding-data).
-
-To allow existing services to be bindable with zero changes, implementers of this specification (i.e. Operators that can fulfill a [service binding request](#request-service-binding)) can choose to provide a mechanism where the requester provides the mapping of existing `status` properties to their correspoding property in the [Service Binding Schema](#Service-binding-schema).  This should be a temporay state before the bindable service embraces at least the minimum requirement of this specification.
+* include a sample `ServiceRequestBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding binding data.  This option allows existing services to be bindable with zero code changes.
 
 #### Recommended
 In addition to the minimum set above, a bindable service **SHOULD** provide:
