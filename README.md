@@ -24,9 +24,9 @@ Main section of the doc.  Has sub-sections that outline the design.
 
 #### Minimum
 For a service to be bindable it **MUST** comply with one-of:
-* provide a Secret that contains the binding data and reference this Secret using one of the patterns discussed [below](#pointer-to-binding-data). 
-* map its `status` properties to the corresponding binding data, using one of the patterns discussed [below](#pointer-to-binding-data).
-* include a sample `ServiceRequestBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding binding data.  This option allows existing services to be bindable with zero code changes.
+* provide a Secret that contains the [binding data](#service-binding-schema) and reference this Secret using one of the patterns discussed [below](#pointer-to-binding-data). 
+* map its `status` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
+* include a sample `ServiceRequestBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding [binding data](#service-binding-schema).  This option allows existing services to be bindable with zero code changes.
 
 #### Recommended
 In addition to the minimum set above, a bindable service **SHOULD** provide:
@@ -40,19 +40,19 @@ The key/value pairs insides this ConfigMap are:
 
 The reference's location and format depends on the following scenarios:
 
-1. OLM-enabled Operator: Use the `statusDescriptor` part of the CSV to mark which `status` properties reference the binding data:
+1. OLM-enabled Operator: Use the `statusDescriptor` part of the CSV to mark which `status` properties reference the [binding data](#service-binding-schema):
     * The reference's `x-descriptors` with one-of:
       * ConfigMap:
-        * servicebinding:ConfigMap
+        * servicebinding:configMap
       * Secret:
-        * servicebinding:Secret
+        * servicebinding:secret
       * Individual binding items:
-        * servicebinding:Secret:host
-        * servicebinding:Secret:port
-        * servicebinding:Secret:uri
-        * servicebinding:Secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
+        * servicebinding:secret:host
+        * servicebinding:secret:port
+        * servicebinding:secret:uri
+        * servicebinding:secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
 
-2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the binding data.  The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
+2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the [binding data](#service-binding-schema).  The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
       * ConfigMap:
         * servicebinding/configMap: {.status.bindable.ConfigMap}
       * Secret:
@@ -61,7 +61,7 @@ The reference's location and format depends on the following scenarios:
         * servicebinding/secret/host: {.status.address}
         * servicebinding/secret/`<binding_property>`: {.status.`<status_property>}` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to the path to the correspoding `status` property)
 
-3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding binding data. The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
+3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding [binding data](#service-binding-schema). The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
       * servicebinding/secret/host: {.status.ingress.host}
       * servicebinding/secret/host: {.status.address}
       * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to the path to the correspoding `status` property)
@@ -82,7 +82,7 @@ The core set of binding data is:
 * **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
 * **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
 * **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>/<name>`.
-* **role-needed** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario a Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
+* **role-needed** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
 
 Extra binding properties can also be defined (with corresponding metadata) in the bindable service's ConfigMap (or Secret).  For example, services may have credentials that are the same for any user (global setting) in addition to per-user credentials.
 
@@ -95,15 +95,15 @@ Since the reference implementation for most of this specification is the [Servic
 
 **Temporary Note**
 To ensure a better fit with the specification a few modifications have been proposed to the `ServiceBindingRequest` CRD:
-* A modification to its API group, to be independent from OpenShift.
-* A simplification of its CRD name to `ServiceBinding`.
-* Renaming `customEnvVar` to `dataMapping`.
-* Allowing for the `application` selector to be omitted, for the cases where another Operator owns the deployment.
-* Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases (more below).
+* A modification to its API group, to be independent from OpenShift. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/364)
+* A simplification of its CRD name to `ServiceBinding`. [ref](https://github.com/redhat-developer/service-binding-operator/issues/365)
+* Renaming `customEnvVar` to `dataMapping`. [ref](https://github.com/redhat-developer/service-binding-operator/issues/356#issuecomment-595943295)
+* Allowing for the `application` selector to be omitted, for the cases where another Operator owns the deployment. [ref](https://github.com/redhat-developer/service-binding-operator/issues/296)
+* Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases (more below). [ref](https://github.com/redhat-developer/service-binding-operator/issues/355)
 
 #### RBAC
 
-If the service provider's Secret (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBindingRequest` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all Secrets in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (accordingin to the binding data) by not provided.
+If the service provider's Secret (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBindingRequest` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all Secrets in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (according to the binding data) but not provided.
 
 Example of a partial CR:
 
@@ -140,19 +140,19 @@ Example of a partial CR:
 
 ### Mounting binding information
 
-Implementations of this specification must bind the Secret containing binding data using the following format:
+Implementations of this specification must bind the following data into the consuming application container:
 
 ```
-<path>/bindings/<service-id>/metadata/configMap/<persisted_configMap>
-<path>/bindings/<service-id>/metadata/request/<ServiceBindingData_CR>
+<path>/bindings/<service-id>/metadata/<persisted_configMap>
+<path>/bindings/<service-id>/request/<ServiceBindingData_CR>
 <path>/bindings/<service-id>/secret/<persisted_secret>
 ```
 
 Where:
 * `<path>` defaults to `platform` if not specified in the `ServiceBindingRequest` CR.
 * `<service-id>` equals the `metadata.name` field from the `ServiceBindingRequest` CR.
-* `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.
-* `<ServiceBindingData_CR>` represents the requested `ServiceBindingRequest` CR
+* `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
+* `<ServiceBindingData_CR>` represents the requested `ServiceBindingRequest` CR.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
 
 
