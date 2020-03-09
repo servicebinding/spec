@@ -40,7 +40,7 @@ The key/value pairs insides this ConfigMap are:
 
 The reference's location and format depends on the following scenarios:
 
-1. OLM-enabled Operator: Use the `statusDescriptor` part of the CSV to mark which `status` properties reference the [binding data](#service-binding-schema):
+1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
     * The reference's `x-descriptors` with one-of:
       * ConfigMap:
         * `servicebinding:configMap`
