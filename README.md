@@ -43,14 +43,14 @@ The reference's location and format depends on the following scenarios:
 1. OLM-enabled Operator: Use the `statusDescriptor` part of the CSV to mark which `status` properties reference the [binding data](#service-binding-schema):
     * The reference's `x-descriptors` with one-of:
       * ConfigMap:
-        * servicebinding:configMap
+        * `servicebinding:configMap`
       * Secret:
-        * servicebinding:secret
+        * `servicebinding:secret`
       * Individual binding items:
-        * servicebinding:secret:host
-        * servicebinding:secret:port
-        * servicebinding:secret:uri
-        * servicebinding:secret:`<binding_property>`  (where `<binding_property>` is any property from the binding schema)
+        * `servicebinding:secret:host`
+        * `servicebinding:secret:port`
+        * `servicebinding:secret:uri`
+        * `servicebinding:secret:<binding_property>`  (where `<binding_property>` is any property from the binding schema)
 
 2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the [binding data](#service-binding-schema).  The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
       * ConfigMap:
