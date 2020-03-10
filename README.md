@@ -61,15 +61,12 @@ The reference's location and format depends on the following scenarios:
         * servicebinding/secret/host: {.status.address}
         * servicebinding/secret/`<binding_property>`: {.status.`<status_property>}` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to the path to the correspoding `status` property)
 
-3. Regular k8s Deployment (Ingress, Route, Service, etc)  - An annotation in the corresponding CR that maps the `status` properties to their corresponding [binding data](#service-binding-schema). The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
+3. Regular k8s Deployment (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding CR that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema). The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
       * servicebinding/secret/host: {.status.ingress.host}
       * servicebinding/secret/host: {.status.address}
-      * servicebinding/secret/`<binding_property>`: status.`<status_property>` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to the path to the correspoding `status` property)
+      * servicebinding/secret/`<binding_property>`: `<property_path>` (where `<binding_property>` is any property from the binding schema, and `<property_path>` refers to the path to the correspoding `status`, `spec` or `data` property)
 
-4. External service - An annotation in the local ConfigMap or Secret that bridges the external service.
-    * The annotation is in the form of either:
-      * servicebinding/configMap: self
-      * servicebinding/secret: self
+The above pattern can be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details. 
 
 ### Service Binding Schema
 
