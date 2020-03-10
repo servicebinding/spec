@@ -97,6 +97,7 @@ To ensure a better fit with the specification a few modifications have been prop
 * Renaming `customEnvVar` to `dataMapping`. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/356#issuecomment-595943295))
 * Allowing for the `application` selector to be omitted, for the cases where another Operator owns the deployment. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/296))
 * Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/355))
+* Not related to the CRD, but directly related to how this spec approaches item 1 from [Pointer to binding data](#pointer-to-binding-data), in terms of referencing a nested property.  ([ref](https://github.com/redhat-developer/service-binding-operator/issues/361))
 
 #### RBAC
 
