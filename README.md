@@ -24,16 +24,16 @@ Main section of the doc.  Has sub-sections that outline the design.
 
 #### Minimum
 For a service to be bindable it **MUST** comply with one-of:
-* provide a Secret that contains the [binding data](#service-binding-schema) and reference this Secret using one of the patterns discussed [below](#pointer-to-binding-data). 
+* provide a Secret and/or ConfigMap that contains the [binding data](#service-binding-schema) and reference this Secret and/or ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data). 
 * map its `status`, `spec`, `data` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
 * include a sample `ServiceRequestBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding [binding data](#service-binding-schema).  This option allows existing services to be bindable with zero code changes.
 
 #### Recommended
 In addition to the minimum set above, a bindable service **SHOULD** provide:
-* a ConfigMap that describes metadata associated with each of the items referenced in the Secret.  The bindable service should also provide a reference to this ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
+* a ConfigMap (which could be the same as the one holding some of the binding data, if applicable) that describes metadata associated with each of the items referenced in the Secret.  The bindable service should also provide a reference to this ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
 
 The key/value pairs insides this ConfigMap are:
-* A set of `Metadata.<property>=<value>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
+* A set of `metadata.<property>=<value>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
 
 
 #### Pointer to binding data
@@ -41,7 +41,7 @@ The key/value pairs insides this ConfigMap are:
 The reference's location and format depends on the following scenarios:
 
 1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
-    * The reference's `x-descriptors` with one-of:
+    * The reference's `x-descriptors` with a possible combination of:
       * ConfigMap:
         * `servicebinding:configMap`
       * Secret:
