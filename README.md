@@ -88,12 +88,12 @@ Extra binding properties can also be defined (with corresponding metadata) in th
 
 Binding is requested by the consuming application, or an entity on its behalf such as the [Runtime Component Operator](https://github.com/application-stacks/runtime-component-operator), via a custom resource that is applied in the same cluster where an implementation of this specification resides.
 
-Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBindingRequest` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds).  
+Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds).  
 
 **Temporary Note**
-To ensure a better fit with the specification a few modifications have been proposed to the `ServiceBindingRequest` CRD:
+To ensure a better fit with the specification a few modifications have been proposed to the `ServiceBinding` CRD:
 * A modification to its API group, to be independent from OpenShift. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/364))
-* A simplification of its CRD name to `ServiceBinding`. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/365))
+* A simplification of its CRD name to `ServiceBinding` (we are already using this name in the spec). ([ref](https://github.com/redhat-developer/service-binding-operator/issues/365))
 * Renaming `customEnvVar` to `dataMapping`. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/356#issuecomment-595943295))
 * Allowing for the `application` selector to be omitted, for the cases where another Operator owns the deployment. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/296))
 * Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/355))
@@ -101,7 +101,7 @@ To ensure a better fit with the specification a few modifications have been prop
 
 #### RBAC
 
-If the service provider's Secret (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBindingRequest` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all Secrets in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (according to the binding data) but not provided.
+If the service provider's Secret (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBinding` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all Secrets in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (according to the binding data) but not provided.
 
 Example of a partial CR:
 
@@ -122,7 +122,7 @@ There are a variety of service providers that require a subscription to be creat
 * premium services that deploy a providers located in the same physical node as the caller for low latency
 * any other type of subscription service
 
-The only requirement from this specification is that the subscription results in a Secret, containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)), created in the same namespace of the `ServiceBindingRequest` that will reference this Secret.  Implementations of this specification will populate this subscription Secret with any additional information provided by the target service, according to the [Pointer to binding data](#pointer-to-binding-data) section.
+The only requirement from this specification is that the subscription results in a Secret, containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)), created in the same namespace of the `ServiceBinding` that will reference this Secret.  Implementations of this specification will populate this subscription Secret with any additional information provided by the target service, according to the [Pointer to binding data](#pointer-to-binding-data) section.
 
 Example of a partial CR:
 
@@ -147,10 +147,10 @@ Implementations of this specification must bind the following data into the cons
 ```
 
 Where:
-* `<path>` defaults to `platform` if not specified in the `ServiceBindingRequest` CR.
-* `<service-id>` equals the `metadata.name` field from the `ServiceBindingRequest` CR.
+* `<path>` defaults to `platform` if not specified in the `ServiceBinding` CR.
+* `<service-id>` equals the `metadata.name` field from the `ServiceBinding` CR.
 * `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
-* `<ServiceBindingData_CR>` represents the requested `ServiceBindingRequest` CR.
+* `<ServiceBindingData_CR>` represents the requested `ServiceBinding` CR.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
 
 
