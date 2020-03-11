@@ -99,9 +99,16 @@ To ensure a better fit with the specification a few modifications have been prop
 * Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/355))
 * Not related to the CRD, but directly related to how this spec approaches item 1 from [Pointer to binding data](#pointer-to-binding-data), in terms of referencing a nested property.  ([ref](https://github.com/redhat-developer/service-binding-operator/issues/361))
 
-#### RBAC
+#### Security
 
-If the service provider's Secret (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBinding` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all Secrets in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (according to the binding data) but not provided.
+This part of the specification deals with security in three aspects:
+1. does the user have the authority to create a ServiceBinding CR?
+1. does the user have the authority to access the binding data for all requested services?
+1. does the user have the authority to modify the source application with the injected binding data?
+
+Scenario 1 can enforced by requiring a certain role type to create ServiceBinding CR, using k8s native RBAC rules.
+
+Scenario 2 there are a few options, one of them being if the service provider's binding resource (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBinding` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all resources in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (according to the binding data) but not provided.
 
 Example of a partial CR:
 
@@ -114,6 +121,8 @@ Example of a partial CR:
       serviceAccount: <my-sa>
 ```
 
+Scenario 3 can also be enforced by RBAC in a similar fashion, but passing the service account in the `application` section of the `RequestBinding` CR.
+
 #### Subscription-based services
 
 There are a variety of service providers that require a subscription to be created before accessing the service. Examples:
@@ -122,7 +131,7 @@ There are a variety of service providers that require a subscription to be creat
 * premium services that deploy a providers located in the same physical node as the caller for low latency
 * any other type of subscription service
 
-The only requirement from this specification is that the subscription results in a Secret, containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)), created in the same namespace of the `ServiceBinding` that will reference this Secret.  Implementations of this specification will populate this subscription Secret with any additional information provided by the target service, according to the [Pointer to binding data](#pointer-to-binding-data) section.
+The only requirement from this specification is that the subscription results in a k8s resources (Secret, etc), containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)).  From the `ServiceBinding` CR's perspective, this resource looks and feels like an additional service.
 
 Example of a partial CR:
 
@@ -130,9 +139,12 @@ Example of a partial CR:
  services:
     - group: postgres.dev
       kind: Service
-      resourceRef: user-db
+      resourceRef: global-user-db
       version: v1beta1
-      subscriptionSecret: <my-subscription-secret>
+    - group: postgres.dev
+      kind: Secret
+      resourceRef: specific-user-db
+      version: v1beta1      
 ```
 
 
