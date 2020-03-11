@@ -161,7 +161,7 @@ Implementations of this specification must bind the following data into the cons
 
 Where:
 * `<path>` defaults to `platform` if not specified in the `ServiceBinding` CR.
-* `<service-id>` equals the `metadata.name` field from the `ServiceBinding` CR.
+* `<service-n-id>` equals the `metadata.name` field + the `services[n].resourceRef` from the `ServiceBinding` CR.
 * `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
 * `<ServiceBindingData_CR>` represents the requested `ServiceBinding` CR.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
