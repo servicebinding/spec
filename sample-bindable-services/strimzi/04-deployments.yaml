@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-producer
+  name: kafka-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+    spec:
+      containers:
+      - name: kafka-producer
+        image: quay.io/kafka-enablement-2020/kafka-producer:latest
+        env:
+          - name: CA_CRT
+            valueFrom:
+              secretKeyRef:
+                name: my-cluster-cluster-ca-cert
+                key: ca.crt
+          - name: USER_CRT
+            valueFrom:
+              secretKeyRef:
+                name: my-producer
+                key: user.crt
+          - name: USER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-producer
+                key: user.key
+          - name: BOOTSTRAP_SERVERS
+            value: my-cluster-kafka-bootstrap:9093
+          - name: TOPIC
+            value: my-topic
+          - name: TIMER
+            value: "1000"
+          - name: NUMBER_OF_KEYS
+            value: "3"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kafka-consumer
+  name: kafka-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-consumer
+    spec:
+      containers:
+      - name: kafka-consumer
+        image: quay.io/kafka-enablement-2020/kafka-consumer:latest
+        env:
+          - name: CA_CRT
+            valueFrom:
+              secretKeyRef:
+                name: my-cluster-cluster-ca-cert
+                key: ca.crt
+          - name: USER_CRT
+            valueFrom:
+              secretKeyRef:
+                name: my-consumer
+                key: user.crt
+          - name: USER_KEY
+            valueFrom:
+              secretKeyRef:
+                name: my-consumer
+                key: user.key
+          - name: BOOTSTRAP_SERVERS
+            value: my-cluster-kafka-bootstrap:9093
+          - name: TOPIC
+            value: my-topic
+          - name: GROUP_ID
+            value: my-kafka-consumer

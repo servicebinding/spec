@@ -1,0 +1,1 @@
+# Binding to Strimzi Operator
