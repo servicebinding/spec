@@ -1,7 +1,7 @@
 # Binding to Strimzi Operator
 
 This sample demonstrates:
-- deploying a Kafka cluster with a listener with mutual TLS authentication
+- deploying a Kafka cluster with a TLS listener
 - creating a Kafka topic
 - creating a Kafka user with mutual TLS authentication
 - deploying a producer and a consumer
