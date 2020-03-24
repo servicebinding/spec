@@ -22,13 +22,13 @@ Main section of the doc.  Has sub-sections that outline the design.
 
 ### Making a service bindable
 
-#### Minimum
-For a service to be bindable it **MUST** comply with one-of:
+#### Minimum requirements for being bindable
+A bindable service **MUST** comply with one-of:
 * provide a Secret and/or ConfigMap that contains the [binding data](#service-binding-schema) and reference this Secret and/or ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data). 
 * map its `status`, `spec`, `data` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
 * include a sample `ServiceBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding [binding data](#service-binding-schema).  This option allows existing services to be bindable with zero code changes.
 
-#### Recommended
+#### Recommended requirements for being bindable
 In addition to the minimum set above, a bindable service **SHOULD** provide:
 * a ConfigMap (which could be the same as the one holding some of the binding data, if applicable) that describes metadata associated with each of the items referenced in the Secret.  The bindable service should also provide a reference to this ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
 
@@ -38,7 +38,7 @@ The key/value pairs insides this ConfigMap are:
 
 #### Pointer to binding data
 
-The reference's location and format depends on the following scenarios:
+This specification supports different scenarios for exposing bindable data.  
 
 1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
     * The reference's `x-descriptors` with a possible combination of:
