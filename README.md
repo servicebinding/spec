@@ -35,6 +35,41 @@ In addition to the minimum set above, a bindable service **SHOULD** provide:
 The key/value pairs insides this ConfigMap are:
 * A set of `metadata.<property>=<value>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
 
+#### Making services discoverable
+
+The requirements above allow a bindable service to be discovered and processed by an implementation of this specification (such as the reference implementation, Service Binding Operator).  However, there is a desire for external tools to quickly query a list of bindable services without requiring them to process all of the scenarios outlined in this specification.  With this in mind, a further recommendation for bindable services is to add the following annotation to its bindable resource:
+
+```
+servicebinding/bindable: "true"
+```
+
+As an example, 
+
+```
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: Kafka
+metadata:
+  name: my-cluster
+  annotations:
+    servicebinding/bindable: "true"
+spec:
+   ...
+```
+
+This allows a tool to quickly query k8s resources that have this annotation, and upon finding them they can easily construct the corresponding `services` entry in a `ServiceBinding` CR:
+
+```
+kind: ServiceBinding
+metadata:
+  name: bindind-example
+spec:
+  services:
+    - group: kafka.strimzi.io
+      kind: Kafka
+      resourceRef: my-cluster
+      version: v1aplha1
+...
+```
 
 #### Pointer to binding data
 
@@ -95,7 +130,7 @@ Therefore implementations of this specification **MUST** add the ID prefix to bi
 
 Binding is requested by the consuming application, or an entity on its behalf such as the [Runtime Component Operator](https://github.com/application-stacks/runtime-component-operator), via a custom resource that is applied in the same cluster where an implementation of this specification resides.
 
-Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds).  
+Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds), as the entity that holds the binding request.  
 
 **Temporary Note**
 To ensure a better fit with the specification a few modifications have been proposed to the `ServiceBinding` CRD:
