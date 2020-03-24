@@ -80,9 +80,15 @@ The core set of binding data is:
 * **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
 * **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
 * **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[/<contextRoot>]`.
-* **role-needed** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
+* **role_needed** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
 
-Extra binding properties can also be defined (with corresponding metadata) in the bindable service's ConfigMap (or Secret).  For example, services may have credentials that are the same for any user (global setting) in addition to per-user credentials.
+Extra binding properties **can** also be defined (preferably with corresponding ConfigMap metadata) by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
+
+#### ID prefix
+
+Applications can consume various services, so while the bindable services provide data using the schema above there must be a way to distinguish them from the consumer side.  This is accomplished via a prefix in the form of `<id>_<property>`, where `<id>` refers to the service's ID as defined in the `ServiceBinding` CR, and `<property>` refers to one of the binding data.  
+
+Therefore implementations of this specification **MUST** add the ID prefix to binding data before mounting, as defined in [Mounting binding information](#mounting-binding-information).  If implementations choose to also support injecting the mouting data as environment variables (beyond the scope of this specification), it must also add the ID prefix.
 
 
 ### Request service binding
@@ -154,16 +160,15 @@ Example of a partial CR:
 Implementations of this specification must bind the following data into the consuming application container:
 
 ```
-<path>/bindings/<service-id>/metadata/<persisted_configMap>
-<path>/bindings/<service-id>/request/<ServiceBindingData_CR>
-<path>/bindings/<service-id>/secret/<persisted_secret>
+<path>/bindings/metadata/<persisted_configMap>
+<path>/bindings/request/<ServiceBinding_CR>
+<path>/bindings/secret/<persisted_secret>
 ```
 
 Where:
 * `<path>` defaults to `platform` if not specified in the `ServiceBinding` CR.
-* `<service-n-id>` equals the `metadata.name` field + the `services[n].resourceRef` from the `ServiceBinding` CR.
 * `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
-* `<ServiceBindingData_CR>` represents the requested `ServiceBinding` CR.
+* `<ServiceBinding_CR>` represents the requested `ServiceBinding` CR.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
 
 
