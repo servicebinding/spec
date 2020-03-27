@@ -1,0 +1,23 @@
+apiVersion: apps.openshift.io/v1alpha1
+kind: ServiceBindingRequest
+metadata:
+  name: kafka-producer-binding
+spec:
+  applicationSelector:
+    group: apps
+    resource: deployments
+    resourceRef: kafka-producer
+    version: v1
+  # Assumption: Kafka and the application are deployed to the same namespace
+  backingServiceSelectors:
+    - group: kafka.strimzi.io
+      kind: Kafka
+      resourceRef: my-cluster
+      version: v1beta1
+    - group: kafka.strimzi.io
+      kind: KafkaUser
+      resourceRef: coffeeshop-user
+      version: v1beta1
+
+      
+     
