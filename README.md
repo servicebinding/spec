@@ -49,6 +49,7 @@ This specification supports different scenarios for exposing bindable data.
       * Individual binding items:
         * `servicebinding:secret:host`
         * `servicebinding:secret:port`
+        * `servicebinding:secret:endpoints`
         * `servicebinding:secret:uri`
         * `servicebinding:secret:<binding_property>`  (where `<binding_property>` is any property from the binding schema)
 
@@ -72,15 +73,16 @@ The above pattern can be used to expose external services (such as from a VM or 
 
 The core set of binding data is:
 * **type** - the type of the service. Examples: openapi, db2, kafka, etc.
-* **host** - host (IP or host name) where the service resides.
+* **host** - the host (IP or host name) where the service resides.
 * **port** - the port to access the service.
-* **protocol** - protocol of the service.  Examples: http, https, postgresql, mysql, mongodb, amqp, mqtt, etc.
+* **endpoints** - the endpoint information to access the service in a service-specific syntax, such as a list of hosts and ports. This is an alternative to separate `host` and `port` properties.
+* **protocol** - the protocol of the service.  Examples: http, https, postgresql, mysql, mongodb, amqp, mqtt, kafka, etc.
 * **contextRoot** - a context root to be used for this service.  Example: the context root for a RESTful service
-* **username** - username to log into the service.  Can be omitted if no authorization required, or if equivalent information is provided in the password as a token.
+* **username** - the username to log into the service.  Can be omitted if no authorization required, or if equivalent information is provided in the password as a token.
 * **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
 * **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
 * **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[/<contextRoot>]`.
-* **role_needed** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
+* **roleNeeded** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario, a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
 
 Extra binding properties **can** also be defined (preferably with corresponding ConfigMap metadata) by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
 
