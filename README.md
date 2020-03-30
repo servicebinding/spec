@@ -81,7 +81,7 @@ The core set of binding data is:
 * **username** - the username to log into the service.  Can be omitted if no authorization required, or if equivalent information is provided in the password as a token.
 * **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
 * **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
-* **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[basePath>]`.
+* **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[<basePath>]`.
 * **roleNeeded** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario, a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
 
 Extra binding properties can also be defined (with corresponding metadata) in the bindable service's ConfigMap (or Secret).  For example, services may have credentials that are the same for any user (global setting) in addition to per-user credentials.
