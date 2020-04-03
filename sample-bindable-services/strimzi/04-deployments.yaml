@@ -16,31 +16,36 @@ spec:
     spec:
       containers:
       - name: kafka-producer
-        image: quay.io/kafka-enablement-2020/kafka-producer:latest
+        image: navidsh/hello-world-producer
         env:
-          - name: CA_CRT
+          - name: KAFKA_SECRET_CA_CRT
             valueFrom:
               secretKeyRef:
-                name: my-cluster-cluster-ca-cert
-                key: ca.crt
-          - name: USER_CRT
+                name: kafka-producer-binding
+                key: KAFKA_SECRET_CA_CRT
+          - name: KAFKAUSER_SECRET_USER_CRT
             valueFrom:
               secretKeyRef:
-                name: my-producer
-                key: user.crt
-          - name: USER_KEY
+                name: kafka-producer-binding
+                key: KAFKAUSER_SECRET_USER_CRT
+          - name: KAFKAUSER_SECRET_USER_KEY
             valueFrom:
               secretKeyRef:
-                name: my-producer
-                key: user.key
+                name: kafka-producer-binding
+                key: KAFKAUSER_SECRET_USER_KEY
           - name: BOOTSTRAP_SERVERS
-            value: my-cluster-kafka-bootstrap:9093
+            valueFrom:
+              secretKeyRef:
+                name: kafka-producer-binding
+                key: BOOTSTRAP_SERVERS
           - name: TOPIC
             value: my-topic
-          - name: TIMER
-            value: "1000"
           - name: NUMBER_OF_KEYS
             value: "3"
+          - name: DELAY_MS
+            value: "1000"
+          - name: MESSAGE_COUNT
+            value: "1000000"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -60,26 +65,33 @@ spec:
     spec:
       containers:
       - name: kafka-consumer
-        image: quay.io/kafka-enablement-2020/kafka-consumer:latest
+        image: navidsh/hello-world-consumer
         env:
-          - name: CA_CRT
+          - name: KAFKA_SECRET_CA_CRT
             valueFrom:
               secretKeyRef:
-                name: my-cluster-cluster-ca-cert
-                key: ca.crt
-          - name: USER_CRT
+                name: kafka-consumer-binding
+                key: KAFKA_SECRET_CA_CRT
+          - name: KAFKAUSER_SECRET_USER_CRT
             valueFrom:
               secretKeyRef:
-                name: my-consumer
-                key: user.crt
-          - name: USER_KEY
+                name: kafka-consumer-binding
+                key: KAFKAUSER_SECRET_USER_CRT
+          - name: KAFKAUSER_SECRET_USER_KEY
             valueFrom:
               secretKeyRef:
-                name: my-consumer
-                key: user.key
+                name: kafka-consumer-binding
+                key: KAFKAUSER_SECRET_USER_KEY
           - name: BOOTSTRAP_SERVERS
-            value: my-cluster-kafka-bootstrap:9093
+            valueFrom:
+              secretKeyRef:
+                name: kafka-consumer-binding
+                key: BOOTSTRAP_SERVERS
           - name: TOPIC
             value: my-topic
           - name: GROUP_ID
             value: my-kafka-consumer
+          - name: LOG_LEVEL
+            value: "INFO"
+          - name: MESSAGE_COUNT
+            value: "1000000"
