@@ -1,11 +1,10 @@
-# Binding to Strimzi Operator
+# Binding Event-driven Applications to an In-cluster Operator Managed Kafka Cluster
 
-This sample demonstrates:
-- deploying a Kafka cluster with a TLS listener
-- creating a Kafka topic
-- creating a Kafka user with mutual TLS authentication
-- deploying a producer and a consumer
-- 🚧creating a `ServiceBindingRequest` to inject Kafka listener address and various certificates into applications
+## Introduction
+
+This scenario illustrates binding two event-driven applications to an in-cluster Operator Managed Kafka cluster using Service Binding Operator. OLM metadata including binding information is added to the Strimzi Operator to make the operator bindable via the Service Binding Operator.
+
+This scenario also shows the use of the `customEnvVar` feature of the Service Binding Operator to specify a mapping for the injected environment variables.
 
 ## Requirements
 
@@ -15,9 +14,27 @@ This sample expects users to execute against an OpenShift Container Platform 4.3
 oc new-project myproject
 ```
 
-## Install Strimzi Operator
+## Install the Strimzi Operator using an `OperatorSource`
 
-Navigate in the OpenShift web console to the **Operators** → **OperatorHub** page. Install Strimzi Operator onto the cluster.
+Apply the following `OperatorSource`:
+
+```console
+cat <<EOS |kubectl apply -f -
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  name: strimzi-operators
+  namespace: openshift-marketplace
+spec:
+  type: appregistry
+  endpoint: https://quay.io/cnr
+  registryNamespace: navidsh
+  displayName: "Bindable Strimzi Operators"
+EOS
+```
+
+Then navigate in the OpenShift web console to the **Operators** → **OperatorHub** page. Install the Strimzi Operator labeled as **Custom** onto the cluster.
 
 ## Deploy Kafka cluster
 
@@ -35,28 +52,22 @@ oc get all
 
 ## Create `KafkaTopic` and `KafkaUser` resources
 
-Create a Kafka Topic:
+Create a Kafka Topic and Kafka Users:
 
 ```console
-oc apply -f 02-topic.yaml
+oc apply -f 02-topic-users.yaml
 ```
 
-Create a Kafka User:
-
-```console
-oc apply -f 03-users.yaml
-```
-
-## Kafka Producer and Consumer Application
+## Express an intent to bind the Kafka cluster and the applications
 
 Deploy a Kafka producer and a Kafka consumer:
 ```console
 oc apply -f 04-deployments.yaml
 ```
 
-Go through the file `04-deployments.yaml` and look at the different environment variables defined in `spec.template.spec.containers.env`.
+---
 
-## Service Binding Requests
+## Further discussion on Service Binding Requests
 
 To allow the service binding operator to automatically inject the Kafka listeneer and certificates (instead of manually doing so as in [04-deployments.yaml](04-deployments.yaml)), some improvements would be required to the Service Binding Operator and/or the Strimzi operator.
 
