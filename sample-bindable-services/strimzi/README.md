@@ -6,17 +6,29 @@ This scenario illustrates binding two event-driven applications to an in-cluster
 
 This scenario also shows the use of the `customEnvVar` feature of the Service Binding Operator to specify a mapping for the injected environment variables.
 
-## Requirements
+## Actions to Perform by Users in 2 Roles
 
-This sample expects users to execute against an OpenShift Container Platform 4.3 cluster. Also, it expects users to run commands in `myproject` namespace:
+In this example there are 2 roles:
 
-```
-oc new-project myproject
-```
+* Cluster Admin - Installs the operators to the cluster
+* Application Developer - Creates a Kafka cluster, creates required Kafka resources, imports applications and creates a request to bind the applications to the Kafka cluster and the Kafka resources.
 
-## Install the Strimzi Operator using an `OperatorSource`
+### Cluster Admin
 
-Apply the following `OperatorSource`:
+The cluster admin needs to install 2 operators into the cluster:
+
+* Service Binding Operator
+* Strimzi Operator
+
+The [Strimzi Kafka Operator](https://github.com/navidsh/strimzi-kafka-operator) includes service binding metadata suggested by the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator/blob/master/docs/OperatorBestPractices.md) in order to be "bindable". The metadata is added to the operator's `ClusterServiceVersion` and exposes binding information through `secrets`, `status` fields and `spec` parameters.
+
+#### Install the Service Binding Operator
+
+Navigate to the **Operator** → **OperatorHub** in the OpenShift console. From the `Developer Tools` category, select the `Service Binding Operator` operator and install a `alpha` version. This would install the `ServiceBindingRequest` *custom resource definition* (CRD) in the cluster.
+
+#### Install the Strimzi Operator
+
+Create the following `OperatorSource`:
 
 ```console
 cat <<EOS |kubectl apply -f -
@@ -34,62 +46,163 @@ spec:
 EOS
 ```
 
-Then navigate in the OpenShift web console to the **Operators** → **OperatorHub** page. Install the Strimzi Operator labeled as **Custom** onto the cluster.
+Once the `OperatorSource` is created, the "bindable" Strimzi Operator will be available to install from OperatorHub catalog in OpenShift console.
 
-## Deploy Kafka cluster
+Then, navigate to the **Operator** → **OperatorHub** in the OpenShift console. Select **Strimzi** operator labelled as "custom" (not "Community") and install on the cluster.
 
-Create a Kafka cluster:
+### Application Developer
+
+#### Create a namespace called `service-binding-demo`
+
+The application and the service instance needs a namespace to live in so let's create one for them:
+
+```console
+cat <<EOS |kubectl apply -f -
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: service-binding-demo
+EOS
+```
+
+#### Create a Kafka cluster
+
+Now we use the Strimzi Operator that the cluster admin has installed. To create a Kafka cluster instance, just create a [`Kafka` custom resource](./01-kafka.yaml) in the `service-binding-demo` namespace called `my-cluster`:
 
 ```console
 oc apply -f 01-kafka.yaml
 ```
 
-Monitor the cluster deployment progress:
+It takes usually a few seconds to spin-up a new Kafka cluster. You can check the status in the custom resources:
 
 ```console
-oc get all
+oc get kafka my-cluster -o yaml
 ```
 
-## Create `KafkaTopic` and `KafkaUser` resources
+This creates a Kafka cluster with a `tls` listener with mutual TLS authentication.
 
-Create a Kafka Topic and Kafka Users:
+#### Create a Kafka Topic
+
+To create a Kafka Topic, apply the [`KafkaTopic` custom resource](./02-kafka-topic.yaml) in the `service-binding-demo` namespace:
 
 ```console
-oc apply -f 02-topic-users.yaml
+oc apply -f 02-kafka-topic.yaml
 ```
 
-## Express an intent to bind the Kafka cluster and the applications
+Check the created custom resource:
 
-Deploy a Kafka producer and a Kafka consumer:
+```console
+oc get kt my-topic
+```
+
+#### Create Kafka Users
+
+To create Kafka Users, one user for producer application and one user for consumer application, apply the [`KafkaUser` custom resources](./03-kafka-user.yaml) in the `service-binding-demo` namespace:
+
+```console
+oc apply -f 03-kafka-user.yaml
+```
+
+Check the created custom resource:
+
+```console
+oc get kafkausers
+```
+
+#### Deploy the Producer and the Consumer Applications
+
+To deploy the producer and the consumer applications, create [`Deployment` resources](04-deployments.yaml) in the `service-binding-demo` namespace:
+
 ```console
 oc apply -f 04-deployments.yaml
 ```
 
+The `Deployment` imports the binding information from the service binding secret created by the Service Binding Operator.
+
+#### Binding Applications to Strimzi
+
+In order to bind the application to the Kafka resources, create [`ServiceBindingRequest` custom resources](./05-service-binding.yaml) in the `service-binding-demo` namespace:
+
+```console
+oc apply -f 05-service-binding.yaml
+```
+
+This would create two `ServiceBindingRequest`s. The custom resource for the producer application looks as follows:
+
+```yaml
+apiVersion: apps.openshift.io/v1alpha1
+kind: ServiceBindingRequest
+metadata:
+  name: kafka-producer-binding
+spec:
+  backingServiceSelectors:
+    - group: kafka.strimzi.io
+      kind: KafkaUser
+      resourceRef: my-producer
+      version: v1beta1
+    - group: kafka.strimzi.io
+      kind: Kafka
+      resourceRef: my-cluster
+      version: v1beta1
+  customEnvVar:
+    - name: BOOTSTRAP_SERVERS
+      value: |-
+        {{- range .status.listeners -}}
+          {{- if and (eq .type "tls") (gt (len .addresses) 0) -}}
+            {{- with (index .addresses 0) -}}
+              {{ .host }}:{{ .port }}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+```
+
+There are two interesting parts in the binding requests:
+
+* `backingServiceSelector` - used to specify the backing services. Applications need binding information from `Kafka` and `KafkaUser` resources.
+* `customEnvVar` - specifies the mapping for the environment variables injected into the binding secret.
+
+When the `ServiceBindingRequest` is created the Service Binding Operator's controller collects binding information from the referenced backing services and the `customEnvVar` and then stores into an intermediate Secret called with the same name as the `ServiceBindingRequest`. The `Deployment` resources have pointers to this secret to inject environment variables into the application containers.
+
+#### View Messages
+
+To see messages sent by the producer application, run:
+
+```console
+oc logs -n service-binding-demo -f $(oc get pods -l app=kafka-producer -o name)
+```
+
+You can press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop viewing the log messages.
+
+Similarly, use the following command to see messages received by the consumer application:
+
+```console
+oc logs -n service-binding-demo -f $(oc get pods -l app=kafka-consumer -o name)
+```
+
 ---
 
-## Further discussion on Service Binding Requests
+#### Further discussion on Service Binding Requests
 
-To allow the service binding operator to automatically inject the Kafka listeneer and certificates (instead of manually doing so as in [04-deployments.yaml](04-deployments.yaml)), some improvements would be required to the Service Binding Operator and/or the Strimzi operator.
+To allow the service binding operator to automatically gather binding information such as the Kafka listener and certificates, some improvements would be required to the Service Binding Operator and/or the Strimzi operator. A [proposal for service binding support in Strimzi](https://github.com/strimzi/strimzi-kafka-operator/pull/2753) is currently being discussed.
 
 These are illustrated in 2 steps:
 
 ### Step 1 - Improvements only to the Service Binding Operator
 
-[service-binding-step1.yaml](service-binding-step1.yaml) demonstrates what's possible with changes to only the Service Binding Operator. In this case, we bind directly to the secrets created by the Strimzi cluster and user operators to inject the CA certificate, user key and certificate. This means we depend on the names of these secrets, which is an implementation detail of the Strimzi operator.  We also have a complicated Go template expression in order to retrieve the listener from the status attribute of the Kafka CR.
+[service-binding-step1.yaml](./service-binding-step1.yaml) demonstrates what is possible with changes to only the Service Binding Operator. In this case, we bind directly to the secrets created by the Strimzi cluster and user operators to inject the CA certificate, user key and certificate. This means we depend on the names of these secrets, which is an implementation detail of the Strimzi operator. We also have a complicated Go template expression in order to retrieve the listener from the status attribute of the Kafka CR.
 
 This would require the following changes to the Service Binding Operator:
-- [Binding directly to secrets](https://github.com/redhat-developer/service-binding-operator/issues/389)
-- [Refering to multiple backing services by ID](https://github.com/redhat-developer/service-binding-operator/issues/396)
+
+* [Binding directly to secrets](https://github.com/redhat-developer/service-binding-operator/issues/389)
+* [Refering to multiple backing services by ID](https://github.com/redhat-developer/service-binding-operator/issues/396)
 
 ### Stage 2 - Improvements to both Strimzi and the Service Binding Operator
 
-With some changes to Strimzi, the service binding request is a lot nicer, as show in [service-binding-step2.yaml](service-binding-step2.yaml).  We simply have to add the Kafka and KafkaUser CRs as backing services and the Service Binding Operator does all the hard work for us. 
+With some changes to Strimzi, the service binding request is a lot nicer, as show in [service-binding-step2.yaml](service-binding-step2.yaml). We simply have to add the Kafka and KafkaUser CRs as backing services and the Service Binding Operator does all the hard work for us.
 
 This would require the following changes to the Service Binding Operator:
-- [Binding to complex objects in CRs](https://github.com/redhat-developer/service-binding-operator/issues/361)
 
-and the following changes to Strimzi:
-- Exposing the listeners in a more useful way on the status of the Kafka CR. For example, the cluster operator could provide a property containing the concatentated list of listeners of each type.
-- Exposing the secret containing the CA certficiate as an attribute of the status of the Kafka CR
-- Adding the service binding annotations to the above attributes so the service binding operator can discover them.
-- Adding the service binding annotations to the `secret` attribute of the KafkaUser CR so the service binding operator can discover it.
+* [Binding to complex objects in CRs](https://github.com/redhat-developer/service-binding-operator/issues/361)
+
+On the Strimzi Operator side, the [proposal for service binding support in Strimzi](https://github.com/strimzi/strimzi-kafka-operator/pull/2753) lists changes needed to be done.

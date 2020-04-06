@@ -16,8 +16,5 @@ spec:
       version: v1beta1
     - group: kafka.strimzi.io
       kind: KafkaUser
-      resourceRef: coffeeshop-user
+      resourceRef: my-producer
       version: v1beta1
-
-      
-     
