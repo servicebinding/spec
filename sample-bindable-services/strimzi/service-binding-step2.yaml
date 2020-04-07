@@ -3,11 +3,6 @@ kind: ServiceBindingRequest
 metadata:
   name: kafka-producer-binding
 spec:
-  applicationSelector:
-    group: apps
-    resource: deployments
-    resourceRef: kafka-producer
-    version: v1
   # Assumption: Kafka and the application are deployed to the same namespace
   backingServiceSelectors:
     - group: kafka.strimzi.io

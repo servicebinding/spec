@@ -19,6 +19,7 @@ The cluster admin needs to install 2 operators into the cluster:
 
 * Service Binding Operator
 * Strimzi Operator
+* Runtime Component Operator
 
 The [Strimzi Kafka Operator](https://github.com/navidsh/strimzi-kafka-operator) includes service binding metadata suggested by the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator/blob/master/docs/OperatorBestPractices.md) in order to be "bindable". The metadata is added to the operator's `ClusterServiceVersion` and exposes binding information through `secrets`, `status` fields and `spec` parameters.
 
@@ -49,6 +50,10 @@ EOS
 Once the `OperatorSource` is created, the "bindable" Strimzi Operator will be available to install from OperatorHub catalog in OpenShift console.
 
 Then, navigate to the **Operator** → **OperatorHub** in the OpenShift console. Select **Strimzi** operator labelled as "custom" (not "Community") and install on the cluster.
+
+#### Install the Runtime Component Operator
+
+Navigate to the **Operator** → **OperatorHub** in the OpenShift console. Select the `Runtime Component Operator` operator and install a `beta` version. This would install the `RuntimeComponent` *custom resource definition* (CRD) in the cluster.
 
 ### Application Developer
 
@@ -110,22 +115,12 @@ Check the created custom resource:
 oc get kafkausers
 ```
 
-#### Deploy the Producer and the Consumer Applications
+#### Create a Service Binding
 
-To deploy the producer and the consumer applications, create [`Deployment` resources](04-deployments.yaml) in the `service-binding-demo` namespace:
-
-```console
-oc apply -f 04-deployments.yaml
-```
-
-The `Deployment` imports the binding information from the service binding secret created by the Service Binding Operator.
-
-#### Binding Applications to Strimzi
-
-In order to bind the application to the Kafka resources, create [`ServiceBindingRequest` custom resources](./05-service-binding.yaml) in the `service-binding-demo` namespace:
+In order to bind the application to the Kafka resources, create [`ServiceBindingRequest` custom resources](./04-service-binding.yaml) in the `service-binding-demo` namespace:
 
 ```console
-oc apply -f 05-service-binding.yaml
+oc apply -f 04-service-binding.yaml
 ```
 
 This would create two `ServiceBindingRequest`s. The custom resource for the producer application looks as follows:
@@ -163,6 +158,16 @@ There are two interesting parts in the binding requests:
 * `customEnvVar` - specifies the mapping for the environment variables injected into the binding secret.
 
 When the `ServiceBindingRequest` is created the Service Binding Operator's controller collects binding information from the referenced backing services and the `customEnvVar` and then stores into an intermediate Secret called with the same name as the `ServiceBindingRequest`. The `Deployment` resources have pointers to this secret to inject environment variables into the application containers.
+
+#### Deploy the Producer and the Consumer Applications
+
+To deploy the producer and the consumer applications, create [`RuntimeComponent` resources](./05-runtime-component.yaml) in the `service-binding-demo` namespace:
+
+```console
+oc apply -f 05-runtime-component.yaml
+```
+
+The Runtime Component Operator will create `Deployment` resources and defines binding information as environment variables for the application containers with values from the binding secret created by the Service Binding Operator.
 
 #### View Messages
 
