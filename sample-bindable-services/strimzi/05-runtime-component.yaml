@@ -1,0 +1,71 @@
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: kafka-producer
+spec:
+  applicationImage: navidsh/hello-world-producer
+  env:
+    - name: KAFKA_SECRET_CA_CRT
+      valueFrom:
+        secretKeyRef:
+          name: kafka-producer-binding
+          key: KAFKA_SECRET_CA_CRT
+    - name: KAFKAUSER_SECRET_USER_CRT
+      valueFrom:
+        secretKeyRef:
+          name: kafka-producer-binding
+          key: KAFKAUSER_SECRET_USER_CRT
+    - name: KAFKAUSER_SECRET_USER_KEY
+      valueFrom:
+        secretKeyRef:
+          name: kafka-producer-binding
+          key: KAFKAUSER_SECRET_USER_KEY
+    - name: BOOTSTRAP_SERVERS
+      valueFrom:
+        secretKeyRef:
+          name: kafka-producer-binding
+          key: BOOTSTRAP_SERVERS
+    - name: TOPIC
+      value: my-topic
+    - name: NUMBER_OF_KEYS
+      value: "3"
+    - name: DELAY_MS
+      value: "1000"
+    - name: MESSAGE_COUNT
+      value: "1000000"
+---
+apiVersion: app.stacks/v1beta1
+kind: RuntimeComponent
+metadata:
+  name: kafka-consumer
+spec:
+  applicationImage: navidsh/hello-world-consumer
+  env:
+    - name: KAFKA_SECRET_CA_CRT
+      valueFrom:
+        secretKeyRef:
+          name: kafka-consumer-binding
+          key: KAFKA_SECRET_CA_CRT
+    - name: KAFKAUSER_SECRET_USER_CRT
+      valueFrom:
+        secretKeyRef:
+          name: kafka-consumer-binding
+          key: KAFKAUSER_SECRET_USER_CRT
+    - name: KAFKAUSER_SECRET_USER_KEY
+      valueFrom:
+        secretKeyRef:
+          name: kafka-consumer-binding
+          key: KAFKAUSER_SECRET_USER_KEY
+    - name: BOOTSTRAP_SERVERS
+      valueFrom:
+        secretKeyRef:
+          name: kafka-consumer-binding
+          key: BOOTSTRAP_SERVERS
+    - name: TOPIC
+      value: my-topic
+    - name: GROUP_ID
+      value: my-kafka-consumer
+    - name: LOG_LEVEL
+      value: "INFO"
+    - name: MESSAGE_COUNT
+      value: "1000000"
