@@ -54,26 +54,35 @@ This specification supports different scenarios for exposing bindable data. Belo
             - path: data.dbcredentials
               x-descriptors:
                 - urn:alm:descriptor:io.kubernetes:Secret 
-                - servicebinding
+                - servicebinding        
 
-
-      * Individual binding items:
+      * Individual binding items from a `Secret`:
         * ```
             - urn:alm:descriptor:io.kubernetes:Secret 
-            - servicebinding:host
+            - servicebinding:username
           ```
         * ```
             - urn:alm:descriptor:io.kubernetes:Secret 
+            - servicebinding:password
+          ```
+      * Individual binding items from a `ConfigMap`:
+        * ```
+            - urn:alm:descriptor:io.kubernetes:ConfigMap 
             - servicebinding:port
           ```
         * ```
-            - urn:alm:descriptor:io.kubernetes:Secret 
-            - servicebinding:port
-          ```
-        * ```
-            - urn:alm:descriptor:io.kubernetes:Secret 
+            - urn:alm:descriptor:io.kubernetes:ConfigMap 
             - servicebinding:host
           ```
+      * Individual backing items from a path referencing a string value
+       
+        * ```
+            - path: data.uri
+              x-descriptors:
+                - servicebinding 
+          ```
+
+        
         
 
 2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema).  The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
