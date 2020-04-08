@@ -184,19 +184,19 @@
     Descriptor
 
     ```
-    - path: data.url
+    - path: data.uri
     x-descriptors:
-        - servicebinding:url
+        - servicebinding
     ```
 
-7. #### Use the attribute “status.data.url” as “connectionURL” in the binding secret
+7. #### Use the attribute “status.data.“connectionURL” as uri in the binding secret
 
     Requirement: *Extract a string from the Kubernetes resource, and map it to custom name in the binding secret.*
 
     Annotation
 
     ```
-    “servicebinding.dev/connectionURL”: "path={.status.data.url}”
+    “servicebinding.dev/uri: "path={.status.data.connectionURL}”
     ```
 
 
@@ -204,7 +204,7 @@
     Descriptor
 
     ```
-    - path: data.url
+    - path: data.uri
     x-descriptors:
         - servicebinding:connectionURL
     ```

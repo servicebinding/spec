@@ -71,7 +71,7 @@ This specification supports different scenarios for exposing bindable data. Belo
             - servicebinding:port
           ```
         * ```
-            - urn:alm:descriptor:io.kubernetes:ConfigMap 
+            - urn:alm:descriptor:io.kubernetes:ConfigMap
             - servicebinding:host
           ```
       * Individual backing items from a path referencing a string value
@@ -97,16 +97,17 @@ This specification supports different scenarios for exposing bindable data. Belo
 
       * Individual binding items from a `ConfigMap`
         *   ```
-            “servicebinding.dev/host: 
+            “servicebinding.dev/host": 
             “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
             ```
      
         *   ```
-            “servicebinding.dev/port: 
+            “servicebinding.dev/port": 
             “path={.status.data.dbConfiguration},objectType=ConfigMap
             ```
 
       * Individual backing items from a path referencing a string value
+      
         * ```
             “servicebinding.dev/uri”:"path={.status.data.connectionURL}"
           ```
