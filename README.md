@@ -38,7 +38,7 @@ The key/value pairs insides this ConfigMap are:
 
 #### Pointer to binding data
 
-This specification supports different scenarios for exposing bindable data. Below is a summary of [how to indicate what is interesting for binding](annotations.md).
+This specification supports different scenarios for exposing bindable data. Below is a summary of how to indicate what is interesting for binding.  Please see the [annotation section](annotations.md) for the full set with more details.
 
 1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
     * The reference's `x-descriptors` with a possible combination of:
@@ -107,7 +107,7 @@ This specification supports different scenarios for exposing bindable data. Belo
             ```
 
       * Individual backing items from a path referencing a string value
-      
+
         * ```
             “servicebinding.dev/uri”:"path={.status.data.connectionURL}"
           ```
