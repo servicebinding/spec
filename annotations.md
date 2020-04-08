@@ -185,7 +185,7 @@
 
     ```
     - path: data.uri
-    x-descriptors:
+      x-descriptors:
         - servicebinding
     ```
 
@@ -225,6 +225,6 @@
 
     ```
     - path: bootstrap
-    x-descriptors:
+      x-descriptors:
         - servicebinding:endpoints:elementType=sliceOfMaps:sourceKey=type:sourceValue=url
     ```
