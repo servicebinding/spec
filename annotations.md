@@ -75,7 +75,7 @@
 
     ```
     - path: data.dbcredentials
-    x-descriptors:
+      x-descriptors:
         - urn:alm:descriptor:io.kubernetes:Secret 
         - servicebinding
     ```
@@ -97,7 +97,7 @@
 
     ```
     - path: data.dbConfiguration
-    x-descriptors:
+      x-descriptors:
         - urn:alm:descriptor:io.kubernetes:ConfigMap 
         - servicebinding
     ```
@@ -120,7 +120,7 @@
 
     ```
     - path: data.dbConfiguration
-    x-descriptors:
+      x-descriptors:
         - urn:alm:descriptor:io.kubernetes:ConfigMap 
         - servicebinding:certificate:bindAs=volume
     ```
@@ -144,7 +144,7 @@
 
     ```
     - path: data.dbConfiguration
-    x-descriptors:
+      x-descriptors:
         - urn:alm:descriptor:io.kubernetes:ConfigMap 
         - servicebinding:certificate:bindAs=volume
     ```
@@ -166,7 +166,7 @@
 
     ```
     - path: data.dbConfiguration
-    x-descriptors:
+      x-descriptors:
         - urn:alm:descriptor:io.kubernetes:ConfigMap 
         - servicebinding:timeout:sourceKey=db_timeout
     ```
@@ -205,7 +205,7 @@
 
     ```
     - path: data.uri
-    x-descriptors:
+      x-descriptors:
         - servicebinding:connectionURL
     ```
 
