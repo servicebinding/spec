@@ -38,34 +38,70 @@ The key/value pairs insides this ConfigMap are:
 
 #### Pointer to binding data
 
-This specification supports different scenarios for exposing bindable data.  
+This specification supports different scenarios for exposing bindable data. Below is a summary of [how to indicate what is interesting for binding](annotations.md).
 
 1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
     * The reference's `x-descriptors` with a possible combination of:
       * ConfigMap:
-        * `servicebinding:configMap`
-      * Secret:
-        * `servicebinding:secret`
-      * Individual binding items:
-        * `servicebinding:secret:host`
-        * `servicebinding:secret:port`
-        * `servicebinding:secret:endpoints`
-        * `servicebinding:secret:uri`
-        * `servicebinding:secret:<binding_property>`  (where `<binding_property>` is any property from the binding schema)
+        
+            - path: data.dbcredentials
+              x-descriptors:
+                - urn:alm:descriptor:io.kubernetes:ConfigMap 
+                - servicebinding
 
-2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` properties reference the [binding data](#service-binding-schema).  The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
+      * Secret:
+
+            - path: data.dbcredentials
+              x-descriptors:
+                - urn:alm:descriptor:io.kubernetes:Secret 
+                - servicebinding
+
+
+      * Individual binding items:
+        * ```
+            - urn:alm:descriptor:io.kubernetes:Secret 
+            - servicebinding:host
+          ```
+        * ```
+            - urn:alm:descriptor:io.kubernetes:Secret 
+            - servicebinding:port
+          ```
+        * ```
+            - urn:alm:descriptor:io.kubernetes:Secret 
+            - servicebinding:port
+          ```
+        * ```
+            - urn:alm:descriptor:io.kubernetes:Secret 
+            - servicebinding:host
+          ```
+        
+
+2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema).  The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
       * ConfigMap:
-        * servicebinding/configMap: {.status.bindable.ConfigMap}
-      * Secret:
-        * servicebinding/secret: {.status.bindable.Secret}
-      * Individual binding items:
-        * servicebinding/secret/host: {.status.address}
-        * servicebinding/secret/`<binding_property>`: {.status.`<status_property>}` (where `<binding_property>` is any property from the binding schema, and `<status_property>` refers to the path to the correspoding `status` property)
+        *   ```
+             "servicebinding.dev/certificate":
+             "path={.status.data.dbConfiguration},objectType=ConfigMap"
+            ```
 
-3. Regular k8s Deployment (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding CR that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema). The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/):
-      * servicebinding/secret/host: {.status.ingress.host}
-      * servicebinding/secret/host: {.status.address}
-      * servicebinding/secret/`<binding_property>`: `<property_path>` (where `<binding_property>` is any property from the binding schema, and `<property_path>` refers to the path to the correspoding `status`, `spec` or `data` property)
+      * Secret:
+        *   ```
+             "servicebinding.dev/dbCredentials":
+             "path={.status.data.dbCredentials},objectType=Secret"
+            ```
+      * Individual binding items:
+        *   ```
+            “servicebinding.dev/host: 
+            “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
+            ```
+     
+        *   ```
+            “servicebinding.dev/port: 
+            “path={.status.data.dbConfiguration},objectType=ConfigMap
+            ```
+      
+3. Regular k8s resources (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding Kubernetes resources that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema). The value of this annotation can be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/)
+
+All annotations used in CRDs in the above section can be used for regular k8s resources, as well.
 
 The above pattern can be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details. 
 
