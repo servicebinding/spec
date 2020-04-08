@@ -16,19 +16,17 @@
 
 ### Data model : Building blocks for expressing binding information
 
-* `path`: A template representation of the path to the element in the Kubernetes resource.
+* `path`: A template representation of the path to the element in the Kubernetes resource. The value of `path` could be specified in either [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/) or [GO templates](https://golang.org/pkg/text/template/)
 
-* `elementType`: Specifies if the value of the element referenced in `path` is of type `string` / `sliceOfStrings` / `sliceOfMaps`. 
+* `elementType`: Specifies if the value of the element referenced in `path` is of type `string` / `sliceOfStrings` / `sliceOfMaps`. Defaults to `string` if omitted.
 
-* `objectType`: Specifies if the value of the element indicated in `path` refers to a `configMap`, `Secret` or a plain string in the current namespace! 
+* `objectType`: Specifies if the value of the element indicated in `path` refers to a `configMap`, `secret` or a plain string in the current namespace!  Defaults to `secret` if omitted and `elementType` is a non-`string`.
 
-* `bindAs`: Specifies if the element is to be bound as an environment variable or a volume mount.
+* `bindAs`: Specifies if the element is to be bound as an environment variable or a volume mount using the keywords `envVar` and `volume`, respectively. Defaults to `envVar` if omitted.
 
-* `destinationKey`: Specifies what the relevant `sourceKey` needs to be added as, in the binding secret.
+* `sourceKey`: Specifies the key in the configmap/secret that is be added to the binding secret. When used in conjunction with `elementType`=`sliceOfMaps`, `sourceKey` specifies the key in the slice of maps whose value would be used as a key in the binding secret. This optional field is the operator author intends to express that only when a specific field in the referenced `secret`/`configMap` is bindable.
 
-* `sourceKey`: Specifies the key in the configmap/secret that is be added to the binding secret. When used in conjunction with `elementType`=`sliceOfMaps`, `sourceKey` specifies the key in the slice of maps whose value would be used as a key in the binding secret.
-
-* `sourceValue`: Specifies the key in the slice of maps whose value would be used as the value, corresponding to the value of the `sourceKey` which is added as the key, in the binding secret.
+* `sourceValue`: Specifies the key in the slice of maps whose value would be used as the value, corresponding to the value of the `sourceKey` which is added as the key, in the binding secret. Mandatory only if `elementType` is `sliceOfMaps`.
 
 
 ### A Sample CR : The Kubernetes resource that the appliaction would bind to
