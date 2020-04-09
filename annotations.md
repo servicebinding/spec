@@ -175,7 +175,7 @@
     Annotation
 
     ```
-    “servicebinding.dev/uri”:"path={.status.data.uri}"
+    “servicebinding.dev/uri”:"path={.status.data.url}"
     ```
 
     Descriptor
