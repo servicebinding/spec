@@ -29,7 +29,7 @@
 * `sourceValue`: Specifies the key in the slice of maps whose value would be used as the value, corresponding to the value of the `sourceKey` which is added as the key, in the binding Secret. Mandatory only if `elementType` is `sliceOfMaps`.
 
 
-### A Sample CR : The Kubernetes resource that the appliaction would bind to
+### A Sample CR : The Kubernetes resource that the application would bind to
 
 ```
     apiVersion: apps.kube.io/v1beta1
@@ -120,7 +120,7 @@
     - path: data.dbConfiguration
       x-descriptors:
         - urn:alm:descriptor:io.kubernetes:ConfigMap 
-        - servicebinding:certificate:bindAs=volume
+        - servicebinding:certificate:bindAs=envVar
     ```
 
 
@@ -137,8 +137,7 @@
     ```
 
 
-    Descriptor
-
+    Descriptor      
 
     ```
     - path: data.dbConfiguration
@@ -176,7 +175,7 @@
     Annotation
 
     ```
-    “servicebinding.dev/url”:"path={.status.data.url}"
+    “servicebinding.dev/uri”:"path={.status.data.uri}"
     ```
 
     Descriptor
@@ -202,9 +201,9 @@
     Descriptor
 
     ```
-    - path: data.uri
+    - path: data.connectionURL
       x-descriptors:
-        - servicebinding:connectionURL
+        - servicebinding:uri
     ```
 
 8. #### Use specific elements from the CR’s “status.bootstrap” to produce key/value pairs in the  binding Secret
