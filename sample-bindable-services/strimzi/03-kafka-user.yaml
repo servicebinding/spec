@@ -1,0 +1,49 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaUser
+metadata:
+  name: my-consumer
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: my-topic
+        operation: Read
+      - resource:
+          type: topic
+          name: my-topic
+        operation: Describe
+      - resource:
+          type: group
+          name: my-kafka-consumer
+        operation: Read
+---
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaUser
+metadata:
+  name: my-producer
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: my-topic
+        operation: Write
+      - resource:
+          type: topic
+          name: my-topic
+        operation: Create
+      - resource:
+          type: topic
+          name: my-topic
+        operation: Describe

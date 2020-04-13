@@ -1,0 +1,34 @@
+apiVersion: apps.openshift.io/v1alpha1
+kind: ServiceBindingRequest
+metadata:
+  name: kafka-producer-binding
+spec:
+  # Assumption: Kafka and the application are deployed to the same namespace
+  backingServiceSelectors:
+    - group: kafka.strimzi.io
+      kind: Kafka
+      resourceRef: my-cluster
+      version: v1beta1
+      id: cluster
+    # Dependency on the names of these secrets - implementation detail!  
+    - group: ''
+      kind: Secret
+      resourceRef: my-cluster-cluster-ca-cert
+      version: v1beta1
+    - group: ''
+      kind: Secret
+      resourceRef: my-producer
+      version: v1beta1
+  customEnvVar:
+    - name: BOOTSTRAP_SERVERS
+      value: |-
+        {{- range cluster.status.listeners -}}
+          {{- if and (eq .type "plain") (gt (len .addresses) 0) -}}
+            {{- with (index .addresses 0) -}}
+              {{ .host }}:{{ .port }}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+
+    
+  
