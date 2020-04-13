@@ -18,7 +18,7 @@ Specification for binding services to runtime applications running in Kubernetes
 
 ## Proposal
 
-Main section of the doc.  Has sub-sections that outline the design.
+The following sections outline the details of the specification.
 
 ### Making a service bindable
 
@@ -28,48 +28,17 @@ For a service to be bindable it **MUST** comply with one-of:
 * map its `status`, `spec`, `data` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
 * include a sample `ServiceBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding [binding data](#service-binding-schema).  This option allows existing services to be bindable with zero code changes.
 
+The service **MUST** also make itself discoverable by complying with one-of:
+* In the case of an OLM-based Operator, add `Bindable` to the CSV's `metadata.annotations.categories`.
+* In the case of a Helm chart service, add bindable to the Chart.yaml's keyword list.
+* In all other cases, add the `servicebinding/bindable: "true"` annotation to your CRD or any CR (Secret, Service, etc).
+
 #### Recommended
 In addition to the minimum set above, a bindable service **SHOULD** provide:
 * a ConfigMap (which could be the same as the one holding some of the binding data, if applicable) that describes metadata associated with each of the items referenced in the Secret.  The bindable service should also provide a reference to this ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
 
 The key/value pairs insides this ConfigMap are:
 * A set of `metadata.<property>=<value>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
-
-#### Making services discoverable
-
-The requirements above allow a bindable service to be discovered and processed by an implementation of this specification (such as the reference implementation, Service Binding Operator).  However, there is a desire for external tools to quickly query a list of bindable services without requiring them to process all of the scenarios outlined in this specification.  With this in mind, a further recommendation for bindable services is to add the following annotation to its bindable resource:
-
-```
-servicebinding/bindable: "true"
-```
-
-As an example, 
-
-```
-apiVersion: kafka.strimzi.io/v1alpha1
-kind: Kafka
-metadata:
-  name: my-cluster
-  annotations:
-    servicebinding/bindable: "true"
-spec:
-   ...
-```
-
-This allows a tool to quickly query k8s resources that have this annotation, and upon finding them they can easily construct the corresponding `services` entry in a `ServiceBinding` CR:
-
-```
-kind: ServiceBinding
-metadata:
-  name: bindind-example
-spec:
-  services:
-    - group: kafka.strimzi.io
-      kind: Kafka
-      resourceRef: my-cluster
-      version: v1aplha1
-...
-```
 
 #### Pointer to binding data
 
