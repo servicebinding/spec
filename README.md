@@ -141,7 +141,7 @@ The data that is injected or mounted into the container may have a different nam
 * a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
 * a prefix may have been added to certain items in `ServiceBinding`, via the usage of the `id` attribute for a specific backing service, or via the global `envVarPrefix` flag.
 
-Application should rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injection-binding-information).
+Application should rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
 
 
 ### Request service binding
@@ -208,7 +208,7 @@ Example of a partial CR:
 ```
 
 
-### Mounting and injection binding information
+### Mounting and injecting binding information
 
 This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidently exposure via environment dumps and subprocesses. 
 
@@ -217,7 +217,7 @@ The decision to mount vs inject is made in the following ascending order of prec
 * value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
 * value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
 
-#### Injected data
+#### Injecting data
 
 The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with a simple map, where the key points to an available service binding item and the value equals either `envVar` or `volume:<path>`.  Example:
 
@@ -228,7 +228,7 @@ The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MU
 In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is also available as an environment variable, and that `KAFKA_PASSWORD` is avallable as a mounted file inside the directory `/platform/bindings/secret/`.
 
 
-#### Mouting data
+#### Mounting data
 Implementations of this specification must bind the following data into the consuming application container:
 
 ```
