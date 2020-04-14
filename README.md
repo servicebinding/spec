@@ -219,13 +219,26 @@ The decision to mount vs inject is made in the following ascending order of prec
 
 #### Injecting data
 
-The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with a simple map, where the key points to an available service binding item and the value equals either `envVar` or `volume:<path>`.  Example:
+The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with an object for each binding key available, containing its `bindAs` type and optionally the `mountPath` (if it is bound as a volume).
+
+Example:
 
 ```
-{ "KAFKA_USERNAME": "envVar", "KAFKA_PASSWORD": "volume:/platform/bindings/secret/" }
+SERVICE_BINDINGS=
+ {
+  "KAFKA_USERNAME":
+    {
+      "bindAs": "envVar"
+    },
+  "KAFKA_PASSWORD":
+    {
+      "bindAs": "volume",
+      "mountPath": "/platform/bindings/secret/"
+    }
+}    
 ```
 
-In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is also available as an environment variable, and that `KAFKA_PASSWORD` is avallable as a mounted file inside the directory `/platform/bindings/secret/`.
+In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is avallable as a mounted file inside the directory `/platform/bindings/secret/`.
 
 
 #### Mounting data
