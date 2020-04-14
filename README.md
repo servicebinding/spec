@@ -30,13 +30,6 @@ A bindable service **MUST** comply with one-of:
   * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).  
   * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
 
-#### Recommended requirements for being bindable
-In addition to the minimum set above, a bindable service **SHOULD** provide:
-* a ConfigMap (which could be the same as the one holding some of the binding data, if applicable) that describes metadata associated with each of the items referenced in the Secret.  The bindable service should also provide a reference to this ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
-
-The key/value pairs insides this ConfigMap are:
-* A set of `metadata.<property>=<value>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
-
 
 #### Pointer to binding data
 
@@ -152,14 +145,8 @@ Binding is requested by the consuming application, or an entity on its behalf su
 
 Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds), as the entity that holds the binding request.  
 
-**Temporary Note**
-To ensure a better fit with the specification a few modifications have been proposed to the `ServiceBinding` CRD:
-* A modification to its API group, to be independent from OpenShift. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/364))
-* A simplification of its CRD name to `ServiceBinding` (we are already using this name in the spec). ([ref](https://github.com/redhat-developer/service-binding-operator/issues/365))
-* Renaming `customEnvVar` to `dataMapping`. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/356#issuecomment-595943295))
-* Allowing for the `application` selector to be omitted, for the cases where another Operator owns the deployment. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/296))
-* Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/355))
-* Not related to the CRD, but directly related to how this spec approaches item 1 from [Pointer to binding data](#pointer-to-binding-data), in terms of referencing a nested property.  ([ref](https://github.com/redhat-developer/service-binding-operator/issues/361))
+**Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, track [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
+
 
 #### Security
 
@@ -247,20 +234,9 @@ In the example above, the application can query the environment variable `SERVIC
 Implementations of this specification must bind the following data into the consuming application container:
 
 ```
-<mountPathPrefix>/bindings/metadata/<persisted_configMap>
-<mountPathPrefix>/bindings/request/<ServiceBinding_CR>
 <mountPathPrefix>/bindings/secret/<persisted_secret>
 ```
 
 Where:
 * `<mountPathPrefix>` defaults to `platform` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.
-* `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
-* `<ServiceBinding_CR>` represents the requested `ServiceBinding` CR.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
-
-
-### Extra:  Consuming binding
-
-*  How are application expected to consume binding information 
-*  Each framework may take a different approach, so this is about samples & recommendations (best practices)
-*  Validates the design
