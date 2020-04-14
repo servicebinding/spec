@@ -145,7 +145,7 @@ Binding is requested by the consuming application, or an entity on its behalf su
 
 Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds), as the entity that holds the binding request.  
 
-**Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, track [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
+**Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, tracked [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
 
 
 #### Security
