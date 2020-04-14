@@ -138,11 +138,12 @@ The core set of binding data is:
 
 Extra binding properties **can** also be defined (preferably with corresponding ConfigMap metadata) by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
 
-#### ID prefix
+The data that is injected or mounted into the container may have a different name because of a few reasons:
+* the backing service may have chosen a different name (discouraged, but allowed).
+* a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
+* a prefix may have been added to certain items in `ServiceBinding`, via the usage of the `id` attribute for a specific backing service, or via the global `envVarPrefix` flag.
 
-Applications can consume various services, so while the bindable services provide data using the schema above there must be a way to distinguish them from the consumer side.  This is accomplished via a prefix in the form of `<id>_<property>`, where `<id>` refers to the service's ID as defined in the `ServiceBinding` CR, and `<property>` refers to one of the binding data.  
-
-Therefore implementations of this specification **MUST** add the ID prefix to binding data before mounting, as defined in [Mounting binding information](#mounting-binding-information).  If implementations choose to also support injecting the mouting data as environment variables (beyond the scope of this specification), it must also add the ID prefix.
+Application should rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
 
 
 ### Request service binding
@@ -209,18 +210,50 @@ Example of a partial CR:
 ```
 
 
-### Mounting binding information
+### Mounting and injecting binding information
 
+This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidently exposure via environment dumps and subprocesses.  Also, binding binary data (e.g. .p12 certificate for Kafka) as an environment variable might cause a pod to fail to start (stuck on `CrashLoopBackOff`), so it advisable for backing services with such binding data to mark it with `bindAs: volume`.
+
+The decision to mount vs inject is made in the following ascending order of precedence:
+* value of the `bindAs` attribute in the backing service as defined in its [annotations](annotations.md#data-model--building-blocks-for-expressing-binding-information), applying to the binding item referenced by the annotation.
+* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
+* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
+
+#### Injecting data
+
+The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with an object for each binding key available, containing its `bindAs` type and optionally the `mountPath` (if it is bound as a volume).
+
+Example:
+
+```
+SERVICE_BINDINGS=
+ {
+  "KAFKA_USERNAME":
+    {
+      "bindAs": "envVar"
+    },
+  "KAFKA_PASSWORD":
+    {
+      "bindAs": "volume",
+      "mountPath": "/platform/bindings/secret/"
+    }
+}    
+```
+
+In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is avallable as a mounted file inside the directory `/platform/bindings/secret/`.
+
+
+#### Mounting data
 Implementations of this specification must bind the following data into the consuming application container:
 
 ```
-<path>/bindings/metadata/<persisted_configMap>
-<path>/bindings/request/<ServiceBinding_CR>
-<path>/bindings/secret/<persisted_secret>
+<mountPathPrefix>/bindings/metadata/<persisted_configMap>
+<mountPathPrefix>/bindings/request/<ServiceBinding_CR>
+<mountPathPrefix>/bindings/secret/<persisted_secret>
 ```
 
 Where:
-* `<path>` defaults to `platform` if not specified in the `ServiceBinding` CR.
+* `<mountPathPrefix>` defaults to `platform` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.
 * `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
 * `<ServiceBinding_CR>` represents the requested `ServiceBinding` CR.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
