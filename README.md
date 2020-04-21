@@ -52,61 +52,49 @@ This specification supports different scenarios for exposing bindable data. Belo
                 - servicebinding        
 
       * Individual binding items from a `Secret`:
-        * ```
+      
             - urn:alm:descriptor:io.kubernetes:Secret 
             - servicebinding:username
-          ```
-        * ```
+          
             - urn:alm:descriptor:io.kubernetes:Secret 
             - servicebinding:password
-          ```
+          
       * Individual binding items from a `ConfigMap`:
-        * ```
+      
             - urn:alm:descriptor:io.kubernetes:ConfigMap 
             - servicebinding:port
-          ```
-        * ```
+
             - urn:alm:descriptor:io.kubernetes:ConfigMap
             - servicebinding:host
-          ```
+            
       * Individual backing items from a path referencing a string value
-       
-        * ```
+      
             - path: data.uri
               x-descriptors:
                 - servicebinding 
-          ```
-
+          
 2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema) :
       * ConfigMap:
-        *   ```
-             "servicebinding.dev/certificate":
-             "path={.status.data.dbConfiguration},objectType=ConfigMap"
-            ```
-
+      
+            "servicebinding.dev/certificate":
+            "path={.status.data.dbConfiguration},objectType=ConfigMap"
+     
       * Secret:
-        *   ```
-             "servicebinding.dev/dbCredentials":
-             "path={.status.data.dbCredentials},objectType=Secret"
-            ```
+      
+            "servicebinding.dev/dbCredentials":
+            "path={.status.data.dbCredentials},objectType=Secret"
 
       * Individual binding items from a `ConfigMap`
-        *   ```
+
             “servicebinding.dev/host": 
-            “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
-            ```
-     
-        *   ```
+             “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
+
             “servicebinding.dev/port": 
             “path={.status.data.dbConfiguration},objectType=ConfigMap
-            ```
 
       * Individual backing items from a path referencing a string value
 
-        * ```
             “servicebinding.dev/uri”:"path={.status.data.connectionURL}"
-          ```
-
       
 3. Regular k8s resources (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding Kubernetes resources that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema). 
 
