@@ -199,7 +199,7 @@ Example of a partial CR:
 
 ### Mounting and injecting binding information
 
-This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidently exposure via environment dumps and subprocesses.  Also, binding binary data (e.g. .p12 certificate for Kafka) as an environment variable might cause a pod to fail to start (stuck on `CrashLoopBackOff`), so it advisable for backing services with such binding data to mark it with `bindAs: volume`.
+This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidentally exposure via environment dumps and subprocesses.  Also, binding binary data (e.g. .p12 certificate for Kafka) as an environment variable might cause a pod to fail to start (stuck on `CrashLoopBackOff`), so it advisable for backing services with such binding data to mark it with `bindAs: volume`.
 
 The decision to mount vs inject is made in the following ascending order of precedence:
 * value of the `bindAs` attribute in the backing service as defined in its [annotations](annotations.md#data-model--building-blocks-for-expressing-binding-information), applying to the binding item referenced by the annotation.
@@ -208,27 +208,27 @@ The decision to mount vs inject is made in the following ascending order of prec
 
 #### Injecting data
 
-The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with an object for each binding key available, containing its `bindAs` type and optionally the `mountPath` (if it is bound as a volume).
+The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with `bindingKeys` key name containing a list of all available binding information available. Each item of the `bindingKeys` list includes an object containing `name`, `bindAs` and an optional `mountPath` (if it is bound as a volume).
 
 Example:
 
-```
-SERVICE_BINDINGS=
- {
-  "KAFKA_USERNAME":
+```json
+SERVICE_BINDINGS = {
+  "bindingKeys": [
     {
+      "name": "KAFKA_USERNAME",
       "bindAs": "envVar"
     },
-  "KAFKA_PASSWORD":
     {
+      "name": "KAFKA_PASSWORD",
       "bindAs": "volume",
       "mountPath": "/platform/bindings/secret/"
     }
-}    
+  ]
+}
 ```
 
-In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is avallable as a mounted file inside the directory `/platform/bindings/secret/`.
-
+In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is available as a mounted file inside the directory `/platform/bindings/secret/`.
 
 #### Mounting data
 Implementations of this specification must bind the following data into the consuming application container:
