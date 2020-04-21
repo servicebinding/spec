@@ -35,21 +35,21 @@
     apiVersion: apps.kube.io/v1beta1
     kind: Database
     metadata:
-    name: my-cluster
+      name: my-cluster
     spec:
     ...
-    status:
+      status:
         bootstrap:   
-            - type: plain   
-    	      url: myhost2.example.com
-              name: hostGroup1
-            - type: tls
-    	      url: myhost1.example.com:9092,myhost2.example.com:9092
-              name: hostGroup2
+          - type: plain   
+            url: myhost2.example.com
+            name: hostGroup1
+          - type: tls
+            url: myhost1.example.com:9092,myhost2.example.com:9092
+            name: hostGroup2
         data:
-            dbConfiguration: database-config  # configmap 
-            dbCredentials: database-cred-Secret # Secret
-            url: db.stage.ibm.com
+          dbConfiguration: database-config  # configmap 
+          dbCredentials: database-cred-Secret # Secret
+          url: db.stage.ibm.com
 ```
 
 
@@ -224,4 +224,63 @@
     - path: bootstrap
       x-descriptors:
         - servicebinding:endpoints:elementType=sliceOfMaps:sourceKey=type:sourceValue=url
+    ```
+
+9. #### Use Go template to produce key/value pairs in the binding Secret <kbd>EXPERIMENTAL</kbd>
+
+    Requirement: *Extract binding information from the Kubernetes resource using Go templates and generate multiple fields in the binding Secret.*
+
+    A sample Kafka CR:
+
+    ```
+    apiVersion: kafka.strimzi.io/v1alpha1
+    kind: Kafka
+    metadata:
+      name: my-cluster
+    ...
+    status:
+      listeners:
+        - type: plain
+          addresses:
+            - host: my-cluster-kafka-bootstrap.service-binding-demo.svc
+              port: 9092
+            - host: my-cluster-kafka-bootstrap.service-binding-demo.svc
+              port: 9093
+        - type: tls
+          addresses:
+            - host: my-cluster-kafka-bootstrap.service-binding-demo.svc
+              port: 9094
+    ```
+
+    Go Template:
+    ```
+    {{- range $idx1, $lis := .status.listeners -}}
+      {{- range $idx2, $adr := $el1.addresses -}}
+        {{ $lis.type }}_{{ $idx2 }}={{ printf "%s:%s\n" "$adr.host" "$adr.port" | b64enc | quote }}
+      {{- end -}}
+    {{- end -}}
+    ```
+
+    The above Go template produces the following string when executed on the sample Kafka CR:
+    ```
+    plain_0="<base64 encoding of my-cluster-kafka-bootstrap.service-binding-demo.svc:9092>"
+    plain_1="<base64 encoding of my-cluster-kafka-bootstrap.service-binding-demo.svc:9093>"
+    tls_0="<base64 encoding of my-cluster-kafka-bootstrap.service-binding-demo.svc:9094>"
+    ```
+
+    The string can then be parsed into key-value pairs to be added into the final binding secret. The Go template above can be written as one-liner and added as `{{GO TEMPLATE}}` in the annotation and descriptor below.
+
+    Annotation
+
+    ```
+    “servicebinding.dev/endpoints”:
+    "path={.status.listeners},elementType=template,source={{GO TEMPLATE}}"
+    ```
+
+    Descriptor
+
+    ```
+    - path: listeners
+      x-descriptors:
+        - servicebinding:elementType=template:source={{GO TEMPLATE}}
     ```
