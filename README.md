@@ -26,21 +26,14 @@ The following sections outline the details of the specification.
 A bindable service **MUST** comply with one-of:
 * provide a Secret and/or ConfigMap that contains the [binding data](#service-binding-schema) and reference this Secret and/or ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data). 
 * map its `status`, `spec`, `data` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
-* include a sample `ServiceBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains a `dataMapping` illustrating how each of its `status` properties map to the corresponding [binding data](#service-binding-schema).  This option allows existing services to be bindable with zero code changes.
-
+* include a sample `ServiceBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
+  * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).  
+  * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
 
 The service **MUST** also make itself discoverable by complying with one-of:
 * In the case of an OLM-based Operator, add `Bindable` to the CSV's `metadata.annotations.categories`.
 * In the case of a Helm chart service, add bindable to the Chart.yaml's keyword list.
 * In all other cases, add the `servicebinding/bindable: "true"` annotation to your CRD or any CR (Secret, Service, etc).
-
-
-#### Recommended requirements for being bindable
-In addition to the minimum set above, a bindable service **SHOULD** provide:
-* a ConfigMap (which could be the same as the one holding some of the binding data, if applicable) that describes metadata associated with each of the items referenced in the Secret.  The bindable service should also provide a reference to this ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
-
-The key/value pairs insides this ConfigMap are:
-* A set of `metadata.<property>=<value>` - where `<property>` maps to one of the defined keys for this service, and `<value>` represents the description of the value.  For example, this is useful to define what format the `password` key is in, such as apiKey, basic auth password, token, etc.
 
 #### Pointer to binding data
 
@@ -142,11 +135,12 @@ The core set of binding data is:
 
 Extra binding properties **can** also be defined (preferably with corresponding ConfigMap metadata) by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
 
-#### ID prefix
+The data that is injected or mounted into the container may have a different name because of a few reasons:
+* the backing service may have chosen a different name (discouraged, but allowed).
+* a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
+* a prefix may have been added to certain items in `ServiceBinding`, via the usage of the `id` attribute for a specific backing service, or via the global `envVarPrefix` flag.
 
-Applications can consume various services, so while the bindable services provide data using the schema above there must be a way to distinguish them from the consumer side.  This is accomplished via a prefix in the form of `<id>_<property>`, where `<id>` refers to the service's ID as defined in the `ServiceBinding` CR, and `<property>` refers to one of the binding data.  
-
-Therefore implementations of this specification **MUST** add the ID prefix to binding data before mounting, as defined in [Mounting binding information](#mounting-binding-information).  If implementations choose to also support injecting the mouting data as environment variables (beyond the scope of this specification), it must also add the ID prefix.
+Application should rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
 
 
 ### Request service binding
@@ -155,14 +149,8 @@ Binding is requested by the consuming application, or an entity on its behalf su
 
 Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds), as the entity that holds the binding request.  
 
-**Temporary Note**
-To ensure a better fit with the specification a few modifications have been proposed to the `ServiceBinding` CRD:
-* A modification to its API group, to be independent from OpenShift. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/364))
-* A simplification of its CRD name to `ServiceBinding` (we are already using this name in the spec). ([ref](https://github.com/redhat-developer/service-binding-operator/issues/365))
-* Renaming `customEnvVar` to `dataMapping`. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/356#issuecomment-595943295))
-* Allowing for the `application` selector to be omitted, for the cases where another Operator owns the deployment. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/296))
-* Addition of fields such as `serviceAccount` and `subscriptionSecret` that support more advanced binding cases. ([ref](https://github.com/redhat-developer/service-binding-operator/issues/355))
-* Not related to the CRD, but directly related to how this spec approaches item 1 from [Pointer to binding data](#pointer-to-binding-data), in terms of referencing a nested property.  ([ref](https://github.com/redhat-developer/service-binding-operator/issues/361))
+**Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, tracked [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
+
 
 #### Security
 
@@ -213,25 +201,46 @@ Example of a partial CR:
 ```
 
 
-### Mounting binding information
+### Mounting and injecting binding information
 
+This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidently exposure via environment dumps and subprocesses.  Also, binding binary data (e.g. .p12 certificate for Kafka) as an environment variable might cause a pod to fail to start (stuck on `CrashLoopBackOff`), so it advisable for backing services with such binding data to mark it with `bindAs: volume`.
+
+The decision to mount vs inject is made in the following ascending order of precedence:
+* value of the `bindAs` attribute in the backing service as defined in its [annotations](annotations.md#data-model--building-blocks-for-expressing-binding-information), applying to the binding item referenced by the annotation.
+* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
+* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
+
+#### Injecting data
+
+The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with an object for each binding key available, containing its `bindAs` type and optionally the `mountPath` (if it is bound as a volume).
+
+Example:
+
+```
+SERVICE_BINDINGS=
+ {
+  "KAFKA_USERNAME":
+    {
+      "bindAs": "envVar"
+    },
+  "KAFKA_PASSWORD":
+    {
+      "bindAs": "volume",
+      "mountPath": "/platform/bindings/secret/"
+    }
+}    
+```
+
+In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is avallable as a mounted file inside the directory `/platform/bindings/secret/`.
+
+
+#### Mounting data
 Implementations of this specification must bind the following data into the consuming application container:
 
 ```
-<path>/bindings/metadata/<persisted_configMap>
-<path>/bindings/request/<ServiceBinding_CR>
-<path>/bindings/secret/<persisted_secret>
+<mountPathPrefix>/bindings/secret/<persisted_secret>
 ```
 
 Where:
-* `<path>` defaults to `platform` if not specified in the `ServiceBinding` CR.
-* `<persisted_configMap>` represents a set of files where the filename is a ConfigMap key and the file contents is the corresponding value of that key.  This is optional, as the ConfigMap is not mandatory.
-* `<ServiceBinding_CR>` represents the requested `ServiceBinding` CR.
+* `<mountPathPrefix>` defaults to `platform` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
-
-
-### Extra:  Consuming binding
-
-*  How are application expected to consume binding information 
-*  Each framework may take a different approach, so this is about samples & recommendations (best practices)
-*  Validates the design
