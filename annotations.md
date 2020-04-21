@@ -273,7 +273,7 @@
     Annotation
 
     ```
-    “servicebinding.dev/endpoints”:
+    “servicebinding.dev:
     "path={.status.listeners},elementType=template,source={{GO TEMPLATE}}"
     ```
 
