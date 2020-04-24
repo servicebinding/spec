@@ -18,7 +18,7 @@ Specification for binding services to runtime applications running in Kubernetes
 
 ## Proposal
 
-Main section of the doc.  Has sub-sections that outline the design.
+The following sections outline the details of the specification.
 
 ### Making a service bindable
 
@@ -30,6 +30,10 @@ A bindable service **MUST** comply with one-of:
   * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).  
   * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
 
+<kbd>EXPERIMENTAL</kbd>The service **MUST** also make itself discoverable by complying with one-of:
+* In the case of an OLM-based Operator, add `Bindable` to the CSV's `metadata.annotations.categories`.
+* In the case of a Helm chart service, add bindable to the Chart.yaml's keyword list.
+* In all other cases, add the `servicebinding/bindable: "true"` annotation to your CRD or any CR (Secret, Service, etc).
 
 #### Pointer to binding data
 
