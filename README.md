@@ -119,14 +119,14 @@ The core set of binding data is:
 * **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
 * **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
 * **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[<basePath>]`.
-* **roleNeeded** - the name of the role needed to fetch the Secret containing the binding data.  In this scenario, a k8s Service Account with the appropriate role must be passed into the binding request (see the [RBAC](#rbac) section below).
+* <kbd>EXPERIMENTAL</kbd>**bindingRole** - the name of the role needed to read the binding data exposed from this bindable service.  Implementations of this specification **can** enforce that only those with the appropriate roles are allowed to access the binding data.
 
-Extra binding properties **can** also be defined (preferably with corresponding ConfigMap metadata) by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
+Extra binding properties **can** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
 
 The data that is injected or mounted into the container may have a different name because of a few reasons:
 * the backing service may have chosen a different name (discouraged, but allowed).
 * a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
-* a prefix may have been added to certain items in `ServiceBinding`, via the usage of the `id` attribute for a specific backing service, or via the global `envVarPrefix` flag.
+* a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.  
 
 Application should rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
 
@@ -139,30 +139,6 @@ Since the reference implementation for most of this specification is the [Servic
 
 **Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, tracked [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
 
-
-#### Security
-
-This part of the specification deals with security in three aspects:
-1. does the user have the authority to create a ServiceBinding CR?
-1. does the user have the authority to access the binding data for all requested services?
-1. does the user have the authority to modify the source application with the injected binding data?
-
-Scenario 1 can enforced by requiring a certain role type to create ServiceBinding CR, using k8s native RBAC rules.
-
-Scenario 2 there are a few options, one of them being if the service provider's binding resource (as defined in [Pointer to binding data](#pointer-to-binding-data)) is protected by RBAC then the service consumer must pass a Service Account in its `ServiceBinding` CR to allow implementations of this specification to fetch information from that Secret.  If the implementation already has access to all resources in the cluster (as is the case with the Service Binding Operator) it must ensure it uses the provided Service Account instead of its own - blocking the bind if a Service Account was needed (according to the binding data) but not provided.
-
-Example of a partial CR:
-
-```
- services:
-    - group: postgres.dev
-      kind: Service
-      resourceRef: user-db
-      version: v1beta1
-      serviceAccount: <my-sa>
-```
-
-Scenario 3 can also be enforced by RBAC in a similar fashion, but passing the service account in the `application` section of the `RequestBinding` CR.
 
 #### Subscription-based services
 
