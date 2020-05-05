@@ -26,7 +26,7 @@ The following sections outline the details of the specification.
 A bindable service **MUST** comply with one-of:
 * provide a Secret and/or ConfigMap that contains the [binding data](#service-binding-schema) and reference this Secret and/or ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data). 
 * map its `status`, `spec`, `data` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
-* include a sample `ServiceBinding` (see the [Request service binding](#Request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
+* include a sample `ServiceBinding` (see the [Request service binding](#request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
   * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).  
   * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
 
