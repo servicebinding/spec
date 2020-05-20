@@ -2,6 +2,16 @@
 
 Specification for binding services to runtime applications running in Kubernetes.  
 
+## Conventions
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in [BCP
+14](https://tools.ietf.org/html/bcp14)
+[[RFC2119](https://tools.ietf.org/html/rfc2119)]
+[[RFC8174](https://tools.ietf.org/html/rfc8174)] when, and only when, they
+appear in all capitals, as shown here.
+
 ## Terminology definition
 
 *  **service** - any software that is exposing functionality.  Could be a RESTful application, a database, an event stream, etc.
@@ -102,9 +112,9 @@ This specification supports different scenarios for exposing bindable data. Belo
       
 3. Regular k8s resources (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding Kubernetes resources that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema). 
 
-All annotations used in CRDs in the above section can be used for regular k8s resources, as well.
+All annotations used in CRDs in the above section **MAY** be used for regular k8s resources, as well.
 
-The above pattern can be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details. 
+The above pattern **MAY** be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details.
 
 ### Service Binding Schema
 
@@ -115,20 +125,20 @@ The core set of binding data is:
 * **endpoints** - the endpoint information to access the service in a service-specific syntax, such as a list of hosts and ports. This is an alternative to separate `host` and `port` properties.
 * **protocol** - the protocol of the service.  Examples: http, https, postgresql, mysql, mongodb, amqp, mqtt, kafka, etc.
 * **basePath** - a URL prefix for this service, relative to the host root. It MUST start with a leading slash `/`.  Example: the URL prefix for a RESTful service. 
-* **username** - the username to log into the service.  Can be omitted if no authorization required, or if equivalent information is provided in the password as a token.
-* **password** - the password or token used to log into the service.  Can be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
-* **certificate** - the certificate used by the client to connect to the service.  Can be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.  
+* **username** - the username to log into the service.  **MAY** be omitted if no authorization required, or if equivalent information is provided in the password as a token.
+* **password** - the password or token used to log into the service.  **MAY** be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
+* **certificate** - the certificate used by the client to connect to the service.  **MAY** be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.
 * **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[<basePath>]`.
-* <kbd>EXPERIMENTAL</kbd>**bindingRole** - the name of the role needed to read the binding data exposed from this bindable service.  Implementations of this specification **can** enforce that only those with the appropriate roles are allowed to access the binding data.
+* <kbd>EXPERIMENTAL</kbd>**bindingRole** - the name of the role needed to read the binding data exposed from this bindable service.  Implementations of this specification **SHOULD** enforce that only those with the appropriate roles are allowed to access the binding data.
 
-Extra binding properties **can** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
+Extra binding properties **SHOULD** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
 
 The data that is injected or mounted into the container may have a different name because of a few reasons:
 * the backing service may have chosen a different name (discouraged, but allowed).
 * a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
 * a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.  
 
-Application should rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
+Application **SHOULD** rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
 
 
 ### Request service binding
@@ -196,7 +206,7 @@ SERVICE_BINDINGS = {
 }
 ```
 
-In the example above, the application can query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is available as a mounted file inside the directory `/platform/bindings/secret/`.
+In the example above, the application **MAY** query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is available as a mounted file inside the directory `/platform/bindings/secret/`.
 
 #### Mounting data
 Implementations of this specification must bind the following data into the consuming application container:
