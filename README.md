@@ -177,44 +177,39 @@ Example of a partial CR:
 
 ### Mounting and injecting binding information
 
-This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidentally exposure via environment dumps and subprocesses.  Also, binding binary data (e.g. .p12 certificate for Kafka) as an environment variable might cause a pod to fail to start (stuck on `CrashLoopBackOff`), so it advisable for backing services with such binding data to mark it with `bindAs: volume`.
+#### Mounting data
+Implementations of this specification **MUST** mount the binding data into the consuming application container in the following location:
 
-The decision to mount vs inject is made in the following ascending order of precedence:
+```
+<mountPathPrefix>/<service-id>/secret/<persisted_secret>
+```
+
+Where:
+* `<mountPathPrefix>` defaults to `/platform/bindings` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.  The environment variable `SERVICE_BINDINGS` **MUST** be set to the value of `<mountPathPrefix>`, so that applications can always find this directory.
+* `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
+* `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
+
+
+#### Exposing data as environment variables
+
+The specification allows for binding properties to be additionally exposed as environment variables.
+
+The decision to make it available as an environment variable is made in the following ascending order of precedence:
 * value of the `bindAs` attribute in the backing service as defined in its [annotations](annotations.md#data-model--building-blocks-for-expressing-binding-information), applying to the binding item referenced by the annotation.
 * value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
 * value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
 
-#### Injecting data
-
-The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with `bindingKeys` key name containing a list of all available binding information available. Each item of the `bindingKeys` list includes an object containing `name`, `bindAs` and an optional `mountPath` (if it is bound as a volume).
-
-Example:
-
-```json
-SERVICE_BINDINGS = {
-  "bindingKeys": [
-    {
-      "name": "KAFKA_USERNAME",
-      "bindAs": "envVar"
-    },
-    {
-      "name": "KAFKA_PASSWORD",
-      "bindAs": "volume",
-      "mountPath": "/platform/bindings/secret/"
-    }
-  ]
-}
-```
-
-In the example above, the application **MAY** query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is available as a mounted file inside the directory `/platform/bindings/secret/`.
-
-#### Mounting data
-Implementations of this specification must bind the following data into the consuming application container:
+If a particular binding key is made available as an environment variable an entry **MUST** be made at the following file:
 
 ```
-<mountPathPrefix>/bindings/secret/<persisted_secret>
+<mountPathPrefix>/<service-id>/metadata/envVars
 ```
 
 Where:
-* `<mountPathPrefix>` defaults to `platform` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.
-* `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
+* `envVars` is a file where each line contains an environment variable name, representing one of the binding properties for this service.  
+
+For example, `platform/bindings/mongodb/metadata/envVars` could have:
+```
+MONGODB_HOST
+MONGODB_PORT
+```
