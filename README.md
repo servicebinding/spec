@@ -189,6 +189,13 @@ Where:
 * `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
 
+Example:  `/platform/bindings/mongo-db/secret/MONGODB_HOST`
+
+#### Cross services data mappings
+
+The `ServiceBinding` CR allows for the declaration of mappings that are potentially composed of different service bindings (ids).  For this case, the special id of `dataMappings` is reserved and **MUST NOT** be used by any service bindings.  
+
+This means that a container **MAY** have the path `<mountPathPrefix>/dataMappings/secret/<persisted_secret>` mounted, representing all of the composed bindings.  
 
 #### Exposing data as environment variables
 
@@ -213,3 +220,22 @@ For example, `platform/bindings/mongodb/metadata/envVars` could have:
 MONGODB_HOST
 MONGODB_PORT
 ```
+
+#### Guidelines for intermediate binding representation
+
+This specification does not mandate a particular methodology for implementations to process `ServiceBinding` CRs and mount the resulting data as per the requirements set in the previous sections, which allows for different frameworks to have flexibility in exactly how they fulfill the binding request.
+
+However, it is **RECOMMENDED** that implementations expose their intermediate binding representation (i.e. the model containing the binding data prior to mount) in the following way:
+
+* a single Secret, whose name matches the corresponding `ServiceBinding` CR's `metadata.name` and resides in the same namespace.  Each item inside this Secret is in the form of either:
+  * `<service-id>/secret/<binding-name>: <binding-value>`, representing a single binding item. Example: 
+    ```
+    mongo-db/secret/MONGODB_HOST: myhost.com
+    ```
+  * `<service-id>/metadata/<metadata-name>: <metadata-value>`, representing a single metadata item.  Example:  
+    ```
+    mongo-db/metadata/envVars: |-
+      MONGODB_HOST
+      MONGODB_PORT
+    ```
+
