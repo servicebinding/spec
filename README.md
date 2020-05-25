@@ -185,7 +185,7 @@ Implementations of this specification **MUST** mount the binding data into the c
 ```
 
 Where:
-* `<mountPathPrefix>` defaults to `/platform/bindings` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.  The environment variable `SERVICE_BINDINGS_ROOT` **MUST** be set to the value of `<mountPathPrefix>`, so that applications can always find this directory.
+* `<mountPathPrefix>` defaults to `/platform/bindings` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.  The environment variable `SERVICE_BINDINGS_ROOT` **MUST** be set to the value of `<mountPathPrefix>`, so that applications can always find this directory, and it is immutable.  This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value.  
 * `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
 
