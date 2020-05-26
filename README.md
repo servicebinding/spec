@@ -193,7 +193,7 @@ Example:  `/platform/bindings/mongo-db/secret/MONGODB_HOST`
 
 #### Custom bindings
 
-The `ServiceBinding` CR allows for the declaration of custom mappings that are potentially composed of different service bindings (ids).  For this case, the special id of `custom-bindings` is reserved and **MUST NOT** be used by any service bindings.  
+The `ServiceBinding` CR allows for the declaration of custom mappings that are potentially composed of different service bindings (ids).  For this case, the `<service-id>` of `custom-bindings` is reserved and **MUST NOT** be used by any service bindings.  
 
 This means that a container **MAY** have the path `<mountPathPrefix>/custom-bindings/secret/<persisted_secret>` mounted, representing all of the custom bindings.  
 
