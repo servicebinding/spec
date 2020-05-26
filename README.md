@@ -234,8 +234,7 @@ However, it is **RECOMMENDED** that implementations expose their intermediate bi
     ```
   * `<service-id>.metadata.<metadata-name>: <metadata-value>`, representing a single metadata item.  Example:  
     ```
-    mongo-db/metadata/envVars: |-
+    mongo-db.metadata.envVars: |-
       MONGODB_HOST
       MONGODB_PORT
     ```
-
