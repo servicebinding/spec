@@ -225,7 +225,7 @@ MONGODB_PORT
 
 This specification does not mandate a particular methodology for implementations to process `ServiceBinding` CRs and mount the resulting data as per the requirements set in the previous sections, which allows for different frameworks to have flexibility in exactly how they fulfill the binding request.
 
-However, it is **RECOMMENDED** that implementations expose their intermediate binding representation (i.e. the model containing the binding data prior to mount) in the following way:
+However, it is **RECOMMENDED** that implementations expose their intermediate binding representation (i.e. the model containing the binding data prior to mount) in the following way, so that Operator-based deployments or any other processing unit that owns the deployment can take over the responsibility for mounting the data into the container:
 
 * a single Secret, whose name matches the corresponding `ServiceBinding` CR's `metadata.name` and resides in the same namespace.  Each item inside this Secret is in the form of either:
   * `<service-id>.secret.<binding-name>: <binding-value>`, representing a single binding item. Example: 
