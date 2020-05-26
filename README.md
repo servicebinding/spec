@@ -230,7 +230,7 @@ However, it is **RECOMMENDED** that implementations expose their intermediate bi
 * a single Secret, whose name matches the corresponding `ServiceBinding` CR's `metadata.name` and resides in the same namespace.  Each item inside this Secret is in the form of either:
   * `<service-id>.secret.<binding-name>: <binding-value>`, representing a single binding item. Example: 
     ```
-    mongo-db/secret/MONGODB_HOST: myhost.com
+    mongo-db.secret.MONGODB_HOST: myhost.com
     ```
   * `<service-id>.metadata.<metadata-name>: <metadata-value>`, representing a single metadata item.  Example:  
     ```
