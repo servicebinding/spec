@@ -138,9 +138,6 @@ The data that is injected or mounted into the container may have a different nam
 * a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
 * a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.  
 
-Application **SHOULD** rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
-
-
 ### Request service binding
 
 Binding is requested by the consuming application, or an entity on its behalf such as the [Runtime Component Operator](https://github.com/application-stacks/runtime-component-operator), via a custom resource that is applied in the same cluster where an implementation of this specification resides.
@@ -166,8 +163,8 @@ spec:
     - group: ibmcloud.ibm.com
       version: v1alpha1
       kind: Binding
-      name: coligo-cos-service-credential
-      id: coligo-cos-service-credential
+      name: coligo-service-binding
+      id: coligo-service-binding
   application:
     name: nodejs-rest-http-crud
     group: apps
@@ -175,6 +172,56 @@ spec:
     resource: deployments
 ```
 
+#### Customizing data bindings
+
+The `ServiceBinding` CR has an element per service called `dataMappings`, whereby the author of the CR can rename certain binding items and/or compose of multiple items:
+
+Partial sample of service-specific mappings:
+```
+  services:
+    - group: postgres.dev
+      kind: Service
+      name: global-user-db
+      version: v1beta1
+      id: postgres-global-user
+    - group: ibmcloud.ibm.com
+      version: v1alpha1
+      kind: Binding
+      name: watson-service-binding
+      id: watson-service-binding
+      dataMappings:
+        - name: WATSON_URL
+          value: {{  .status.host }} / {{ .status.port }}
+        - name: WATSON_USERNAME
+          value: {{  .status.username }}
+```
+
+If a `dataMappings` requires a cross-service composition then a new synthetic service entry must be created.  
+
+Partial sample of a synthetic / composed mapping:
+```
+  services:
+    - group: event.stream
+      kind: User
+      name: my-user
+      version: v1beta1
+      id: event-user
+    - group: event.stream
+      kind: Cluster
+      resourceRef: my-cluster
+      version: v1beta1
+      id: event-cluster
+    - group: servicebinding
+      version: v1alpha1
+      kind: ComposedService
+      name: events-composed
+      id: event-stream
+      dataMappings:
+        - name: EVENT_STREAMS_URL
+          value: {{  event-user.status.url }} / ?username= {{ event-user.status.username }}
+```
+
+The special CRD reference with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` is a special CRD whose sole purpose is to compose bindings from other services.  
 
 #### Subscription-based services
 
