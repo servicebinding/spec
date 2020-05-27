@@ -149,6 +149,32 @@ Since the reference implementation for most of this specification is the [Servic
 
 **Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, tracked [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
 
+Sample CR
+```
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: example-service-binding
+spec:
+  mountPathPrefix: "/var/bindings"
+  services:
+    - group: postgres.dev
+      kind: Service
+      name: global-user-db
+      version: v1beta1
+      id: postgres-global-user
+    - group: ibmcloud.ibm.com
+      version: v1alpha1
+      kind: Binding
+      name: coligo-cos-service-credential
+      id: coligo-cos-service-credential
+  application:
+    name: nodejs-rest-http-crud
+    group: apps
+    version: v1
+    resource: deployments
+```
+
 
 #### Subscription-based services
 
@@ -160,17 +186,16 @@ There are a variety of service providers that require a subscription to be creat
 
 The only requirement from this specification is that the subscription results in a k8s resources (Secret, etc), containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)).  From the `ServiceBinding` CR's perspective, this resource looks and feels like an additional service.
 
-Example of a partial CR:
-
+Example of a partial CR, where the second service refers to a Secret containing the provisioned user specific credentials.
 ```
  services:
     - group: postgres.dev
       kind: Service
-      resourceRef: global-user-db
+      name: global-user-db
       version: v1beta1
     - group: postgres.dev
       kind: Secret
-      resourceRef: specific-user-db
+      name: specific-user-db
       version: v1beta1      
 ```
 
@@ -181,60 +206,32 @@ Example of a partial CR:
 Implementations of this specification **MUST** mount the binding data into the consuming application container in the following location:
 
 ```
-<mountPathPrefix>/<service-id>/secret/<persisted_secret>
+$SERVICE_BINDINGS_ROOT/<service-id>/secret/<persisted_bindings>
 ```
 
 Where:
-* `<mountPathPrefix>` defaults to `/platform/bindings` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.  The environment variable `SERVICE_BINDINGS_ROOT` **MUST** be set to the value of `<mountPathPrefix>`, so that applications can always find this directory, and it is immutable.  This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value.  
+* $SERVICE_BINDINGS_ROOT is an immutable environment variable (once set) that corresponds to the root location of the bindings.  This value comes from the first `ServiceBinding` CR, as there may be many, and its `mountPathPrefix` element, or from the default value of `/platform/bindings` if the first `ServiceBinding` CR did not specify a `mountPathPrefix` element.
+  * This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value, even if it had a conflicting `mountPathPrefix` element.
 * `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
 
-Example:  `/platform/bindings/mongo-db/secret/MONGODB_HOST`
+Example:  `/platform/bindings/my-nosql-db/secret/MONGODB_HOST`
 
-#### Custom bindings
+In addition to the secret, implementations of this specification **MUST** mount, if available, metadata about the bindings in the following location:
 
-The `ServiceBinding` CR allows for the declaration of custom mappings that are potentially composed of different service bindings (ids).  For this case, the `<service-id>` of `custom-bindings` is reserved and **MUST NOT** be used by any service bindings.  
+```
+$SERVICE_BINDINGS_ROOT/<service-id>/metadata/<persisted_metadata>
+```
 
-This means that a container **MAY** have the path `<mountPathPrefix>/custom-bindings/secret/<persisted_secret>` mounted, representing all of the custom bindings.  
+The recommended set of metadata will vary dependending on implementations and platforms, but two **RECOMMENDED** keys are:
+* kind
+* provider
+
 
 #### Exposing data as environment variables
 
-The specification allows for binding properties to be additionally exposed as environment variables.
+The specification allows for binding properties to be additionally exposed as environment variables.  The assumption is that applications will have pre-knowledge of these environment variable keys, so the mechanisms described in this section are solely for the purpose of allowing the entity responsible for mounting the binding data to know which keys should also be made available as environment variables.  
 
-The decision to make it available as an environment variable is made in the following ascending order of precedence:
-* value of the `bindAs` attribute in the backing service as defined in its [annotations](annotations.md#data-model--building-blocks-for-expressing-binding-information), applying to the binding item referenced by the annotation.
+This decision is made in the following ascending order of precedence:
 * value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
 * value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
-
-If a particular binding key is made available as an environment variable an entry **MUST** be made at the following file:
-
-```
-<mountPathPrefix>/<service-id>/metadata/envVars
-```
-
-Where:
-* `envVars` is a file where each line contains an environment variable name, representing one of the binding properties for this service.  
-
-For example, `platform/bindings/mongodb/metadata/envVars` could have:
-```
-MONGODB_HOST
-MONGODB_PORT
-```
-
-#### Guidelines for intermediate binding representation
-
-This specification does not mandate a particular methodology for implementations to process `ServiceBinding` CRs and mount the resulting data as per the requirements set in the previous sections, which allows for different frameworks to have flexibility in exactly how they fulfill the binding request.
-
-However, it is **RECOMMENDED** that implementations expose their intermediate binding representation (i.e. the model containing the binding data prior to mount) in the following way, so that Operator-based deployments or any other processing unit that owns the deployment can take over the responsibility for mounting the data into the container:
-
-* a single Secret, whose name matches the corresponding `ServiceBinding` CR's `metadata.name` and resides in the same namespace.  Each item inside this Secret is in the form of either:
-  * `<service-id>.secret.<binding-name>: <binding-value>`, representing a single binding item. Example: 
-    ```
-    mongo-db.secret.MONGODB_HOST: myhost.com
-    ```
-  * `<service-id>.metadata.<metadata-name>: <metadata-value>`, representing a single metadata item.  Example:  
-    ```
-    mongo-db.metadata.envVars: |-
-      MONGODB_HOST
-      MONGODB_PORT
-    ```
