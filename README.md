@@ -223,7 +223,7 @@ Partial sample of a synthetic / composed mapping:
           value: {{  event-user.status.url }} / ?username= {{ event-user.status.username }}
 ```
 
-The special CRD reference with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` is a special CRD whose sole purpose is to compose bindings from other services.  
+The service entry with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` refers to a synthetic CR whose sole purpose is to compose bindings from other services.  
 
 #### Subscription-based services
 
