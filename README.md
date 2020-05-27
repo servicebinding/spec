@@ -24,7 +24,7 @@ appear in all capitals, as shown here.
 
 * Need a consistent way to bind k8s application to services (applications, databases, event streams, etc).
 * A standard / spec / RFC will enable adoption from different service providers.
-* The CNB (Cloud Native Buildpacks) community has started to address this issue with a [bindings specification](https://github.com/buildpacks/spec/blob/master/extensions/bindings.md). We should align with these concepts and expand the use case to incorporate scenarios such as: 
+* The [Cloud Native Buildpacks](https://buildpacks.io) (CNB) community has started to address this issue with a [bindings specification](https://github.com/buildpacks/spec/blob/master/extensions/bindings.md). We should align with these concepts and expand the use case to incorporate scenarios such as: 
   * how to make a service bindable
   * how to request a binding
   * what is the proposed binding schema
