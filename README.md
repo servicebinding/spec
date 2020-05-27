@@ -196,6 +196,8 @@ Partial sample of service-specific mappings:
           value: {{  .status.username }}
 ```
 
+#### <kbd>EXPERIMENTAL</kbd> Synthetic data bindings
+
 If a `dataMappings` requires a cross-service composition then a new synthetic service entry must be created.  
 
 Partial sample of a synthetic / composed mapping:
