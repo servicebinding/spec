@@ -22,9 +22,12 @@ appear in all capitals, as shown here.
 
 ## Motivation
 
-*  Need a consistent way to bind k8s application to services (applications, databases, event streams, etc)
-*  A standard / spec / RFC will enable adoption from different service providers
-*  Cloud Foundry has addressed this issue with a [buildpack specification](https://github.com/buildpacks/rfcs/blob/master/text/0012-service-binding.md). The equivalent is not available for k8s.
+* Need a consistent way to bind k8s application to services (applications, databases, event streams, etc).
+* A standard / spec / RFC will enable adoption from different service providers.
+* The [Cloud Native Buildpacks](https://buildpacks.io) (CNB) community has started to address this issue with a [bindings specification](https://github.com/buildpacks/spec/blob/master/extensions/bindings.md). We should align with these concepts and expand the use case to incorporate scenarios such as: 
+  * how to make a service bindable
+  * how to request a binding
+  * what is the proposed binding schema
 
 ## Proposal
 
