@@ -141,9 +141,6 @@ The data that is injected or mounted into the container may have a different nam
 * a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
 * a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.  
 
-Application **SHOULD** rely on the `SERVICE_BINDINGS` environment variable for the accurate list of injected or mounted binding items, as [defined below](#Mounting-and-injecting-binding-information).
-
-
 ### Request service binding
 
 Binding is requested by the consuming application, or an entity on its behalf such as the [Runtime Component Operator](https://github.com/application-stacks/runtime-component-operator), via a custom resource that is applied in the same cluster where an implementation of this specification resides.
@@ -152,6 +149,84 @@ Since the reference implementation for most of this specification is the [Servic
 
 **Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, tracked [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
 
+Sample CR
+```
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: example-service-binding
+spec:
+  mountPathPrefix: "/var/bindings"
+  services:
+    - group: postgres.dev
+      kind: Service
+      name: global-user-db
+      version: v1beta1
+      id: postgres-global-user
+    - group: ibmcloud.ibm.com
+      version: v1alpha1
+      kind: Binding
+      name: coligo-service-binding
+      id: coligo-service-binding
+  application:
+    name: nodejs-rest-http-crud
+    group: apps
+    version: v1
+    resource: deployments
+```
+
+#### Customizing data bindings
+
+The `ServiceBinding` CR has an element per service called `dataMappings`, whereby the author of the CR can rename certain binding items and/or compose of multiple items:
+
+Partial sample of service-specific mappings:
+```
+  services:
+    - group: postgres.dev
+      kind: Service
+      name: global-user-db
+      version: v1beta1
+      id: postgres-global-user
+    - group: ibmcloud.ibm.com
+      version: v1alpha1
+      kind: Binding
+      name: watson-service-binding
+      id: watson-service-binding
+      dataMappings:
+        - name: WATSON_URL
+          value: {{  .status.host }} / {{ .status.port }}
+        - name: WATSON_USERNAME
+          value: {{  .status.username }}
+```
+
+#### <kbd>EXPERIMENTAL</kbd> Synthetic data bindings
+
+If a `dataMappings` requires a cross-service composition then a new synthetic service entry must be created.  
+
+Partial sample of a synthetic / composed mapping:
+```
+  services:
+    - group: event.stream
+      kind: User
+      name: my-user
+      version: v1beta1
+      id: event-user
+    - group: event.stream
+      kind: Cluster
+      resourceRef: my-cluster
+      version: v1beta1
+      id: event-cluster
+    - group: servicebinding
+      version: v1alpha1
+      kind: ComposedService
+      name: events-composed
+      id: event-stream
+      dataMappings:
+        - name: EVENT_STREAMS_URL
+          value: {{  event-cluster.status.url }} / ?username= {{ event-user.status.username }}
+```
+
+The service entry with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` refers to a synthetic CR whose sole purpose is to compose bindings from other services.  
 
 #### Subscription-based services
 
@@ -163,61 +238,52 @@ There are a variety of service providers that require a subscription to be creat
 
 The only requirement from this specification is that the subscription results in a k8s resources (Secret, etc), containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)).  From the `ServiceBinding` CR's perspective, this resource looks and feels like an additional service.
 
-Example of a partial CR:
-
+Example of a partial CR, where the second service refers to a Secret containing the provisioned user specific credentials.
 ```
  services:
     - group: postgres.dev
       kind: Service
-      resourceRef: global-user-db
+      name: global-user-db
       version: v1beta1
     - group: postgres.dev
       kind: Secret
-      resourceRef: specific-user-db
+      name: specific-user-db
       version: v1beta1      
 ```
 
 
 ### Mounting and injecting binding information
 
-This specification allows for data to be mounted using volumes or injected using environment variables.  The best practice is to mount any sensitive information, such as passwords, since that will avoid accidentally exposure via environment dumps and subprocesses.  Also, binding binary data (e.g. .p12 certificate for Kafka) as an environment variable might cause a pod to fail to start (stuck on `CrashLoopBackOff`), so it advisable for backing services with such binding data to mark it with `bindAs: volume`.
-
-The decision to mount vs inject is made in the following ascending order of precedence:
-* value of the `bindAs` attribute in the backing service as defined in its [annotations](annotations.md#data-model--building-blocks-for-expressing-binding-information), applying to the binding item referenced by the annotation.
-* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
-* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
-
-#### Injecting data
-
-The key `SERVICE_BINDINGS` acts as a global map of the service bindings and **MUST** always be injected into the environment.  It contains a JSON payload with `bindingKeys` key name containing a list of all available binding information available. Each item of the `bindingKeys` list includes an object containing `name`, `bindAs` and an optional `mountPath` (if it is bound as a volume).
-
-Example:
-
-```json
-SERVICE_BINDINGS = {
-  "bindingKeys": [
-    {
-      "name": "KAFKA_USERNAME",
-      "bindAs": "envVar"
-    },
-    {
-      "name": "KAFKA_PASSWORD",
-      "bindAs": "volume",
-      "mountPath": "/platform/bindings/secret/"
-    }
-  ]
-}
-```
-
-In the example above, the application **MAY** query the environment variable `SERVICE_BINDINGS`, walk its JSON payload and learn that `KAFKA_USERNAME` is available as an environment variable, and that `KAFKA_PASSWORD` is available as a mounted file inside the directory `/platform/bindings/secret/`.
-
 #### Mounting data
-Implementations of this specification must bind the following data into the consuming application container:
+Implementations of this specification **MUST** mount the binding data into the consuming application container in the following location:
 
 ```
-<mountPathPrefix>/bindings/secret/<persisted_secret>
+$SERVICE_BINDINGS_ROOT/<service-id>/secret/<persisted_bindings>
 ```
 
 Where:
-* `<mountPathPrefix>` defaults to `platform` if not specified in the `ServiceBinding` CR via the `mountPathPrefix` element.
+* $SERVICE_BINDINGS_ROOT is an immutable environment variable (once set) that corresponds to the root location of the bindings.  This value comes from the first `ServiceBinding` CR, as there may be many, and its `mountPathPrefix` element, or from the default value of `/platform/bindings` if the first `ServiceBinding` CR did not specify a `mountPathPrefix` element.
+  * This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value, even if it had a conflicting `mountPathPrefix` element.
+* `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
+
+Example:  `/platform/bindings/my-nosql-db/secret/MONGODB_HOST`
+
+In addition to the secret, implementations of this specification **MUST** mount, if available, metadata about the bindings in the following location:
+
+```
+$SERVICE_BINDINGS_ROOT/<service-id>/metadata/<persisted_metadata>
+```
+
+The recommended set of metadata will vary dependending on implementations and platforms, but two **RECOMMENDED** keys are:
+* kind
+* provider
+
+
+#### Exposing data as environment variables
+
+The specification allows for binding properties to be additionally exposed as environment variables.  The assumption is that applications will have pre-knowledge of these environment variable keys, so the mechanisms described in this section are solely for the purpose of allowing the entity responsible for mounting the binding data to know which keys should also be made available as environment variables.  
+
+This decision is made in the following ascending order of precedence:
+* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
+* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
