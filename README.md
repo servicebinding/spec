@@ -220,7 +220,7 @@ Partial sample of a synthetic / composed mapping:
       id: event-stream
       dataMappings:
         - name: EVENT_STREAMS_URL
-          value: {{  event-user.status.url }} / ?username= {{ event-user.status.username }}
+          value: {{  event-cluster.status.url }} / ?username= {{ event-user.status.username }}
 ```
 
 The service entry with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` refers to a synthetic CR whose sole purpose is to compose bindings from other services.  
