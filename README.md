@@ -20,10 +20,10 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
    * [Service Binding Specification for Kubernetes](#service-binding-specification-for-kubernetes)
       * [Notational Conventions](#notational-conventions)
       * [Terminology definition](#terminology-definition)
-   * [Bindable Services](#bindable-services)
-      * [Minimum requirements for being bindable](#minimum-requirements-for-being-bindable)
-      * [Pointer to binding data](#pointer-to-binding-data)
-      * [Service Binding Schema](#service-binding-schema)
+   * [Provisioned Service](#provisioned-service)
+      * [Resource Type Schema](#resource-type-schema)
+      * [Example Resource](#example-resource)
+      * [Well-known Secret Entries](#well-known-secret-entries)
    * [Application Projection](#application-projection)
       * [Example Directory Structure](#example-directory-structure)
    * [Service Binding Request](#service-binding-request)
@@ -33,7 +33,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
    * [Extensions](#extensions)
       * [Exposing data as environment variables](#exposing-data-as-environment-variables)
 
-<!-- Added by: bhale, at: Fri May 29 15:18:42 PDT 2020 -->
+<!-- Added by: bhale, at: Mon Jun  1 20:46:50 PDT 2020 -->
 
 <!--te-->
 
@@ -48,6 +48,9 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 ## Terminology definition
 
 <dl>
+  <dt>Duck Type</dt>
+  <dd>Any type that meets the contract defined in a specification, without being an instance of a specific concrete type.  For example, for specification that requires a given key on <code>status</code>, any resource that has that key on its <code>status</code> regardless of its <code>kind</code> would be considered a duck type of the specification.</dd>
+
   <dt>Service</dt>
   <dd>Any software that exposes functionality.  Examples include an application with REST endpoints, an event stream, an Application Performance Monitor, or a Hardware Security Module.</dd>
 
@@ -64,113 +67,43 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/configmap/">Secret</a></dd>
 </dl>
 
-# Bindable Services
+# Provisioned Service
 
-## Minimum requirements for being bindable
-A bindable service **MUST** comply with one-of:
-* provide a Secret and/or ConfigMap that contains the [binding data](#service-binding-schema) and reference this Secret and/or ConfigMap using one of the patterns discussed [below](#pointer-to-binding-data).
-* map its `status`, `spec`, `data` properties to the corresponding [binding data](#service-binding-schema), using one of the patterns discussed [below](#pointer-to-binding-data).
-* include a sample `ServiceBinding` (see the [Request service binding](#request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
-  * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).
-  * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
+A Provisioned Service resource **MUST** define a `.status.bindingRef.name` which is a `LocalObjectReference` to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
-<kbd>EXPERIMENTAL</kbd>The service **MUST** also make itself discoverable by complying with one-of:
-* In the case of an OLM-based Operator, add `Bindable` to the CSV's `metadata.annotations.categories`.
-* In the case of a Helm chart service, add bindable to the Chart.yaml's keyword list.
-* In all other cases, add the `servicebinding/bindable: "true"` annotation to your CRD or any CR (Secret, Service, etc).
+## Resource Type Schema
 
-## Pointer to binding data
+```yaml
+status:
+  binding:
+    name:  # string
+```
 
-This specification supports different scenarios for exposing bindable data. Below is a summary of how to indicate what is interesting for binding.  Please see the [annotation section](annotations.md) for the full set with more details.
+## Example Resource
 
-1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
-    * The reference's `x-descriptors` with a possible combination of:
-      * ConfigMap:
+```
+...
+status:
+  ...
+  bindingRef:
+    name: production-db-secret
+```
 
-            - path: data.dbcredentials
-              x-descriptors:
-                - urn:alm:descriptor:io.kubernetes:ConfigMap
-                - servicebinding
+## Well-known Secret Entries
 
-      * Secret:
+Other than the required `kind` entry and the recommended `provider` entry, there are no other reserved `Secret` entries.  In the interests of consistency, if a `Secret` includes any of the following entry names, the entry value **MUST** meet the specified requirements:
 
-            - path: data.dbcredentials
-              x-descriptors:
-                - urn:alm:descriptor:io.kubernetes:Secret
-                - servicebinding
+| Name | Requirements
+| ---- | ------------
+| `host` | A DNS-resolvable host name or IP address
+| `port` | A valid port number
+| `uri` | A valid URI as defined by [RFC3986](https://tools.ietf.org/html/rfc3986)
+| `username` | A string-based username credential
+| `password` | A string-based password credential
+| `certificates` | A collection of PEM-encoded X.509 certificates, representing a certificate chain used in mTLS client authentication
+| `privateKey` | A PEM-encoded private key used in mTLS client authentication
 
-      * Individual binding items from a `Secret`:
-
-            - urn:alm:descriptor:io.kubernetes:Secret
-            - servicebinding:username
-
-            - urn:alm:descriptor:io.kubernetes:Secret
-            - servicebinding:password
-
-      * Individual binding items from a `ConfigMap`:
-
-            - urn:alm:descriptor:io.kubernetes:ConfigMap
-            - servicebinding:port
-
-            - urn:alm:descriptor:io.kubernetes:ConfigMap
-            - servicebinding:host
-
-      * Individual backing items from a path referencing a string value
-
-            - path: data.uri
-              x-descriptors:
-                - servicebinding
-
-2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema) :
-      * ConfigMap:
-
-            "servicebinding.dev/certificate":
-            "path={.status.data.dbConfiguration},objectType=ConfigMap"
-
-      * Secret:
-
-            "servicebinding.dev/dbCredentials":
-            "path={.status.data.dbCredentials},objectType=Secret"
-
-      * Individual binding items from a `ConfigMap`
-
-            “servicebinding.dev/host":
-             “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
-
-            “servicebinding.dev/port":
-            “path={.status.data.dbConfiguration},objectType=ConfigMap
-
-      * Individual backing items from a path referencing a string value
-
-            “servicebinding.dev/uri”:"path={.status.data.connectionURL}"
-
-3. Regular k8s resources (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding Kubernetes resources that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema).
-
-All annotations used in CRDs in the above section **MAY** be used for regular k8s resources, as well.
-
-The above pattern **MAY** be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details.
-
-## Service Binding Schema
-
-The core set of binding data is:
-* **type** - the type of the service. Examples: openapi, db2, kafka, etc.
-* **host** - the host (IP or host name) where the service resides.
-* **port** - the port to access the service.
-* **endpoints** - the endpoint information to access the service in a service-specific syntax, such as a list of hosts and ports. This is an alternative to separate `host` and `port` properties.
-* **protocol** - the protocol of the service.  Examples: http, https, postgresql, mysql, mongodb, amqp, mqtt, kafka, etc.
-* **basePath** - a URL prefix for this service, relative to the host root. It MUST start with a leading slash `/`.  Example: the URL prefix for a RESTful service.
-* **username** - the username to log into the service.  **MAY** be omitted if no authorization required, or if equivalent information is provided in the password as a token.
-* **password** - the password or token used to log into the service.  **MAY** be omitted if no authorization required, or take another format such as an API key.  It is strongly recommended that the corresponding ConfigMap metadata properly describes this key.
-* **certificate** - the certificate used by the client to connect to the service.  **MAY** be omitted if no certificate is required, or simply point to another Secret that holds the client certificate.
-* **uri** - for convenience, the full URI of the service in the form of `<protocol>://<host>:<port>[<basePath>]`.
-* <kbd>EXPERIMENTAL</kbd>**bindingRole** - the name of the role needed to read the binding data exposed from this bindable service.  Implementations of this specification **SHOULD** enforce that only those with the appropriate roles are allowed to access the binding data.
-
-Extra binding properties **SHOULD** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
-
-The data that is injected or mounted into the container may have a different name because of a few reasons:
-* the backing service may have chosen a different name (discouraged, but allowed).
-* a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
-* a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.
+`Secret` entries that do not meet these requirements **MUST** use different entry names.
 
 # Application Projection
 
@@ -316,6 +249,98 @@ Example of a partial CR, where the second service refers to a Secret containing 
   * This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value, even if it had a conflicting `mountPathPrefix` element.
 * `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
 * `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
+
+-->
+
+<!--
+  ## Minimum requirements for being bindable
+
+* include a sample `ServiceBinding` (see the [Request service binding](#request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
+  * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).
+  * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
+
+<kbd>EXPERIMENTAL</kbd>The service **MUST** also make itself discoverable by complying with one-of:
+* In the case of an OLM-based Operator, add `Bindable` to the CSV's `metadata.annotations.categories`.
+* In the case of a Helm chart service, add bindable to the Chart.yaml's keyword list.
+* In all other cases, add the `servicebinding/bindable: "true"` annotation to your CRD or any CR (Secret, Service, etc).
+
+## Pointer to binding data
+
+This specification supports different scenarios for exposing bindable data. Below is a summary of how to indicate what is interesting for binding.  Please see the [annotation section](annotations.md) for the full set with more details.
+
+1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
+    * The reference's `x-descriptors` with a possible combination of:
+      * ConfigMap:
+
+            - path: data.dbcredentials
+              x-descriptors:
+                - urn:alm:descriptor:io.kubernetes:ConfigMap
+                - servicebinding
+
+      * Secret:
+
+            - path: data.dbcredentials
+              x-descriptors:
+                - urn:alm:descriptor:io.kubernetes:Secret
+                - servicebinding
+
+      * Individual binding items from a `Secret`:
+
+            - urn:alm:descriptor:io.kubernetes:Secret
+            - servicebinding:username
+
+            - urn:alm:descriptor:io.kubernetes:Secret
+            - servicebinding:password
+
+      * Individual binding items from a `ConfigMap`:
+
+            - urn:alm:descriptor:io.kubernetes:ConfigMap
+            - servicebinding:port
+
+            - urn:alm:descriptor:io.kubernetes:ConfigMap
+            - servicebinding:host
+
+      * Individual backing items from a path referencing a string value
+
+            - path: data.uri
+              x-descriptors:
+                - servicebinding
+
+2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema) :
+      * ConfigMap:
+
+            "servicebinding.dev/certificate":
+            "path={.status.data.dbConfiguration},objectType=ConfigMap"
+
+      * Secret:
+
+            "servicebinding.dev/dbCredentials":
+            "path={.status.data.dbCredentials},objectType=Secret"
+
+      * Individual binding items from a `ConfigMap`
+
+            “servicebinding.dev/host":
+             “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
+
+            “servicebinding.dev/port":
+            “path={.status.data.dbConfiguration},objectType=ConfigMap
+
+      * Individual backing items from a path referencing a string value
+
+            “servicebinding.dev/uri”:"path={.status.data.connectionURL}"
+
+3. Regular k8s resources (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding Kubernetes resources that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema).
+
+All annotations used in CRDs in the above section **MAY** be used for regular k8s resources, as well.
+
+The above pattern **MAY** be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details.
+
+Extra binding properties **SHOULD** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
+
+The data that is injected or mounted into the container may have a different name because of a few reasons:
+* the backing service may have chosen a different name (discouraged, but allowed).
+* a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
+* a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.
 
 -->
 
