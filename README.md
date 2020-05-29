@@ -10,7 +10,6 @@ The goal of this specification is to create a Kubernetes-wide specification for 
 
 The pattern of Service Binding has prior art in non-Kubernetes platforms.  Heroku pioneered this model with [Add-ons][h] and Cloud Foundry adopted similar ideas with their [Services][cf]. Other open source projects like the [Open Service Broker][osb] aim to help with this pattern on those non-Kubernetes platforms.  In the Kubernetes ecosystem, the CNCF Sandbox Cloud Native Buildpacks project has proposed a [buildpack-specific specification][cnb] exclusively addressing the application developer portion of this pattern.
 
-
 [h]: https://devcenter.heroku.com/articles/add-ons
 [cf]: https://docs.cloudfoundry.org/devguide/services/
 [osb]: https://www.openservicebrokerapi.org
@@ -26,6 +25,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
       * [Pointer to binding data](#pointer-to-binding-data)
       * [Service Binding Schema](#service-binding-schema)
    * [Application Projection](#application-projection)
+      * [Example Directory Structure](#example-directory-structure)
    * [Service Binding Request](#service-binding-request)
       * [Customizing data bindings](#customizing-data-bindings)
       * [<kbd>EXPERIMENTAL</kbd> Synthetic data bindings](#experimental-synthetic-data-bindings)
@@ -33,7 +33,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
    * [Extensions](#extensions)
       * [Exposing data as environment variables](#exposing-data-as-environment-variables)
 
-<!-- Added by: bhale, at: Fri May 29 10:25:45 PDT 2020 -->
+<!-- Added by: bhale, at: Fri May 29 15:18:42 PDT 2020 -->
 
 <!--te-->
 
@@ -174,30 +174,31 @@ The data that is injected or mounted into the container may have a different nam
 
 # Application Projection
 
-Implementations of this specification **MUST** mount the binding data into the consuming application container in the following location:
+A Binding `Secret` **MUST** be volume mounted into a container at in `$SERVICE_BINDINGS_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDINGS_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
+The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+
+The contents of a secret entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
+
+The collection of files within the directory **MAY** change between container launches.  The collection of files within the directory **MUST NOT** change during the lifetime of the container.
+
+## Example Directory Structure
+
+```plain
+$SERVICE_BINDING_ROOT
+├── account-database
+│   ├── kind
+│   ├── connection-count
+│   ├── uri
+│   ├── username
+│   └── password
+└── transaction-event-stream
+│   ├── kind
+│   ├── connection-count
+│   ├── uri
+│   ├── certificates
+│   └── private-key
 ```
-$SERVICE_BINDINGS_ROOT/<service-id>/secret/<persisted_bindings>
-```
-
-Where:
-* $SERVICE_BINDINGS_ROOT is an immutable environment variable (once set) that corresponds to the root location of the bindings.  This value comes from the first `ServiceBinding` CR, as there may be many, and its `mountPathPrefix` element, or from the default value of `/platform/bindings` if the first `ServiceBinding` CR did not specify a `mountPathPrefix` element.
-  * This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value, even if it had a conflicting `mountPathPrefix` element.
-* `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
-* `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
-
-Example:  `/platform/bindings/my-nosql-db/secret/MONGODB_HOST`
-
-In addition to the secret, implementations of this specification **MUST** mount, if available, metadata about the bindings in the following location:
-
-```
-$SERVICE_BINDINGS_ROOT/<service-id>/metadata/<persisted_metadata>
-```
-
-The recommended set of metadata will vary dependending on implementations and platforms, but two **RECOMMENDED** keys are:
-* kind
-* provider
-
 
 # Service Binding Request
 
@@ -308,6 +309,15 @@ Example of a partial CR, where the second service refers to a Secret containing 
       name: specific-user-db
       version: v1beta1
 ```
+
+
+<!--
+  * $SERVICE_BINDINGS_ROOT is an immutable environment variable (once set) that corresponds to the root location of the bindings.  This value comes from the first `ServiceBinding` CR, as there may be many, and its `mountPathPrefix` element, or from the default value of `/platform/bindings` if the first `ServiceBinding` CR did not specify a `mountPathPrefix` element.
+  * This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value, even if it had a conflicting `mountPathPrefix` element.
+* `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
+* `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
+
+-->
 
 # Extensions
 
