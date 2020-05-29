@@ -1,19 +1,24 @@
-# Kubernetes Service Binding Specification
+# Service Binding Specification for Kubernetes
 
-## Motivation
+Today in Kubernetes, the exposure of secrets for connecting applications to external services such as REST APIs, databases, event buses, and more is both manual and bespoke.  Each service provider suggests a different way to access their secrets and each application developer consumes those secrets in a way that is custom to their applications.  While there is a good deal of value to this level of flexibility, large development teams lose overall velocity dealing with each unique solution.  To combat this, we already see teams adopting internal patterns for how to achieve this application-to-service linkage.
 
-* Need a consistent way to bind k8s application to services (applications, databases, event streams, etc).
-* A standard / spec / RFC will enable adoption from different service providers.
-* The [Cloud Native Buildpacks](https://buildpacks.io) (CNB) community has started to address this issue with a [bindings specification](https://github.com/buildpacks/spec/blob/master/extensions/bindings.md). We should align with these concepts and expand the use case to incorporate scenarios such as:
-  * how to make a service bindable
-  * how to request a binding
-  * what is the proposed binding schema
+The goal of this specification is to create a Kubernetes-wide specification for communicating service secrets to applications in an automated way.  It aims to create a mechanism that is widely applicable, but _without_ excluding other strategies for systems that it does not fit easily.  The benefit of a Kubernetes-wide specification is that all of the actors in an ecosystem can work towards a clearly defined abstraction at the edge of their expertise and depend on other parties to complete the chain.
 
-## Table of Contents
+* Application Developers expect secrets to be exposed in a consistent and predictable way
+* Service Providers expect their secrets to be collected and exposed to users in a consistent and predictable way
+* Platforms expect to retrieve secrets from Service Providers and expose them to Application Developers in a consistent and predictable way
+
+The pattern of Service Binding has prior art in non-Kubernetes platforms.  Heroku pioneered this model with [Add-ons][h] and Cloud Foundry adopted similar ideas with their [Services][cf]. Other open source projects like the [Open Service Broker][osb] aim to help with this pattern on those non-Kubernetes platforms.  In the Kubernetes ecosystem, the CNCF Sandbox Cloud Native Buildpacks project has proposed a [buildpack-specific specification][cnb] exclusively addressing the application developer portion of this pattern.
+
+
+[h]: https://devcenter.heroku.com/articles/add-ons
+[cf]: https://docs.cloudfoundry.org/devguide/services/
+[osb]: https://www.openservicebrokerapi.org
+[cnb]: https://github.com/buildpacks/spec/blob/master/extensions/bindings.md
+
+---
 <!--ts-->
-   * [Kubernetes Service Binding Specification](#kubernetes-service-binding-specification)
-      * [Motivation](#motivation)
-      * [Table of Contents](#table-of-contents)
+   * [Service Binding Specification for Kubernetes](#service-binding-specification-for-kubernetes)
       * [Notational Conventions](#notational-conventions)
       * [Terminology definition](#terminology-definition)
    * [Bindable Services](#bindable-services)
@@ -28,7 +33,7 @@
    * [Extensions](#extensions)
       * [Exposing data as environment variables](#exposing-data-as-environment-variables)
 
-<!-- Added by: bhale, at: Fri May 29 06:16:34 PDT 2020 -->
+<!-- Added by: bhale, at: Fri May 29 10:25:45 PDT 2020 -->
 
 <!--te-->
 
@@ -47,7 +52,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>Any software that exposes functionality.  Examples include an application with REST endpoints, an event stream, an Application Performance Monitor, or a Hardware Security Module.</dd>
 
   <dt>Application</dt>
-  <dd>Any single process, running within a container.  Examples include a Spring Boot application, a NodeJS Express application, or a Ruby Rails application.  <b>Note:</b> This is different than an umbrella application as defined by the Kubernetes SIG, which refers to a set of micro-services.</dd>
+  <dd>Any process, running within a container.  Examples include a Spring Boot application, a NodeJS Express application, or a Ruby Rails application.  <b>Note:</b> This is different than an umbrella application as defined by the Kubernetes SIG, which refers to a set of micro-services.</dd>
 
   <dt>Service Binding</dt>
   <dd>The act of or representation of the action of providing information about a Service to an Application</dd>
