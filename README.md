@@ -31,10 +31,12 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
       * [Example Resource](#example-resource-1)
       * [Reconciler Implementation](#reconciler-implementation)
    * [Extensions](#extensions)
-      * [Binding Values as Environment Variables](#binding-values-as-environment-variables)
+      * [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
          * [Resource Type Schema](#resource-type-schema-1)
          * [Example Resource](#example-resource-2)
-      * [Customizing data bindings](#customizing-data-bindings)
+      * [Binding Values as Environment Variables](#binding-values-as-environment-variables)
+         * [Resource Type Schema](#resource-type-schema-2)
+         * [Example Resource](#example-resource-3)
       * [<kbd>EXPERIMENTAL</kbd> Synthetic data bindings](#experimental-synthetic-data-bindings)
       * [Subscription-based services](#subscription-based-services)
 
@@ -223,13 +225,70 @@ If the modification of the Application resource is completed successfully, the `
 
 Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
 
+## Mapping Existing Values to New Values
+
+Many applications will not be able to consume the secrets exposed by Provisioned Services directly.  Teams creating Provisioned Services do not know how their services will be consumed, teams creating Applications will not know what services will be provided to them, different language families have different idioms for naming and style, and more.  Users must have a way of describing a mapping from existing values to customize the provided entries to ones that are usable directly by their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
+
+A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
+
+### Resource Type Schema
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name:         # string
+spec:
+  name:         # string, optional, default: .metadata.name
+
+  application:  # PodSpec-able resource ObjectReference
+    apiVersion: # string
+    kind:       # string
+    name:       # string
+    ...
+
+  service:      # Provisioned Service-able resource ObjectReference
+    apiVersion: # string
+    kind:       # string
+    name:       # string
+    ...
+
+  mapping:      # []Mapping, optional
+  - name:       # string
+    value:      # string
+  ...
+```
+
+### Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: online-banking-to-account-service
+spec:
+  name: account-service
+
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+  mapping:
+  - name:  accountServiceUri
+    value: https://((username)):((password))@((host)):((port))/((path))
+```
+
 ## Binding Values as Environment Variables
 
 Many applications, especially initially, will not be able to consume Service Bindings as defined by the Application Projection section directly since many of these applications assume that configuration will be exposed via environment variables.  Users must have a way of describing how they would like environment variables containing the values from bound secrets mapped into their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
-
-<!-- TODO: Handle already exists, twice defined, unknown Secret entry -->
 
 ### Resource Type Schema
 
@@ -294,17 +353,6 @@ spec:
 
 ---
 
-<!--
-
-  mapping: # map[string]string, optional
-  - name:  # string
-    value: # string
-
-  mapping:
-  - name:  accountServiceUri
-    value: https://((username)):((password))@((host)):((port))/((path))
-
--->
 
 
 
@@ -336,30 +384,6 @@ spec:
     group: apps
     version: v1
     resource: deployments
-```
-
-## Customizing data bindings
-
-The `ServiceBinding` CR has an element per service called `dataMappings`, whereby the author of the CR can rename certain binding items and/or compose of multiple items:
-
-Partial sample of service-specific mappings:
-```
-  services:
-    - group: postgres.dev
-      kind: Service
-      name: global-user-db
-      version: v1beta1
-      id: postgres-global-user
-    - group: ibmcloud.ibm.com
-      version: v1alpha1
-      kind: Binding
-      name: watson-service-binding
-      id: watson-service-binding
-      dataMappings:
-        - name: WATSON_URL
-          value: {{  .status.host }} / {{ .status.port }}
-        - name: WATSON_USERNAME
-          value: {{  .status.username }}
 ```
 
 ## <kbd>EXPERIMENTAL</kbd> Synthetic data bindings
