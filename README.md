@@ -31,7 +31,9 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
       * [Example Resource](#example-resource-1)
       * [Reconciler Implementation](#reconciler-implementation)
    * [Extensions](#extensions)
-      * [Exposing data as environment variables](#exposing-data-as-environment-variables)
+      * [Binding Values as Environment Variables](#binding-values-as-environment-variables)
+         * [Resource Type Schema](#resource-type-schema-1)
+         * [Example Resource](#example-resource-2)
       * [Customizing data bindings](#customizing-data-bindings)
       * [<kbd>EXPERIMENTAL</kbd> Synthetic data bindings](#experimental-synthetic-data-bindings)
       * [Subscription-based services](#subscription-based-services)
@@ -185,7 +187,7 @@ kind: ServiceBinding
 metadata:
   name: online-banking-to-account-service
 spec:
-  name: prod-account-service
+  name: account-service
 
   application:
     apiVersion: apps/v1
@@ -219,13 +221,75 @@ If the modification of the Application resource is completed successfully, the `
 
 # Extensions
 
-## Exposing data as environment variables
+Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
 
-The specification allows for binding properties to be additionally exposed as environment variables.  The assumption is that applications will have pre-knowledge of these environment variable keys, so the mechanisms described in this section are solely for the purpose of allowing the entity responsible for mounting the binding data to know which keys should also be made available as environment variables.
+## Binding Values as Environment Variables
 
-This decision is made in the following ascending order of precedence:
-* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
-* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
+Many applications, especially initially, will not be able to consume Service Bindings as defined by the Application Projection section directly since many of these applications assume that configuration will be exposed via environment variables.  Users must have a way of describing how they would like environment variables containing the values from bound secrets mapped into their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
+
+A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
+
+<!-- TODO: Handle already exists, twice defined, unknown Secret entry -->
+
+### Resource Type Schema
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name:         # string
+spec:
+  name:         # string, optional, default: .metadata.name
+
+  application:  # PodSpec-able resource ObjectReference
+    apiVersion: # string
+    kind:       # string
+    name:       # string
+    ...
+
+  service:      # Provisioned Service-able resource ObjectReference
+    apiVersion: # string
+    kind:       # string
+    name:       # string
+    ...
+
+  env:          # []EnvVar, optional
+  - name:       # string
+    value:      # string
+  ...
+```
+
+### Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: online-banking-to-account-service
+spec:
+  name: account-service
+
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+  env:
+  - name:  ACCOUNT_SERVICE_HOST
+    value: ((host))
+  - name:  ACCOUNT_SERVICE_USERNAME
+    value: ((username))
+  - name:  ACCOUNT_SERVICE_PASSWORD
+    value: ((password))
+  - name:  ACCOUNT_SERVICE_URI
+    value: ((accountServiceUri))
+```
+
 
 
 ---
@@ -236,23 +300,10 @@ This decision is made in the following ascending order of precedence:
   - name:  # string
     value: # string
 
-  env:  # map[string]string, optional
-  - name:  # string
-    value: # string
-
   mapping:
   - name:  accountServiceUri
-    value: https://((.username)):((.password))@((.host)):((.port))/((.path))
+    value: https://((username)):((password))@((host)):((port))/((path))
 
-  env:
-  - name:  ACCOUNT_SERVICE_HOST
-    value: ((.host))
-  - name:  ACCOUNT_SERVICE_USERNAME
-    value: ((.username))
-  - name:  ACCOUNT_SERVICE_PASSWORD
-    value: ((.password))
-  - name:  ACCOUNT_SERVICE_URI
-    value: ((.accountServiceUri))
 -->
 
 
@@ -449,9 +500,5 @@ The above pattern **MAY** be used to expose external services (such as from a VM
 
 Extra binding properties **SHOULD** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
 
-The data that is injected or mounted into the container may have a different name because of a few reasons:
-* the backing service may have chosen a different name (discouraged, but allowed).
-* a custom name may have been chosen using the `dataMappings` portion of the `ServiceBinding` CR.
-* a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.
 
 -->
