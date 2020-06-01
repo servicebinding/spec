@@ -122,7 +122,6 @@ The above pattern **MAY** be used to expose external services (such as from a VM
 ### Service Binding Schema
 
 The core set of binding data is:
-* **type** - the type of the service. Examples: openapi, db2, kafka, etc.
 * **host** - the host (IP or host name) where the service resides.
 * **port** - the port to access the service.
 * **endpoints** - the endpoint information to access the service in a service-specific syntax, such as a list of hosts and ports. This is an alternative to separate `host` and `port` properties.
@@ -276,7 +275,7 @@ $SERVICE_BINDINGS_ROOT/<service-id>/metadata/<persisted_metadata>
 ```
 
 The recommended set of metadata will vary dependending on implementations and platforms, but two **RECOMMENDED** keys are:
-* kind
+* kind - Examples: openapi, db2, kafka, etc.
 * provider
 
 
