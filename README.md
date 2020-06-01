@@ -26,12 +26,15 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
       * [Well-known Secret Entries](#well-known-secret-entries)
    * [Application Projection](#application-projection)
       * [Example Directory Structure](#example-directory-structure)
-   * [Service Binding Request](#service-binding-request)
+   * [Service Binding](#service-binding)
+      * [Resource Type Schema](#resource-type-schema)
+      * [Example Resource](#example-resource-1)
+      * [Reconciler Implementation](#reconciler-implementation)
+   * [Extensions](#extensions)
+      * [Exposing data as environment variables](#exposing-data-as-environment-variables)
       * [Customizing data bindings](#customizing-data-bindings)
       * [<kbd>EXPERIMENTAL</kbd> Synthetic data bindings](#experimental-synthetic-data-bindings)
       * [Subscription-based services](#subscription-based-services)
-   * [Extensions](#extensions)
-      * [Exposing data as environment variables](#exposing-data-as-environment-variables)
 
 <!-- Added by: bhale, at: Mon Jun  1 20:46:50 PDT 2020 -->
 
@@ -69,7 +72,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.bindingRef.name` which is a `LocalObjectReference` to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
 ## Resource Type Schema
 
@@ -81,11 +84,11 @@ status:
 
 ## Example Resource
 
-```
+```yaml
 ...
 status:
   ...
-  bindingRef:
+  binding:
     name: production-db-secret
 ```
 
@@ -133,13 +136,130 @@ $SERVICE_BINDING_ROOT
 │   └── private-key
 ```
 
-# Service Binding Request
+# Service Binding
+
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It is codified as a concrete resource type.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.
+
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference` to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference` to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into to the application.
+
+A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
+
+## Resource Type Schema
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name:                 # string
+spec:
+  name:                 # string, optional, default: .metadata.name
+  kind:                 # string, optional
+  provider:             # string, optional
+
+  application:          # PodSpec-able resource ObjectReference
+    apiVersion:         # string
+    kind:               # string
+    name:               # string
+    ...
+
+  service:              # Provisioned Service-able resource ObjectReference
+    apiVersion:         # string
+    kind:               # string
+    name:               # string
+    ...
+
+status:
+  conditions:           # []Condition containing at least one entry for `Ready`
+  - type:               # string
+    status:             # string
+    lastTransitionTime: # Time
+    reason:             # string
+    message:            # string
+```
+
+## Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: online-banking-to-account-service
+spec:
+  name: prod-account-service
+
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
+## Reconciler Implementation
+
+A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.
+
+If the `$SERVICE_BINDING_ROOT` environment variable has already been configured on the resource represented by `application`, the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  If the `$SERVICE_BINDING_ROOT` environment variable has not been configured on the resource represented by `application`, the `$SERVICE_BINDING_ROOT` environment variable **MUST** be set and the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.
+
+The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is already configured on the resource represented by `application`.
+
+If a `.spec.name` is set, the directory name relative to `$SERVICE_BINDING_ROOT` **MUST** be its value.  If a `.spec.name` is not set, the directory name relative to `$SERVICE_BINDING_ROOT` **SHOULD** be the value of `.metadata.name`.
+
+If a `.spec.kind` is set, the `kind` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
+
+If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed sucessfully the `Ready` condition status **MUST NOT** be set to `True`.
+
+# Extensions
+
+## Exposing data as environment variables
+
+The specification allows for binding properties to be additionally exposed as environment variables.  The assumption is that applications will have pre-knowledge of these environment variable keys, so the mechanisms described in this section are solely for the purpose of allowing the entity responsible for mounting the binding data to know which keys should also be made available as environment variables.
+
+This decision is made in the following ascending order of precedence:
+* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
+* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
+
+
+---
+
+<!--
+
+  mapping: # map[string]string, optional
+  - name:  # string
+    value: # string
+
+  env:  # map[string]string, optional
+  - name:  # string
+    value: # string
+
+  mapping:
+  - name:  accountServiceUri
+    value: https://((.username)):((.password))@((.host)):((.port))/((.path))
+
+  env:
+  - name:  ACCOUNT_SERVICE_HOST
+    value: ((.host))
+  - name:  ACCOUNT_SERVICE_USERNAME
+    value: ((.username))
+  - name:  ACCOUNT_SERVICE_PASSWORD
+    value: ((.password))
+  - name:  ACCOUNT_SERVICE_URI
+    value: ((.accountServiceUri))
+-->
+
+
 
 Binding is requested by the consuming application, or an entity on its behalf such as the [Runtime Component Operator](https://github.com/application-stacks/runtime-component-operator), via a custom resource that is applied in the same cluster where an implementation of this specification resides.
 
 Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds), as the entity that holds the binding request.
-
-**Note** - a few updates / enhancements are being proposed to the current `ServiceBinding` CR, tracked [here](https://github.com/application-stacks/service-binding-specification/issues/16#issuecomment-605309629).
 
 Sample CR
 ```
@@ -245,14 +365,6 @@ Example of a partial CR, where the second service refers to a Secret containing 
 
 
 <!--
-  * $SERVICE_BINDINGS_ROOT is an immutable environment variable (once set) that corresponds to the root location of the bindings.  This value comes from the first `ServiceBinding` CR, as there may be many, and its `mountPathPrefix` element, or from the default value of `/platform/bindings` if the first `ServiceBinding` CR did not specify a `mountPathPrefix` element.
-  * This means that if another `ServiceBinding` CR wants to project itself into the same container, it **MUST** reuse the current `SERVICE_BINDINGS_ROOT` value, even if it had a conflicting `mountPathPrefix` element.
-* `<service-id>` is the `id` field of the corresponding `service` entry in the `ServiceBinding` CR.  If the `id` field is not present, the `name` field is used instead.  The `<service-id>` path **MUST** be unique between the services bound to a particular application.
-* `<persisted_secret>` represents a set of files where the filename is a Secret key and the file contents is the corresponding value of that key.
-
--->
-
-<!--
   ## Minimum requirements for being bindable
 
 * include a sample `ServiceBinding` (see the [Request service binding](#request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
@@ -343,13 +455,3 @@ The data that is injected or mounted into the container may have a different nam
 * a prefix may have been added to certain items in `ServiceBinding`, either globally or per service.
 
 -->
-
-# Extensions
-
-## Exposing data as environment variables
-
-The specification allows for binding properties to be additionally exposed as environment variables.  The assumption is that applications will have pre-knowledge of these environment variable keys, so the mechanisms described in this section are solely for the purpose of allowing the entity responsible for mounting the binding data to know which keys should also be made available as environment variables.
-
-This decision is made in the following ascending order of precedence:
-* value of `ServiceBinding`'s global `bindAs` element, which applies to all binding data.
-* value of the `bindAs` attribute in each of the `dataMappings` elements inside `ServiceBinding`.
