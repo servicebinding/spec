@@ -275,9 +275,10 @@ In addition to the secret, implementations of this specification **MUST** mount,
 $SERVICE_BINDINGS_ROOT/<service-id>/metadata/<persisted_metadata>
 ```
 
-The recommended set of metadata will vary dependending on implementations and platforms, but two **RECOMMENDED** keys are:
+The recommended set of metadata will vary depending on implementations and platforms, but the **RECOMMENDED** keys are:
 * kind
 * provider
+* tags - These can be anything like attributes/names of backing technologies behind the service or any additional information about the service instance which may or may not be used as hints to the application when acting on the service binding information. This is optional and can only be provided by the backing service operator.
 
 
 #### Exposing data as environment variables
