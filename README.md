@@ -582,7 +582,7 @@ spec:
 
   mappings:
   - name: event-streams-url
-    value: {{prod-kafka-cluster.status.url}}/?username={{prod-kafka-user.status.username}}
+    value: ((prod-kafka-cluster.status.url))/?username=((prod-kafka-user.status.username))
 
 status:
   binding:
