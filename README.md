@@ -126,7 +126,7 @@ The `Secret` **MUST** contain a `kind` entry with a value that identifies the ab
 
 The contents of a secret entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
 
-The collection of files within the directory **MAY** change between container launches.  The collection of files within the directory **MUST NOT** change during the lifetime of the container.
+The collection of files within the directory **MAY** change between container launches.  The collection of files within the directory **SHOULD NOT** change during the lifetime of the container.
 
 ## Example Directory Structure
 
