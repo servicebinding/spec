@@ -453,7 +453,7 @@ spec:
     kind:       AccountService
     name:       prod-account-service
 
-  mapping:
+  mappings:
   - name:  accountServiceUri
     value: https://((username)):((password))@((host)):((port))/((path))
 ```
