@@ -442,7 +442,7 @@ spec:
     name:       # string
     ...
 
-  mappings:      # []Mapping, optional
+  mappings:     # []Mapping, optional
   - name:       # string
     value:      # string
   ...
@@ -569,7 +569,7 @@ spec:
     name:       # string
     ...
 
-  mappings:      # []Mapping, optional
+  mappings:     # []Mapping, optional
   - name:       # string
     value:      # string
 
