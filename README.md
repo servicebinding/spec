@@ -425,7 +425,7 @@ spec:
     name:       # string
     ...
 
-  mapping:      # []Mapping, optional
+  mappings:      # []Mapping, optional
   - name:       # string
     value:      # string
   ...
