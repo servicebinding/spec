@@ -65,7 +65,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>Any type that meets the contract defined in a specification, without being an instance of a specific concrete type.  For example, for specification that requires a given key on <code>status</code>, any resource that has that key on its <code>status</code> regardless of its <code>kind</code> would be considered a duck type of the specification.</dd>
 
   <dt>Service</dt>
-  <dd>Any software that exposes functionality.  Examples include an application with REST endpoints, an event stream, an Application Performance Monitor, or a Hardware Security Module.</dd>
+  <dd>Any software that exposes functionality.  Examples include a database, a message broker, an application with REST endpoints, an event stream, an Application Performance Monitor, or a Hardware Security Module.</dd>
 
   <dt>Application</dt>
   <dd>Any process, running within a container.  Examples include a Spring Boot application, a NodeJS Express application, or a Ruby Rails application.  <b>Note:</b> This is different than an umbrella application as defined by the Kubernetes SIG, which refers to a set of micro-services.</dd>
