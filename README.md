@@ -150,7 +150,7 @@ $SERVICE_BINDING_ROOT
 
 A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It is codified as a concrete resource type.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference` to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference` to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into to the application.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference` to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference` to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
 
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
 
