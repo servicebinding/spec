@@ -31,14 +31,17 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
       * [Example Resource](#example-resource-1)
       * [Reconciler Implementation](#reconciler-implementation)
    * [Extensions](#extensions)
+      * [Binding Secret Generation Strategies](#binding-secret-generation-strategies)
+         * [OLM Operator Descriptors](#olm-operator-descriptors)
+         * [Descriptor Examples](#descriptor-examples)
+         * [Non-OLM Operator Annotations](#non-olm-operator-annotations)
+         * [Annotation Examples](#annotation-examples)
       * [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
          * [Resource Type Schema](#resource-type-schema-1)
          * [Example Resource](#example-resource-2)
       * [Binding Values as Environment Variables](#binding-values-as-environment-variables)
          * [Resource Type Schema](#resource-type-schema-2)
          * [Example Resource](#example-resource-3)
-      * [<kbd>EXPERIMENTAL</kbd> Synthetic data bindings](#experimental-synthetic-data-bindings)
-      * [Subscription-based services](#subscription-based-services)
 
 <!-- Added by: bhale, at: Mon Jun  1 20:46:50 PDT 2020 -->
 
@@ -225,9 +228,175 @@ If the modification of the Application resource is completed successfully, the `
 
 Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
 
+## Binding `Secret` Generation Strategies
+
+Many services, especially initially, will not be Provisioned Service-compliant.  These services will expose the appropriate binding `Secret` information, but not in the way that the specification or applications expect.  Users should have a way of describing a mapping from existing data associated with arbitrary resources and CRDs to a representation of a binding `Secret`.
+
+To handle the majority of existing resources and CRDs, `Secret` generation needs to support the following behaviors:
+
+1.  Extract a string from a resource
+1.  Extract an entire `ConfigMap`/`Secret` refrenced from a resource
+1.  Extract a specific entry in a `ConfigMap`/`Secret` referenced from a resource
+1.  Extract entries from a collection of objects, mapping keys and values from entries in a `ConfigMap`/`Secret` referenced from a resource
+1.  Map each value to a specific key
+
+While the syntax of the generation strategies are specific to the system they are annotating, they are based on a common data model.
+
+| Model | Description
+| ----- | -----------
+| `path` | A template represention of the path to an element in a Kubernetes resource.  The value of `path` is specified as [JSONPath](https://kubernetes.io/docs/reference/kubectl/jsonpath/).  Required.
+| `objectType` | Specifies the type of the object selected by the `path`.  One of `ConfigMap`, `Secret`, or `string` (default).
+| `elementType` | Specifies the type of object in an array selected by the `path`.  One of `sliceOfMaps`, `sliceOfStrings`, `string` (default).
+| `sourceKey` | Specifies a particular key to select if a `ConfigMap` or `Secret` is selected by the `path`.  Specifies a value to use for the key for an entry in a binding `Secret` when `elementType` is `sliceOfMaps`.
+| `sourceValue` | Specifies a particular value to use for the value for an entry in a binding `Secret` when `elementType` is `sliceOfMaps`
+
+
+### OLM Operator Descriptors
+
+OLM Operators are configured by setting the `specDescriptor` and `statusDescriptor` entries in the [ClusterServiceVersion](https://docs.openshift.com/container-platform/4.4/operators/operator_sdk/osdk-generating-csvs.html) with mapping descriptors.
+
+### Descriptor Examples
+
+The following examples refer to this resource definition.
+
+```yaml
+apiVersion: apps.kube.io/v1beta1
+kind: Database
+metadata:
+  name: my-cluster
+spec:
+  ...
+
+status:
+  bootstrap:
+  - type: plain
+    url: myhost2.example.com
+    name: hostGroup1
+  - type: tls
+    url: myhost1.example.com:9092,myhost2.example.com:9092
+    name: hostGroup2
+  data:
+    dbConfiguration: database-config     # ConfigMap
+    dbCredentials: database-cred-Secret  # Secret
+    url: db.stage.ibm.com
+```
+
+1.  Mount an entire `Secret` as the binding `Secret`
+    ```yaml
+    - path: data.dbCredentials
+      x-descriptors:
+      - urn:alm:descriptor:io.kubernetes:Secret
+      - service.binding
+    ```
+1.  Mount an entire `ConfigMap` as the binding `Secret`
+    ```yanl
+    - path: data.dbConfiguration
+      x-descriptors:
+      - urn:alm:descriptor:io.kubernetes:ConfigMap
+      - service.binding
+    ```
+1.  Mount an entry from a `ConfigMap` into the binding `Secret`
+    ```yaml
+    - path: data.dbConfiguration
+      x-descriptors:
+      - urn:alm:descriptor:io.kubernetes:ConfigMap
+      - service.binding:certificate:sourceKey=certificate
+    ```
+1.  Mount an entry from a `ConfigMap` into the binding `Secret` with a different key
+    ```yaml
+    - path: data.dbConfiguration
+      x-descriptors:
+      - urn:alm:descriptor:io.kubernetes:ConfigMap
+      - servicebinding:timeout:sourceKey=db_timeout
+    ```
+1.  Mount a resource defintion value into the binding `Secret`
+    ```yaml
+    - path: data.uri
+      x-descriptors:
+      - service.binding:uri
+    ```
+1.  Mount a resource definition value into the binding `Secret` with a different key
+    ```yaml
+    - path: data.connectionURL
+      x-descriptors:
+      - service.binding:uri
+    ```
+1.  Mount the entries of a collection into the binding `Secret` selecting the key and value from each entry
+    ```yaml
+    - path: bootstrap
+      x-descriptors:
+      - service.binding:endpoints:elementType=sliceOfMaps:sourceKey=type:sourceValue=url
+    ```
+
+### Non-OLM Operator and Resource Annotations
+
+Non-OLM Operators are configured by adding annotations to the Operator's CRD with mapping configuration.  All Kubernetes resources are configured by adding annotations to the resource.
+
+### Annotation Examples
+
+The following examples refer to this resource definition.
+
+```yaml
+apiVersion: apps.kube.io/v1beta1
+kind: Database
+metadata:
+  name: my-cluster
+spec:
+  ...
+
+status:
+  bootstrap:
+  - type: plain
+    url: myhost2.example.com
+    name: hostGroup1
+  - type: tls
+    url: myhost1.example.com:9092,myhost2.example.com:9092
+    name: hostGroup2
+  data:
+    dbConfiguration: database-config     # ConfigMap
+    dbCredentials: database-cred-Secret  # Secret
+    url: db.stage.ibm.com
+```
+
+1.  Mount an entire `Secret` as the binding `Secret`
+    ```plain
+    “service.binding":
+      ”path={.status.data.dbCredentials},objectType=Secret”
+    ```
+1.  Mount an entire `ConfigMap` as the binding `Secret`
+    ```plain
+    service.binding”:
+      "path={.status.data.dbConfiguration},objectType=ConfigMap”
+    ```
+1.  Mount an entry from a `ConfigMap` into the binding `Secret`
+    ```plain
+    “service.binding/certificate”:
+      "path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=certificate"
+    ```
+1.  Mount an entry from a `ConfigMap` into the binding `Secret` with a different key
+    ```plain
+    “service.binding/timeout”:
+      “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=db_timeout”
+    ```
+1.  Mount a resource defintion value into the binding `Secret`
+    ```plain
+    “service.binding/uri”:
+      "path={.status.data.url}"
+    ```
+1.  Mount a resource definition value into the binding `Secret` with a different key
+    ```plain
+    “service.binding/uri":
+      "path={.status.data.connectionURL}”
+    ```
+1.  Mount the entries of a collection into the binding `Secret` selecting the key and value from each entry
+    ```plain
+    “service.binding/endpoints”:
+      "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
+    ```
+
 ## Mapping Existing Values to New Values
 
-Many applications will not be able to consume the secrets exposed by Provisioned Services directly.  Teams creating Provisioned Services do not know how their services will be consumed, teams creating Applications will not know what services will be provided to them, different language families have different idioms for naming and style, and more.  Users must have a way of describing a mapping from existing values to customize the provided entries to ones that are usable directly by their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
+Many applications will not be able to consume the secrets exposed by Provisioned Services directly.  Teams creating Provisioned Services do not know how their services will be consumed, teams creating Applications will not know what services will be provided to them, different language families have different idioms for naming and style, and more.  Users should have a way of describing a mapping from existing values to customize the provided entries to ones that are usable directly by their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
 
@@ -268,6 +437,8 @@ metadata:
   name: online-banking-to-account-service
 spec:
   name: account-service
+  kind: database
+  provider: vmware
 
   application:
     apiVersion: apps/v1
@@ -286,7 +457,7 @@ spec:
 
 ## Binding Values as Environment Variables
 
-Many applications, especially initially, will not be able to consume Service Bindings as defined by the Application Projection section directly since many of these applications assume that configuration will be exposed via environment variables.  Users must have a way of describing how they would like environment variables containing the values from bound secrets mapped into their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
+Many applications, especially initially, will not be able to consume Service Bindings as defined by the Application Projection section directly since many of these applications assume that configuration will be exposed via environment variables.  Users should have a way of describing how they would like environment variables containing the values from bound secrets mapped into their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
 
@@ -351,40 +522,11 @@ spec:
 
 
 
----
+<!--
+## Synthetic Provided Services
 
+Many services, especially initially, will not be Provided Service-compliant.  A common pattern to bootstrap an ecosystem towards a specification is to decouple the implementations of the specification from the underlying resource implementations.  In the context of this specification, this means creating synthetic Provided Services
 
-
-
-Binding is requested by the consuming application, or an entity on its behalf such as the [Runtime Component Operator](https://github.com/application-stacks/runtime-component-operator), via a custom resource that is applied in the same cluster where an implementation of this specification resides.
-
-Since the reference implementation for most of this specification is the [Service Binding Operator](https://github.com/redhat-developer/service-binding-operator) we will be using the `ServiceBinding` CRD, which resides in [this folder](https://github.com/redhat-developer/service-binding-operator/tree/master/deploy/crds), as the entity that holds the binding request.
-
-Sample CR
-```
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name: example-service-binding
-spec:
-  mountPathPrefix: "/var/bindings"
-  services:
-    - group: postgres.dev
-      kind: Service
-      name: global-user-db
-      version: v1beta1
-      id: postgres-global-user
-    - group: ibmcloud.ibm.com
-      version: v1alpha1
-      kind: Binding
-      name: coligo-service-binding
-      id: coligo-service-binding
-  application:
-    name: nodejs-rest-http-crud
-    group: apps
-    version: v1
-    resource: deployments
-```
 
 ## <kbd>EXPERIMENTAL</kbd> Synthetic data bindings
 
@@ -415,114 +557,31 @@ Partial sample of a synthetic / composed mapping:
 
 The service entry with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` refers to a synthetic CR whose sole purpose is to compose bindings from other services.
 
-## Subscription-based services
-
-There are a variety of service providers that require a subscription to be created before accessing the service. Examples:
-* an API management framework that provides apiKeys after a plan subscription has been approved
-* a database provisioner that spins single-tenant databases upon request
-* premium services that deploy a providers located in the same physical node as the caller for low latency
-* any other type of subscription service
-
-The only requirement from this specification is that the subscription results in a k8s resources (Secret, etc), containing a partial or complete set of binding data (defined in [Service Binding Schema](#service-binding-schema)).  From the `ServiceBinding` CR's perspective, this resource looks and feels like an additional service.
-
-Example of a partial CR, where the second service refers to a Secret containing the provisioned user specific credentials.
 ```
- services:
-    - group: postgres.dev
-      kind: Service
-      name: global-user-db
-      version: v1beta1
-    - group: postgres.dev
-      kind: Secret
-      name: specific-user-db
-      version: v1beta1
+apiVersion: service.binding/v1alpha1
+kind: SyntheticProvidedService
+metadata:
+  name: kafka
+spec:
+  services:
+  - apiVersion: com.example/v1alpha1
+    kind:       KafkaUser
+    name:       prod-kafka
+    id:         alpha
+  - apiVersion: com.example/v1alpha1
+    kind:       KafkaCluster
+    name:       prod-kafka
+    id:         bravo
+
+  mapping:
+  - name: KAFKA_URL
+    value: {{bravo.status.url}}/?username={{alpha.status.username}}&password={{ alpha.status.creds{{.password}} }}
+
+status:
+  binding:
+    name: kafka-eftg9
 ```
-
-
-<!--
-  ## Minimum requirements for being bindable
-
-* include a sample `ServiceBinding` (see the [Request service binding](#request-service-binding) section below) in its documentation (e.g. GitHub repository, installation instructions, etc) which contains either:
-  * a `dataMapping` element illustrating how each of its `status`, `spec` or `data` properties map to the corresponding [binding data](#service-binding-schema).
-  * a `detectBindingResources: true` element which will automatically populate the resulting Secret from the `ServiceBinding` with information from any Route, Ingress, Service, ConfigMap or Secret resources that are owned by the backing service CR.
-
-<kbd>EXPERIMENTAL</kbd>The service **MUST** also make itself discoverable by complying with one-of:
-* In the case of an OLM-based Operator, add `Bindable` to the CSV's `metadata.annotations.categories`.
-* In the case of a Helm chart service, add bindable to the Chart.yaml's keyword list.
-* In all other cases, add the `servicebinding/bindable: "true"` annotation to your CRD or any CR (Secret, Service, etc).
-
-## Pointer to binding data
-
-This specification supports different scenarios for exposing bindable data. Below is a summary of how to indicate what is interesting for binding.  Please see the [annotation section](annotations.md) for the full set with more details.
-
-1. OLM-enabled Operator: Use the `statusDescriptor` and/or `specDescriptor` parts of the CSV to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema):
-    * The reference's `x-descriptors` with a possible combination of:
-      * ConfigMap:
-
-            - path: data.dbcredentials
-              x-descriptors:
-                - urn:alm:descriptor:io.kubernetes:ConfigMap
-                - servicebinding
-
-      * Secret:
-
-            - path: data.dbcredentials
-              x-descriptors:
-                - urn:alm:descriptor:io.kubernetes:Secret
-                - servicebinding
-
-      * Individual binding items from a `Secret`:
-
-            - urn:alm:descriptor:io.kubernetes:Secret
-            - servicebinding:username
-
-            - urn:alm:descriptor:io.kubernetes:Secret
-            - servicebinding:password
-
-      * Individual binding items from a `ConfigMap`:
-
-            - urn:alm:descriptor:io.kubernetes:ConfigMap
-            - servicebinding:port
-
-            - urn:alm:descriptor:io.kubernetes:ConfigMap
-            - servicebinding:host
-
-      * Individual backing items from a path referencing a string value
-
-            - path: data.uri
-              x-descriptors:
-                - servicebinding
-
-2. Non-OLM Operator: - An annotation in the Operator's CRD to mark which `status` and/or `spec` properties reference the [binding data](#service-binding-schema) :
-      * ConfigMap:
-
-            "servicebinding.dev/certificate":
-            "path={.status.data.dbConfiguration},objectType=ConfigMap"
-
-      * Secret:
-
-            "servicebinding.dev/dbCredentials":
-            "path={.status.data.dbCredentials},objectType=Secret"
-
-      * Individual binding items from a `ConfigMap`
-
-            “servicebinding.dev/host":
-             “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=address"
-
-            “servicebinding.dev/port":
-            “path={.status.data.dbConfiguration},objectType=ConfigMap
-
-      * Individual backing items from a path referencing a string value
-
-            “servicebinding.dev/uri”:"path={.status.data.connectionURL}"
-
-3. Regular k8s resources (Ingress, Route, Service, Secret, ConfigMap etc)  - An annotation in the corresponding Kubernetes resources that maps the `status`, `spec` or `data` properties to their corresponding [binding data](#service-binding-schema).
-
-All annotations used in CRDs in the above section **MAY** be used for regular k8s resources, as well.
-
-The above pattern **MAY** be used to expose external services (such as from a VM or external cluster), as long as there is an entity such as a Secret that provides the binding details.
-
-Extra binding properties **SHOULD** also be defined by the bindable service, using one of the patterns defined in [Pointer to binding data](#pointer-to-binding-data).
-
-
 -->
+
+
+
