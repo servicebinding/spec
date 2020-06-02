@@ -27,21 +27,24 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
    * [Application Projection](#application-projection)
       * [Example Directory Structure](#example-directory-structure)
    * [Service Binding](#service-binding)
-      * [Resource Type Schema](#resource-type-schema)
+      * [Resource Type Schema](#resource-type-schema-1)
       * [Example Resource](#example-resource-1)
       * [Reconciler Implementation](#reconciler-implementation)
    * [Extensions](#extensions)
       * [Binding Secret Generation Strategies](#binding-secret-generation-strategies)
          * [OLM Operator Descriptors](#olm-operator-descriptors)
          * [Descriptor Examples](#descriptor-examples)
-         * [Non-OLM Operator Annotations](#non-olm-operator-annotations)
+         * [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
          * [Annotation Examples](#annotation-examples)
       * [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
-         * [Resource Type Schema](#resource-type-schema-1)
+         * [Resource Type Schema](#resource-type-schema-2)
          * [Example Resource](#example-resource-2)
       * [Binding Values as Environment Variables](#binding-values-as-environment-variables)
-         * [Resource Type Schema](#resource-type-schema-2)
+         * [Resource Type Schema](#resource-type-schema-3)
          * [Example Resource](#example-resource-3)
+      * [Synthetic Provisioned Service](#synthetic-provisioned-service)
+         * [Resource Type Schema](#resource-type-schema-4)
+         * [Example Resource](#example-resource-4)
 
 <!-- Added by: bhale, at: Mon Jun  1 20:46:50 PDT 2020 -->
 
@@ -520,68 +523,68 @@ spec:
     value: ((accountServiceUri))
 ```
 
+## Synthetic Provisioned Service
 
+There are some situations where there is an arity mismatch between a collection of Kubernetes resources representing a system and an application that wishes to consume them.  The solution to this problem is to create a synthetic Provisioned Service that is a composite of multiple other resources.
 
-<!--
-## Synthetic Provided Services
+A Synthetic Provisioned Service resource **MUST** define a `.spec.services` which is an array of `ObjectReference`s to a resource.
 
-Many services, especially initially, will not be Provided Service-compliant.  A common pattern to bootstrap an ecosystem towards a specification is to decouple the implementations of the specification from the underlying resource implementations.  In the context of this specification, this means creating synthetic Provided Services
+A Synthetic Provisioned Service resource **MUST** define a `.spec.mappings` which is an array of `Mapping` objects. A `Mapping` object **MUST** define `name` and `value` entries. The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a [JSON Path](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to an entry on a resource defined in `services`. The value of this `Secret` entry **MUST** be substituted into the original value string, replacing the token. Once all tokens have been substituted, the new value **MUST** be added to the binding `Secret` exposed by the resource.
 
+If a `.spec.kind` is set, the `kind` entry in the binding `Secret` **MUST** be set to its value. If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value.
 
-## <kbd>EXPERIMENTAL</kbd> Synthetic data bindings
+A Synthetic Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`. The `Secret` **MUST** be in the same namespace as the resource. The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding. It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding. The `Secret` **MAY** contain any other entry.
 
-If a `dataMappings` requires a cross-service composition then a new synthetic service entry must be created.
+### Resource Type Schema
 
-Partial sample of a synthetic / composed mapping:
-```
-  services:
-    - group: event.stream
-      kind: User
-      name: my-user
-      version: v1beta1
-      id: event-user
-    - group: event.stream
-      kind: Cluster
-      resourceRef: my-cluster
-      version: v1beta1
-      id: event-cluster
-    - group: servicebinding
-      version: v1alpha1
-      kind: ComposedService
-      name: events-composed
-      id: event-stream
-      dataMappings:
-        - name: EVENT_STREAMS_URL
-          value: {{  event-cluster.status.url }} / ?username= {{ event-user.status.username }}
-```
-
-The service entry with apiVersion `servicebinding/v1alpha1` and kind `ComposedService` refers to a synthetic CR whose sole purpose is to compose bindings from other services.
-
-```
+```yaml
 apiVersion: service.binding/v1alpha1
-kind: SyntheticProvidedService
+kind: SyntheticProvisionedService
 metadata:
-  name: kafka
+  name:         # string
 spec:
+  kind:         # string, optional
+  provider:     # string, optional
+
+  services:     # []]ObjectReference
+  - apiVersion: # string
+    kind:       # string
+    name:       # string
+    ...
+
+  mapping:      # []Mapping, optional
+  - name:       # string
+    value:      # string
+
+status:         # Provisioned Service Duck Type
+  binding:
+    name:       # string
+```
+
+### Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: SyntheticProvisionedService
+metadata:
+  name: kafka-composite-service
+spec:
+  name: kafka
+  kind: Kafka
+
   services:
-  - apiVersion: com.example/v1alpha1
-    kind:       KafkaUser
-    name:       prod-kafka
-    id:         alpha
-  - apiVersion: com.example/v1alpha1
-    kind:       KafkaCluster
-    name:       prod-kafka
-    id:         bravo
+  - apiVersion: event.stream/v1beta1
+    kind:       Cluster
+    name:       prod-kafka-cluster
+  - apiVersion: event.stream/v1beta1
+    kind:       User
+    name:       prod-kafka-user
 
   mapping:
-  - name: KAFKA_URL
-    value: {{bravo.status.url}}/?username={{alpha.status.username}}&password={{ alpha.status.creds{{.password}} }}
+  - name: event-streams-url
+    value: {{prod-kafka-cluster.status.url}}/?username={{prod-kafka-user.status.username}}
 
 status:
   binding:
     name: kafka-eftg9
 ```
--->
-
-
-
