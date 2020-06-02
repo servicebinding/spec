@@ -381,7 +381,7 @@ status:
     “service.binding/timeout”:
       “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=db_timeout”
     ```
-1.  Mount a resource defintion value into the binding `Secret`
+1.  Mount a resource definition value into the binding `Secret`
     ```plain
     “service.binding/uri”:
       "path={.status.data.url}"
