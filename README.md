@@ -24,6 +24,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
       * [Resource Type Schema](#resource-type-schema)
       * [Example Resource](#example-resource)
       * [Well-known Secret Entries](#well-known-secret-entries)
+      * [Example Secret](#example-secret)
    * [Application Projection](#application-projection)
       * [Example Directory Structure](#example-directory-structure)
    * [Service Binding](#service-binding)
@@ -46,7 +47,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
          * [Resource Type Schema](#resource-type-schema-4)
          * [Example Resource](#example-resource-4)
 
-<!-- Added by: bhale, at: Mon Jun  1 20:46:50 PDT 2020 -->
+<!-- Added by: bhale, at: Tue Jun  2 07:50:09 PDT 2020 -->
 
 <!--te-->
 
@@ -117,6 +118,22 @@ Other than the required `kind` entry and the recommended `provider` entry, there
 | `privateKey` | A PEM-encoded private key used in mTLS client authentication
 
 `Secret` entries that do not meet these requirements **MUST** use different entry names.
+
+## Example Secret
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: production-db
+stringData:
+  kind: mysql
+  provider: bitnami
+  host: localhost
+  port: 3306
+  username: root
+  password: root
+```
 
 # Application Projection
 
