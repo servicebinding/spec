@@ -187,6 +187,7 @@ spec:
     apiVersion:         # string
     kind:               # string
     name:               # string
+    containers:         # []intstr.IntOrString, optional
     ...
 
   service:              # Provisioned Service-able resource ObjectReference
