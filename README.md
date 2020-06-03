@@ -156,11 +156,11 @@ $SERVICE_BINDING_ROOT
 │   ├── username
 │   └── password
 └── transaction-event-stream
-│   ├── kind
-│   ├── connection-count
-│   ├── uri
-│   ├── certificates
-│   └── private-key
+    ├── kind
+    ├── connection-count
+    ├── uri
+    ├── certificates
+    └── private-key
 ```
 
 # Service Binding
