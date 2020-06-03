@@ -566,7 +566,7 @@ spec:
   kind:         # string, optional
   provider:     # string, optional
 
-  services:     # []]ObjectReference
+  services:     # []ObjectReference
   - apiVersion: # string
     kind:       # string
     name:       # string
