@@ -83,7 +83,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `kind` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
 ## Resource Type Schema
 
@@ -105,7 +105,7 @@ status:
 
 ## Well-known Secret Entries
 
-Other than the recommended `kind` and `provider` entries, there are no other reserved `Secret` entries.  In the interests of consistency, if a `Secret` includes any of the following entry names, the entry value **MUST** meet the specified requirements:
+Other than the recommended `type` and `provider` entries, there are no other reserved `Secret` entries.  In the interests of consistency, if a `Secret` includes any of the following entry names, the entry value **MUST** meet the specified requirements:
 
 | Name | Requirements
 | ---- | ------------
@@ -127,7 +127,7 @@ kind: Secret
 metadata:
   name: production-db
 stringData:
-  kind: mysql
+  type: mysql
   provider: bitnami
   host: localhost
   port: 3306
@@ -139,7 +139,7 @@ stringData:
 
 A Binding `Secret` **MUST** be volume mounted into a container at `$SERVICE_BINDINGS_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDINGS_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
-The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
 The name of a secret entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  The contents of a secret entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
 
@@ -150,13 +150,13 @@ The collection of files within the directory **MAY** change between container la
 ```plain
 $SERVICE_BINDING_ROOT
 ├── account-database
-│   ├── kind
+│   ├── type
 │   ├── connection-count
 │   ├── uri
 │   ├── username
 │   └── password
 └── transaction-event-stream
-    ├── kind
+    ├── type
     ├── connection-count
     ├── uri
     ├── certificates
@@ -182,7 +182,7 @@ metadata:
   name:                 # string
 spec:
   name:                 # string, optional, default: .metadata.name
-  kind:                 # string, optional
+  type:                 # string, optional
   provider:             # string, optional
 
   application:          # PodSpec-able resource ObjectReference
@@ -243,7 +243,7 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.name` is set, the directory name relative to `$SERVICE_BINDING_ROOT` **MUST** be its value.  If a `.spec.name` is not set, the directory name relative to `$SERVICE_BINDING_ROOT` **SHOULD** be the value of `.metadata.name`.
 
-If a `.spec.kind` is set, the `kind` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
+If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed sucessfully the `Ready` condition status **MUST NOT** be set to `True`.
 
@@ -551,9 +551,9 @@ A Synthetic Provisioned Service resource **MUST** define a `.spec.services` whic
 
 A Synthetic Provisioned Service resource **MUST** define a `.spec.mappings` which is an array of `Mapping` objects. A `Mapping` object **MUST** define `name` and `value` entries. The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a [JSON Path](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to an entry on a resource defined in `services`. The value of this `Secret` entry **MUST** be substituted into the original value string, replacing the token. Once all tokens have been substituted, the new value **MUST** be added to the binding `Secret` exposed by the resource.
 
-If a `.spec.kind` is set, the `kind` entry in the binding `Secret` **MUST** be set to its value. If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value.
+If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value. If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value.
 
-A Synthetic Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`. The `Secret` **MUST** be in the same namespace as the resource. The `Secret` **MUST** contain a `kind` entry with a value that identifies the abstract classification of the binding. It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding. The `Secret` **MAY** contain any other entry.
+A Synthetic Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`. The `Secret` **MUST** be in the same namespace as the resource. The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding. It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding. The `Secret` **MAY** contain any other entry.
 
 ### Resource Type Schema
 
@@ -563,7 +563,7 @@ kind: SyntheticProvisionedService
 metadata:
   name:         # string
 spec:
-  kind:         # string, optional
+  type:         # string, optional
   provider:     # string, optional
 
   services:     # []ObjectReference
@@ -590,7 +590,7 @@ metadata:
   name: kafka-composite-service
 spec:
   name: kafka
-  kind: Kafka
+  type: Kafka
 
   services:
   - apiVersion: event.stream/v1beta1
