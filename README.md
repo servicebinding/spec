@@ -153,7 +153,7 @@ The collection of files within the directory **MAY** change between container la
 $SERVICE_BINDING_ROOT
 ├── account-database
 │   ├── type
-│   ├── connection-count
+│   ├── provider
 │   ├── uri
 │   ├── username
 │   └── password
