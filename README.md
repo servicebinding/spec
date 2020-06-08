@@ -117,7 +117,7 @@ Other than the recommended `type` and `provider` entries, there are no other res
 | `username` | A string-based username credential
 | `password` | A string-based password credential
 | `certificates` | A collection of PEM-encoded X.509 certificates, representing a certificate chain used in mTLS client authentication
-| `privateKey` | A PEM-encoded private key used in mTLS client authentication
+| `private-key` | A PEM-encoded private key used in mTLS client authentication
 
 `Secret` entries that do not meet these requirements **MUST** use different entry names.
 
