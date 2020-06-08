@@ -83,7 +83,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference`-able to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
@@ -171,7 +171,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference` to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference` to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
 
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
 
@@ -187,14 +187,14 @@ spec:
   type:                 # string, optional
   provider:             # string, optional
 
-  application:          # PodSpec-able resource ObjectReference
+  application:          # PodSpec-able resource ObjectReference-able
     apiVersion:         # string
     kind:               # string
     name:               # string
     containers:         # []intstr.IntOrString, optional
     ...
 
-  service:              # Provisioned Service-able resource ObjectReference
+  service:              # Provisioned Service-able resource ObjectReference-able
     apiVersion:         # string
     kind:               # string
     name:               # string
@@ -435,13 +435,13 @@ metadata:
 spec:
   name:         # string, optional, default: .metadata.name
 
-  application:  # PodSpec-able resource ObjectReference
+  application:  # PodSpec-able resource ObjectReference-able
     apiVersion: # string
     kind:       # string
     name:       # string
     ...
 
-  service:      # Provisioned Service-able resource ObjectReference
+  service:      # Provisioned Service-able resource ObjectReference-able
     apiVersion: # string
     kind:       # string
     name:       # string
@@ -496,13 +496,13 @@ metadata:
 spec:
   name:         # string, optional, default: .metadata.name
 
-  application:  # PodSpec-able resource ObjectReference
+  application:  # PodSpec-able resource ObjectReference-able
     apiVersion: # string
     kind:       # string
     name:       # string
     ...
 
-  service:      # Provisioned Service-able resource ObjectReference
+  service:      # Provisioned Service-able resource ObjectReference-able
     apiVersion: # string
     kind:       # string
     name:       # string
@@ -549,13 +549,13 @@ spec:
 
 There are some situations where there is an arity mismatch between a collection of Kubernetes resources representing a system and an application that wishes to consume them.  The solution to this problem is to create a synthetic Provisioned Service that is a composite of multiple other resources.
 
-A Synthetic Provisioned Service resource **MUST** define a `.spec.services` which is an array of `ObjectReference`s to a resource.
+A Synthetic Provisioned Service resource **MUST** define a `.spec.services` which is an array of `ObjectReference`-ables to a resource.
 
 A Synthetic Provisioned Service resource **MUST** define a `.spec.mappings` which is an array of `Mapping` objects. A `Mapping` object **MUST** define `name` and `value` entries. The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a [JSON Path](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to an entry on a resource defined in `services`. The value of this `Secret` entry **MUST** be substituted into the original value string, replacing the token. Once all tokens have been substituted, the new value **MUST** be added to the binding `Secret` exposed by the resource.
 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value. If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value.
 
-A Synthetic Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference` to a `Secret`. The `Secret` **MUST** be in the same namespace as the resource. The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding. It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding. The `Secret` **MAY** contain any other entry.
+A Synthetic Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference`-able to a `Secret`. The `Secret` **MUST** be in the same namespace as the resource. The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding. It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding. The `Secret` **MAY** contain any other entry.
 
 ### Resource Type Schema
 
@@ -568,7 +568,7 @@ spec:
   type:         # string, optional
   provider:     # string, optional
 
-  services:     # []ObjectReference
+  services:     # []ObjectReference-able
   - apiVersion: # string
     kind:       # string
     name:       # string
