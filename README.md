@@ -312,21 +312,21 @@ status:
     - path: data.dbCredentials
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:Secret
-      - service.binding
+      - servicebinding
     ```
 1.  Mount an entire `ConfigMap` as the binding `Secret`
-    ```yanl
+    ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
-      - service.binding
+      - servicebinding
     ```
 1.  Mount an entry from a `ConfigMap` into the binding `Secret`
     ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
-      - service.binding:certificate:sourceKey=certificate
+      - servicebinding:certificate:sourceKey=certificate
     ```
 1.  Mount an entry from a `ConfigMap` into the binding `Secret` with a different key
     ```yaml
@@ -339,19 +339,19 @@ status:
     ```yaml
     - path: data.uri
       x-descriptors:
-      - service.binding:uri
+      - servicebinding
     ```
 1.  Mount a resource definition value into the binding `Secret` with a different key
     ```yaml
     - path: data.connectionURL
       x-descriptors:
-      - service.binding:uri
+      - servicebinding:uri
     ```
 1.  Mount the entries of a collection into the binding `Secret` selecting the key and value from each entry
     ```yaml
     - path: bootstrap
       x-descriptors:
-      - service.binding:endpoints:elementType=sliceOfMaps:sourceKey=type:sourceValue=url
+      - servicebinding:endpoints:elementType=sliceOfMaps:sourceKey=type:sourceValue=url
     ```
 
 ### Non-OLM Operator and Resource Annotations
@@ -386,37 +386,37 @@ status:
 
 1.  Mount an entire `Secret` as the binding `Secret`
     ```plain
-    “service.binding":
+    “servicebinding":
       ”path={.status.data.dbCredentials},objectType=Secret”
     ```
 1.  Mount an entire `ConfigMap` as the binding `Secret`
     ```plain
-    service.binding”:
+    servicebinding”:
       "path={.status.data.dbConfiguration},objectType=ConfigMap”
     ```
 1.  Mount an entry from a `ConfigMap` into the binding `Secret`
     ```plain
-    “service.binding/certificate”:
+    “servicebinding/certificate”:
       "path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=certificate"
     ```
 1.  Mount an entry from a `ConfigMap` into the binding `Secret` with a different key
     ```plain
-    “service.binding/timeout”:
+    “servicebinding/timeout”:
       “path={.status.data.dbConfiguration},objectType=ConfigMap,sourceKey=db_timeout”
     ```
 1.  Mount a resource definition value into the binding `Secret`
     ```plain
-    “service.binding/uri”:
+    “servicebinding/url”:
       "path={.status.data.url}"
     ```
 1.  Mount a resource definition value into the binding `Secret` with a different key
     ```plain
-    “service.binding/uri":
+    “servicebinding/uri":
       "path={.status.data.connectionURL}”
     ```
 1.  Mount the entries of a collection into the binding `Secret` selecting the key and value from each entry
     ```plain
-    “service.binding/endpoints”:
+    “servicebinding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
     ```
 
