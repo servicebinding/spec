@@ -337,7 +337,7 @@ status:
     ```
 1.  Mount a resource definition value into the binding `Secret`
     ```yaml
-    - path: data.uri
+    - path: data.url
       x-descriptors:
       - servicebinding
     ```
