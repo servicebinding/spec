@@ -625,7 +625,7 @@ As label selectors are inherently queries that return zero-to-many resources, im
 ### Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/{vendored-version}
 kind: ServiceBinding
 metadata:
   ...
@@ -642,7 +642,7 @@ status:
 ### Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/{vendored-version}
 kind: ServiceBinding
 metadata:
   name: online-banking-to-account-service
