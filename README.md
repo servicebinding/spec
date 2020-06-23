@@ -618,7 +618,7 @@ The `ServiceBinding` resource is limited by the [Service Binding](#service-bindi
 
 A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.
 
-As label selectors are inherently queries that return zero-to-many resources, implementations **SHOULD** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **SHOULD** be aggregated and reported on the binding status's `Ready` condition.
+As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED* that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors of this extension **SHOULD** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **SHOULD** be aggregated and reported on the binding status's `Ready` condition.
 
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 
