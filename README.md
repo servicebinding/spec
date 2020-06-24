@@ -47,11 +47,14 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Synthetic Provisioned Service](#synthetic-provisioned-service)
     - [Resource Type Schema](#resource-type-schema-4)
     - [Example Resource](#example-resource-4)
+  - [Multi-Application Bindings](#multi-application-bindings)
+    - [Resource Type Schema](#resource-type-schema-5)
+    - [Example Resource](#example-resource-5)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-5)
-    - [For Service Binding Implementors](#for-service-binding-implementors)
       - [Example Resource](#example-resource-6)
+    - [For Service Binding Implementors](#for-service-binding-implementors)
+      - [Example Resource](#example-resource-7)
 
 ---
 
