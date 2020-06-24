@@ -16,40 +16,44 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
 [cnb]: https://github.com/buildpacks/spec/blob/master/extensions/bindings.md
 
 ---
-<!--ts-->
-   * [Service Binding Specification for Kubernetes](#service-binding-specification-for-kubernetes)
-      * [Notational Conventions](#notational-conventions)
-      * [Terminology definition](#terminology-definition)
-   * [Provisioned Service](#provisioned-service)
-      * [Resource Type Schema](#resource-type-schema)
-      * [Example Resource](#example-resource)
-      * [Well-known Secret Entries](#well-known-secret-entries)
-      * [Example Secret](#example-secret)
-   * [Application Projection](#application-projection)
-      * [Example Directory Structure](#example-directory-structure)
-   * [Service Binding](#service-binding)
-      * [Resource Type Schema](#resource-type-schema-1)
-      * [Example Resource](#example-resource-1)
-      * [Reconciler Implementation](#reconciler-implementation)
-   * [Extensions](#extensions)
-      * [Binding Secret Generation Strategies](#binding-secret-generation-strategies)
-         * [OLM Operator Descriptors](#olm-operator-descriptors)
-         * [Descriptor Examples](#descriptor-examples)
-         * [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
-         * [Annotation Examples](#annotation-examples)
-      * [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
-         * [Resource Type Schema](#resource-type-schema-2)
-         * [Example Resource](#example-resource-2)
-      * [Binding Values as Environment Variables](#binding-values-as-environment-variables)
-         * [Resource Type Schema](#resource-type-schema-3)
-         * [Example Resource](#example-resource-3)
-      * [Synthetic Provisioned Service](#synthetic-provisioned-service)
-         * [Resource Type Schema](#resource-type-schema-4)
-         * [Example Resource](#example-resource-4)
 
-<!-- Added by: bhale, at: Tue Jun  2 07:50:09 PDT 2020 -->
+<!-- Using https://github.com/yzhang-gh/vscode-markdown to manage toc -->
+- [Service Binding Specification for Kubernetes](#service-binding-specification-for-kubernetes)
+  - [Notational Conventions](#notational-conventions)
+  - [Terminology definition](#terminology-definition)
+- [Provisioned Service](#provisioned-service)
+  - [Resource Type Schema](#resource-type-schema)
+  - [Example Resource](#example-resource)
+  - [Well-known Secret Entries](#well-known-secret-entries)
+  - [Example Secret](#example-secret)
+- [Application Projection](#application-projection)
+  - [Example Directory Structure](#example-directory-structure)
+- [Service Binding](#service-binding)
+  - [Resource Type Schema](#resource-type-schema-1)
+  - [Example Resource](#example-resource-1)
+  - [Reconciler Implementation](#reconciler-implementation)
+- [Extensions](#extensions)
+  - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
+    - [OLM Operator Descriptors](#olm-operator-descriptors)
+    - [Descriptor Examples](#descriptor-examples)
+    - [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
+    - [Annotation Examples](#annotation-examples)
+  - [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
+    - [Resource Type Schema](#resource-type-schema-2)
+    - [Example Resource](#example-resource-2)
+  - [Binding Values as Environment Variables](#binding-values-as-environment-variables)
+    - [Resource Type Schema](#resource-type-schema-3)
+    - [Example Resource](#example-resource-3)
+  - [Synthetic Provisioned Service](#synthetic-provisioned-service)
+    - [Resource Type Schema](#resource-type-schema-4)
+    - [Example Resource](#example-resource-4)
+  - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
+    - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
+      - [Example Resource](#example-resource-5)
+    - [For Service Binding Implementors](#for-service-binding-implementors)
+      - [Example Resource](#example-resource-6)
 
-<!--te-->
+---
 
 ## Notational Conventions
 
@@ -610,4 +614,66 @@ spec:
 status:
   binding:
     name: kafka-eftg9
+```
+
+## Role-Based Access Control (RBAC)
+
+Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources. When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into. This extension defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler. Cluster operators **MAY** impose additional access controls beyond RBAC.
+
+[rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+
+### For Cluster Operators and CRD Authors
+
+Cluster operators and CRD authors **MAY** opt-in resources to service binding by defining a `ClusterRole` with a label matching `service.binding/controller=true`. For Provisioned Service-able resources the `get`, `list`, and `watch` verbs **MUST** be granted. For PodSpec-able resources the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+
+#### Example Resource
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: awesome-service-bindings
+  labels:
+    service.binding/controller: "true" # matches the aggregation rule selector
+rules:
+# for Provisioned Service-able resources only
+- apiGroups:
+  - awesome.example.com
+  resources:
+  - awesomeservices
+  verbs:
+  - get
+  - list
+  - watch
+# for PodSpec-able resources (also compatible with Provisioned Service-able resources)
+- apiGroups:
+  - awesome.example.com
+  resources:
+  - awesomeapplications
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+```
+
+### For Service Binding Implementors
+
+Service binding reconciler implementations **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `service.binding/controller=true`. This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
+
+[acr]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
+
+#### Example Resource
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ...
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+      service.binding/controller: "true"
+rules: [] # The control plane automatically fills in the rules
 ```
