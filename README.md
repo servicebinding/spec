@@ -616,6 +616,62 @@ status:
     name: kafka-eftg9
 ```
 
+## Multi-Application Bindings
+
+The `ServiceBinding` resource is limited by the [Service Binding](#service-binding) spec to bind a single service by-name to a single application by-name. If the application's name is generated and not known in advance, the binding implicitly must be created after the application. While level-based reconciliation will converge on the desired state, the application will roll out initially without the bound service. Depending on the application this may cause a crash loop or a misconfiguration (e.g. using an in-memory database designed for development in a production environment). By switching the application reference from using a name to a label selector the service can be bound to the application resource as it is created.
+
+A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.
+
+As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors of this extension **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
+
+[ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+
+### Resource Type Schema
+
+```yaml
+apiVersion: service.binding/{vendored-version}
+kind: ServiceBinding
+metadata:
+  ...
+spec:
+  application:          # PodSpec-able resource ObjectReference-able
+    ...
+    name:               # string, optional, mutually exclusive with selector
+    selector:           # metav1.LabelSelector, optional, mutually exclusive with name
+  ...
+status:
+  ...
+```
+
+### Example Resource
+
+```yaml
+apiVersion: service.binding/{vendored-version}
+kind: ServiceBinding
+metadata:
+  name: online-banking-to-account-service
+spec:
+  name: account-service
+
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    selector:
+      matchLabels:
+        app.kubernetes.io/part-of: online-banking
+        app.kubernetes.io/component: frontend
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
 ## Role-Based Access Control (RBAC)
 
 Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources. When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into. This extension defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler. Cluster operators **MAY** impose additional access controls beyond RBAC.
