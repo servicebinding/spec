@@ -44,17 +44,14 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Binding Values as Environment Variables](#binding-values-as-environment-variables)
     - [Resource Type Schema](#resource-type-schema-3)
     - [Example Resource](#example-resource-3)
-  - [Synthetic Provisioned Service](#synthetic-provisioned-service)
+  - [Multi-Application Bindings](#multi-application-bindings)
     - [Resource Type Schema](#resource-type-schema-4)
     - [Example Resource](#example-resource-4)
-  - [Multi-Application Bindings](#multi-application-bindings)
-    - [Resource Type Schema](#resource-type-schema-5)
-    - [Example Resource](#example-resource-5)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-6)
+      - [Example Resource](#example-resource-5)
     - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-7)
+      - [Example Resource](#example-resource-6)
 
 ---
 
@@ -551,72 +548,6 @@ spec:
     value: ((password))
   - name:  ACCOUNT_SERVICE_URI
     value: ((accountServiceUri))
-```
-
-## Synthetic Provisioned Service
-
-There are some situations where there is an arity mismatch between a collection of Kubernetes resources representing a system and an application that wishes to consume them.  The solution to this problem is to create a synthetic Provisioned Service that is a composite of multiple other resources.
-
-A Synthetic Provisioned Service resource **MUST** define a `.spec.services` which is an array of `ObjectReference`-ables to a resource.
-
-A Synthetic Provisioned Service resource **MUST** define a `.spec.mappings` which is an array of `Mapping` objects. A `Mapping` object **MUST** define `name` and `value` entries. The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a [JSON Path](https://kubernetes.io/docs/reference/kubectl/jsonpath/) to an entry on a resource defined in `services`. The value of this `Secret` entry **MUST** be substituted into the original value string, replacing the token. Once all tokens have been substituted, the new value **MUST** be added to the binding `Secret` exposed by the resource.
-
-If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value. If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value.
-
-A Synthetic Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference`-able to a `Secret`. The `Secret` **MUST** be in the same namespace as the resource. The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding. It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding. The `Secret` **MAY** contain any other entry.
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: SyntheticProvisionedService
-metadata:
-  name:         # string
-spec:
-  type:         # string, optional
-  provider:     # string, optional
-
-  services:     # []ObjectReference-able
-  - apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  mappings:     # []Mapping, optional
-  - name:       # string
-    value:      # string
-
-status:         # Provisioned Service Duck Type
-  binding:
-    name:       # string
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: SyntheticProvisionedService
-metadata:
-  name: kafka-composite-service
-spec:
-  name: kafka
-  type: Kafka
-
-  services:
-  - apiVersion: event.stream/v1beta1
-    kind:       Cluster
-    name:       prod-kafka-cluster
-  - apiVersion: event.stream/v1beta1
-    kind:       User
-    name:       prod-kafka-user
-
-  mappings:
-  - name: event-streams-url
-    value: ((prod-kafka-cluster.url))/?username=((prod-kafka-user.username))
-
-status:
-  binding:
-    name: kafka-eftg9
 ```
 
 ## Multi-Application Bindings
