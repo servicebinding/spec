@@ -41,17 +41,14 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
     - [Resource Type Schema](#resource-type-schema-2)
     - [Example Resource](#example-resource-2)
-  - [Binding Values as Environment Variables](#binding-values-as-environment-variables)
+  - [Multi-Application Bindings](#multi-application-bindings)
     - [Resource Type Schema](#resource-type-schema-3)
     - [Example Resource](#example-resource-3)
-  - [Multi-Application Bindings](#multi-application-bindings)
-    - [Resource Type Schema](#resource-type-schema-4)
-    - [Example Resource](#example-resource-4)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-5)
+      - [Example Resource](#example-resource-4)
     - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-6)
+      - [Example Resource](#example-resource-5)
 
 ---
 
@@ -177,6 +174,8 @@ Restricting service binding to resources within the same namespace is strongly *
 
 A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
 
+A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
+
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
 
 ## Resource Type Schema
@@ -202,6 +201,11 @@ spec:
     apiVersion:         # string
     kind:               # string
     name:               # string
+    ...
+
+  env:                  # []EnvVar, optional
+  - name:               # string
+    value:              # string
     ...
 
 status:
@@ -233,6 +237,16 @@ spec:
     kind:       AccountService
     name:       prod-account-service
 
+  env:
+  - name:  ACCOUNT_SERVICE_HOST
+    value: ((host))
+  - name:  ACCOUNT_SERVICE_USERNAME
+    value: ((username))
+  - name:  ACCOUNT_SERVICE_PASSWORD
+    value: ((password))
+  - name:  ACCOUNT_SERVICE_URI
+    value: ((accountServiceUri))
+
 status:
   conditions:
   - type:   Ready
@@ -248,7 +262,6 @@ If a `.spec.name` is set, the directory name of the volume mount **MUST** be its
 If the `$SERVICE_BINDING_ROOT` environment variable has already been configured on the resource represented by `application`, the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  If the `$SERVICE_BINDING_ROOT` environment variable has not been configured on the resource represented by `application`, the `$SERVICE_BINDING_ROOT` environment variable **MUST** be set and the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  A **RECOMMENDED** value to use is `/bindings`.
 
 The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is already configured on the resource represented by `application`.
-
 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
@@ -483,71 +496,6 @@ spec:
   mappings:
   - name:  accountServiceUri
     value: https://((username)):((password))@((host)):((port))/((path))
-```
-
-## Binding Values as Environment Variables
-
-Many applications, especially initially, will not be able to consume Service Bindings as defined by the Application Projection section directly since many of these applications assume that configuration will be exposed via environment variables.  Users should have a way of describing how they would like environment variables containing the values from bound secrets mapped into their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
-
-A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name:         # string
-spec:
-  name:         # string, optional, default: .metadata.name
-
-  application:  # PodSpec-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  service:      # Provisioned Service-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  env:          # []EnvVar, optional
-  - name:       # string
-    value:      # string
-  ...
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name: online-banking-to-account-service
-spec:
-  name: account-service
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-  env:
-  - name:  ACCOUNT_SERVICE_HOST
-    value: ((host))
-  - name:  ACCOUNT_SERVICE_USERNAME
-    value: ((username))
-  - name:  ACCOUNT_SERVICE_PASSWORD
-    value: ((password))
-  - name:  ACCOUNT_SERVICE_URI
-    value: ((accountServiceUri))
 ```
 
 ## Multi-Application Bindings
