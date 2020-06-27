@@ -38,17 +38,14 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
     - [Descriptor Examples](#descriptor-examples)
     - [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
     - [Annotation Examples](#annotation-examples)
-  - [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
+  - [Multi-Application Bindings](#multi-application-bindings)
     - [Resource Type Schema](#resource-type-schema-2)
     - [Example Resource](#example-resource-2)
-  - [Multi-Application Bindings](#multi-application-bindings)
-    - [Resource Type Schema](#resource-type-schema-3)
-    - [Example Resource](#example-resource-3)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-4)
+      - [Example Resource](#example-resource-3)
     - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-5)
+      - [Example Resource](#example-resource-4)
 
 ---
 
@@ -174,6 +171,8 @@ Restricting service binding to resources within the same namespace is strongly *
 
 A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
 
+A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
+
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
 
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
@@ -202,6 +201,11 @@ spec:
     kind:               # string
     name:               # string
     ...
+
+  mappings:             # []Mapping, optional
+  - name:               # string
+    value:              # string
+  ...
 
   env:                  # []EnvVar, optional
   - name:               # string
@@ -236,6 +240,10 @@ spec:
     apiVersion: com.example/v1alpha1
     kind:       AccountService
     name:       prod-account-service
+
+  mappings:
+  - name:  accountServiceUri
+    value: https://((username)):((password))@((host)):((port))/((path))
 
   env:
   - name:  ACCOUNT_SERVICE_HOST
@@ -436,67 +444,6 @@ status:
     “service.binding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
     ```
-
-## Mapping Existing Values to New Values
-
-Many applications will not be able to consume the secrets exposed by Provisioned Services directly.  Teams creating Provisioned Services do not know how their services will be consumed, teams creating Applications will not know what services will be provided to them, different language families have different idioms for naming and style, and more.  Users should have a way of describing a mapping from existing values to customize the provided entries to ones that are usable directly by their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
-
-A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name:         # string
-spec:
-  name:         # string, optional, default: .metadata.name
-
-  application:  # PodSpec-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  service:      # Provisioned Service-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  mappings:     # []Mapping, optional
-  - name:       # string
-    value:      # string
-  ...
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name: online-banking-to-account-service
-spec:
-  name: account-service
-  kind: database
-  provider: vmware
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-  mappings:
-  - name:  accountServiceUri
-    value: https://((username)):((password))@((host)):((port))/((path))
-```
 
 ## Multi-Application Bindings
 
