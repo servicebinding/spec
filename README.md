@@ -38,14 +38,11 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
     - [Descriptor Examples](#descriptor-examples)
     - [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
     - [Annotation Examples](#annotation-examples)
-  - [Multi-Application Bindings](#multi-application-bindings)
-    - [Resource Type Schema](#resource-type-schema-2)
-    - [Example Resource](#example-resource-2)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-3)
+      - [Example Resource](#example-resource-2)
     - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-4)
+      - [Example Resource](#example-resource-3)
 
 ---
 
@@ -169,13 +166,15 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
 
-A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
+A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
+
+[ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 
 ## Resource Type Schema
 
@@ -192,7 +191,8 @@ spec:
   application:          # PodSpec-able resource ObjectReference-able
     apiVersion:         # string
     kind:               # string
-    name:               # string
+    name:               # string, optional, mutually exclusive with selector
+    selector:           # metav1.LabelSelector, optional, mutually exclusive with name
     containers:         # []intstr.IntOrString, optional
     ...
 
@@ -234,7 +234,10 @@ spec:
   application:
     apiVersion: apps/v1
     kind:       Deployment
-    name:       online-banking
+    selector:
+      matchLabels:
+        app.kubernetes.io/part-of: online-banking
+        app.kubernetes.io/component: frontend
 
   service:
     apiVersion: com.example/v1alpha1
@@ -444,62 +447,6 @@ status:
     “service.binding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
     ```
-
-## Multi-Application Bindings
-
-The `ServiceBinding` resource is limited by the [Service Binding](#service-binding) spec to bind a single service by-name to a single application by-name. If the application's name is generated and not known in advance, the binding implicitly must be created after the application. While level-based reconciliation will converge on the desired state, the application will roll out initially without the bound service. Depending on the application this may cause a crash loop or a misconfiguration (e.g. using an in-memory database designed for development in a production environment). By switching the application reference from using a name to a label selector the service can be bound to the application resource as it is created.
-
-A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.
-
-As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors of this extension **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
-
-[ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/{vendored-version}
-kind: ServiceBinding
-metadata:
-  ...
-spec:
-  application:          # PodSpec-able resource ObjectReference-able
-    ...
-    name:               # string, optional, mutually exclusive with selector
-    selector:           # metav1.LabelSelector, optional, mutually exclusive with name
-  ...
-status:
-  ...
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/{vendored-version}
-kind: ServiceBinding
-metadata:
-  name: online-banking-to-account-service
-spec:
-  name: account-service
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    selector:
-      matchLabels:
-        app.kubernetes.io/part-of: online-banking
-        app.kubernetes.io/component: frontend
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-status:
-  conditions:
-  - type:   Ready
-    status: True
-```
 
 ## Role-Based Access Control (RBAC)
 
