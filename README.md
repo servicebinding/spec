@@ -30,7 +30,10 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Example Directory Structure](#example-directory-structure)
 - [Service Binding](#service-binding)
   - [Resource Type Schema](#resource-type-schema-1)
-  - [Example Resource](#example-resource-1)
+  - [Minimal Example Resource](#minimal-example-resource)
+  - [Label Selector Example Resource](#label-selector-example-resource)
+  - [Mappings Example Resource](#mappings-example-resource)
+  - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
 - [Extensions](#extensions)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
@@ -38,20 +41,11 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
     - [Descriptor Examples](#descriptor-examples)
     - [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
     - [Annotation Examples](#annotation-examples)
-  - [Mapping Existing Values to New Values](#mapping-existing-values-to-new-values)
-    - [Resource Type Schema](#resource-type-schema-2)
-    - [Example Resource](#example-resource-2)
-  - [Binding Values as Environment Variables](#binding-values-as-environment-variables)
-    - [Resource Type Schema](#resource-type-schema-3)
-    - [Example Resource](#example-resource-3)
-  - [Multi-Application Bindings](#multi-application-bindings)
-    - [Resource Type Schema](#resource-type-schema-4)
-    - [Example Resource](#example-resource-4)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-5)
+      - [Example Resource](#example-resource-1)
     - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-6)
+      - [Example Resource](#example-resource-2)
 
 ---
 
@@ -175,9 +169,15 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.  A Service Binding resource **MAY** define a `.spec.name` which is the name of the service when projected into the application.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.
 
-A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.
+A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
+
+A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
+
+A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
+
+[ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 
 ## Resource Type Schema
 
@@ -194,7 +194,8 @@ spec:
   application:          # PodSpec-able resource ObjectReference-able
     apiVersion:         # string
     kind:               # string
-    name:               # string
+    name:               # string, mutually exclusive with selector
+    selector:           # metav1.LabelSelector, mutually exclusive with name
     containers:         # []intstr.IntOrString, optional
     ...
 
@@ -202,6 +203,16 @@ spec:
     apiVersion:         # string
     kind:               # string
     name:               # string
+    ...
+
+  mappings:             # []Mapping, optional
+  - name:               # string
+    value:              # string
+  ...
+
+  env:                  # []EnvVar, optional
+  - name:               # string
+    value:              # string
     ...
 
 status:
@@ -213,16 +224,14 @@ status:
     message:            # string
 ```
 
-## Example Resource
+## Minimal Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha1
 kind: ServiceBinding
 metadata:
-  name: online-banking-to-account-service
-spec:
   name: account-service
-
+spec:
   application:
     apiVersion: apps/v1
     kind:       Deployment
@@ -239,6 +248,101 @@ status:
     status: True
 ```
 
+## Label Selector Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: online-banking-frontend-to-account-service
+spec:
+  name: account-service
+
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    selector:
+      matchLabels:
+        app.kubernetes.io/part-of: online-banking
+        app.kubernetes.io/component: frontend
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
+## Mappings Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: account-service
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+  mappings:
+  - name:  accountServiceUri
+    value: https://((username)):((password))@((host)):((port))/((path))
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
+## Environment Variables Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: account-service
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+  mappings:
+  - name:  accountServiceUri
+    value: https://((username)):((password))@((host)):((port))/((path))
+
+  env:
+  - name:  ACCOUNT_SERVICE_HOST
+    value: ((host))
+  - name:  ACCOUNT_SERVICE_USERNAME
+    value: ((username))
+  - name:  ACCOUNT_SERVICE_PASSWORD
+    value: ((password))
+  - name:  ACCOUNT_SERVICE_URI
+    value: ((accountServiceUri))
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
 ## Reconciler Implementation
 
 A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.  If the `application` resource is managed by another Reconciler, a `ServiceBinding` Implementations **SHOULD** ensure that the `Secret` volume mount configuration remains after the other Reconciler completes.
@@ -248,7 +352,6 @@ If a `.spec.name` is set, the directory name of the volume mount **MUST** be its
 If the `$SERVICE_BINDING_ROOT` environment variable has already been configured on the resource represented by `application`, the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  If the `$SERVICE_BINDING_ROOT` environment variable has not been configured on the resource represented by `application`, the `$SERVICE_BINDING_ROOT` environment variable **MUST** be set and the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  A **RECOMMENDED** value to use is `/bindings`.
 
 The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is already configured on the resource represented by `application`.
-
 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
@@ -423,188 +526,6 @@ status:
     “service.binding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
     ```
-
-## Mapping Existing Values to New Values
-
-Many applications will not be able to consume the secrets exposed by Provisioned Services directly.  Teams creating Provisioned Services do not know how their services will be consumed, teams creating Applications will not know what services will be provided to them, different language families have different idioms for naming and style, and more.  Users should have a way of describing a mapping from existing values to customize the provided entries to ones that are usable directly by their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
-
-A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name:         # string
-spec:
-  name:         # string, optional, default: .metadata.name
-
-  application:  # PodSpec-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  service:      # Provisioned Service-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  mappings:     # []Mapping, optional
-  - name:       # string
-    value:      # string
-  ...
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name: online-banking-to-account-service
-spec:
-  name: account-service
-  kind: database
-  provider: vmware
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-  mappings:
-  - name:  accountServiceUri
-    value: https://((username)):((password))@((host)):((port))/((path))
-```
-
-## Binding Values as Environment Variables
-
-Many applications, especially initially, will not be able to consume Service Bindings as defined by the Application Projection section directly since many of these applications assume that configuration will be exposed via environment variables.  Users should have a way of describing how they would like environment variables containing the values from bound secrets mapped into their applications.  This specification is described as an extension to the [Service Binding](#service-binding) specification and assumes full compatibility with it.
-
-A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name:         # string
-spec:
-  name:         # string, optional, default: .metadata.name
-
-  application:  # PodSpec-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  service:      # Provisioned Service-able resource ObjectReference-able
-    apiVersion: # string
-    kind:       # string
-    name:       # string
-    ...
-
-  env:          # []EnvVar, optional
-  - name:       # string
-    value:      # string
-  ...
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha1
-kind: ServiceBinding
-metadata:
-  name: online-banking-to-account-service
-spec:
-  name: account-service
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-  env:
-  - name:  ACCOUNT_SERVICE_HOST
-    value: ((host))
-  - name:  ACCOUNT_SERVICE_USERNAME
-    value: ((username))
-  - name:  ACCOUNT_SERVICE_PASSWORD
-    value: ((password))
-  - name:  ACCOUNT_SERVICE_URI
-    value: ((accountServiceUri))
-```
-
-## Multi-Application Bindings
-
-The `ServiceBinding` resource is limited by the [Service Binding](#service-binding) spec to bind a single service by-name to a single application by-name. If the application's name is generated and not known in advance, the binding implicitly must be created after the application. While level-based reconciliation will converge on the desired state, the application will roll out initially without the bound service. Depending on the application this may cause a crash loop or a misconfiguration (e.g. using an in-memory database designed for development in a production environment). By switching the application reference from using a name to a label selector the service can be bound to the application resource as it is created.
-
-A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.
-
-As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors of this extension **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
-
-[ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
-
-### Resource Type Schema
-
-```yaml
-apiVersion: service.binding/{vendored-version}
-kind: ServiceBinding
-metadata:
-  ...
-spec:
-  application:          # PodSpec-able resource ObjectReference-able
-    ...
-    name:               # string, optional, mutually exclusive with selector
-    selector:           # metav1.LabelSelector, optional, mutually exclusive with name
-  ...
-status:
-  ...
-```
-
-### Example Resource
-
-```yaml
-apiVersion: service.binding/{vendored-version}
-kind: ServiceBinding
-metadata:
-  name: online-banking-to-account-service
-spec:
-  name: account-service
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    selector:
-      matchLabels:
-        app.kubernetes.io/part-of: online-banking
-        app.kubernetes.io/component: frontend
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-status:
-  conditions:
-  - type:   Ready
-    status: True
-```
 
 ## Role-Based Access Control (RBAC)
 
