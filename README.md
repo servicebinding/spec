@@ -213,7 +213,7 @@ spec:
   env:                  # []EnvVar, optional
   - name:               # string
     key:                # string
-    ...
+  ...
 
 status:
   conditions:           # []Condition containing at least one entry for `Ready`
