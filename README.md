@@ -171,9 +171,9 @@ Restricting service binding to resources within the same namespace is strongly *
 
 A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.
 
-A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The value of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
+A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be added to the `Secret` exposed to the resource represented by `application`.
 
-A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  The value of an entry in this array **MAY** contain zero or more tokens beginning with `((`, ending with `))`, and encapsulating a binding `Secret` key name.  The value of this `Secret` entry **MUST** be substituted into the original `value` string, replacing the token.  Once all tokens have been substituted, the new `value` **MUST** be configured as an environment variable on the resource represented by `application`.
+A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  An `EnvVar` object **MUST** define `name` and `key` entries.  The `key` of an `EnvVar` **MUST** refer to a binding `Secret` key name including any key defined by a `Mapping`.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` must be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTranstionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
 
@@ -212,7 +212,7 @@ spec:
 
   env:                  # []EnvVar, optional
   - name:               # string
-    value:              # string
+    key:                # string
     ...
 
 status:
@@ -328,14 +328,14 @@ spec:
     value: https://((username)):((password))@((host)):((port))/((path))
 
   env:
-  - name:  ACCOUNT_SERVICE_HOST
-    value: ((host))
-  - name:  ACCOUNT_SERVICE_USERNAME
-    value: ((username))
-  - name:  ACCOUNT_SERVICE_PASSWORD
-    value: ((password))
-  - name:  ACCOUNT_SERVICE_URI
-    value: ((accountServiceUri))
+  - name: ACCOUNT_SERVICE_HOST
+    key:  host
+  - name: ACCOUNT_SERVICE_USERNAME
+    key:  username
+  - name: ACCOUNT_SERVICE_PASSWORD
+    key:  password
+  - name: ACCOUNT_SERVICE_URI
+    key:  accountServiceUri
 
 status:
   conditions:
