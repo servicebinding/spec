@@ -30,7 +30,10 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Example Directory Structure](#example-directory-structure)
 - [Service Binding](#service-binding)
   - [Resource Type Schema](#resource-type-schema-1)
-  - [Example Resource](#example-resource-1)
+  - [Minimal Example Resource](#minimal-example-resource)
+  - [Label Selector Example Resource](#label-selector-example-resource)
+  - [Mappings Example Resource](#mappings-example-resource)
+  - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
 - [Extensions](#extensions)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
@@ -40,9 +43,9 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
     - [Annotation Examples](#annotation-examples)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
     - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-2)
+      - [Example Resource](#example-resource-1)
     - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-3)
+      - [Example Resource](#example-resource-2)
 
 ---
 
@@ -221,13 +224,37 @@ status:
     message:            # string
 ```
 
-## Example Resource
+## Minimal Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha1
 kind: ServiceBinding
 metadata:
-  name: online-banking-to-account-service
+  name: account-service
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
+## Label Selector Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: online-banking-frontend-to-account-service
 spec:
   name: account-service
 
@@ -238,6 +265,58 @@ spec:
       matchLabels:
         app.kubernetes.io/part-of: online-banking
         app.kubernetes.io/component: frontend
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
+## Mappings Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: account-service
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+  mappings:
+  - name:  accountServiceUri
+    value: https://((username)):((password))@((host)):((port))/((path))
+
+status:
+  conditions:
+  - type:   Ready
+    status: True
+```
+
+## Environment Variables Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha1
+kind: ServiceBinding
+metadata:
+  name: account-service
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
 
   service:
     apiVersion: com.example/v1alpha1
