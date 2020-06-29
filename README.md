@@ -191,8 +191,8 @@ spec:
   application:          # PodSpec-able resource ObjectReference-able
     apiVersion:         # string
     kind:               # string
-    name:               # string, optional, mutually exclusive with selector
-    selector:           # metav1.LabelSelector, optional, mutually exclusive with name
+    name:               # string, mutually exclusive with selector
+    selector:           # metav1.LabelSelector, mutually exclusive with name
     containers:         # []intstr.IntOrString, optional
     ...
 
