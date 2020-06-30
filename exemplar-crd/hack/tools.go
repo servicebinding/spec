@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package v1alpha1
+package hack
 
 import (
 	_ "sigs.k8s.io/controller-tools/pkg/version"
