@@ -298,7 +298,7 @@ spec:
 
   mappings:
   - name:  accountServiceUri
-    value: https://((username)):((password))@((host)):((port))/((path))
+    value: https://{{ urlquery .username }}:{{ urlquery .password }}@{{ .host }}:{{ .port }}/{{ .path }}
 
 status:
   conditions:
@@ -326,7 +326,7 @@ spec:
 
   mappings:
   - name:  accountServiceUri
-    value: https://((username)):((password))@((host)):((port))/((path))
+    value: https://{{ urlquery .username }}:{{ urlquery .password }}@{{ .host }}:{{ .port }}/{{ .path }}
 
   env:
   - name: ACCOUNT_SERVICE_HOST
