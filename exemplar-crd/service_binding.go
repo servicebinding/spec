@@ -17,14 +17,14 @@
 package v1alpha1
 
 import (
-	"k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // ServiceBindingApplication defines an extension to v1.ObjectReference
 type ServiceBindingApplication struct {
-	v1.ObjectReference `json:",inline"`
+	corev1.ObjectReference `json:",inline"`
 	// Containers describes which containers in a Pod should be bound to
 	Containers []intstr.IntOrString `json:"containers,omitempty"`
 	// Selector is a query that selects the application or applications to bind the service to
@@ -59,7 +59,7 @@ type ServiceBindingSpec struct {
 	// Application is a reference to an object that fulfills the PodSpec duck type
 	Application ServiceBindingApplication `json:"application"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
-	Service v1.ObjectReference `json:"service"`
+	Service corev1.ObjectReference `json:"service"`
 	// EnvVars is the collection of mappings from Secret entries to environment variables
 	EnvVars []ServiceBindingEnvVar `json:"env,omitempty"`
 	// Mappings is the collection of mappings from existing Secret entries to new Secret entries
@@ -82,7 +82,7 @@ type ServiceBindingCondition struct {
 	Type ServiceBindingConditionType `json:"type"`
 	// Status is the status of the condition
 	// Can be True, False, Unknown.
-	Status v1.ConditionStatus `json:"status"`
+	Status corev1.ConditionStatus `json:"status"`
 	// Last time the condition transitioned from one status to another
 	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 	// Unique, one-word, CamelCase reason for the condition's last transition
@@ -93,15 +93,22 @@ type ServiceBindingCondition struct {
 
 // ServiceBindingStatus defines the observed state of ServiceBinding
 type ServiceBindingStatus struct {
-
-	// +kubebuilder:validation:MinItems=1
-
+	// ObservedGeneration is the 'Generation' of the ServiceBinding that
+	// was last processed by the controller.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 	// Conditions are the conditions of this ServiceBinding
+	// +optional
+	// +patchMergeKey=type
+	// +patchStrategy=merge
 	Conditions []ServiceBindingCondition `json:"conditions"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=="Ready")].status`
+// +kubebuilder:printcolumn:name="Reason",type=string,JSONPath=`.status.conditions[?(@.type=="Ready")].reason`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // ServiceBinding is the Schema for the servicebindings API
 type ServiceBinding struct {
