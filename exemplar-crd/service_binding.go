@@ -39,15 +39,12 @@ type ServiceBindingServiceReference struct {
 // ObjectReference is a subset of corev1.ObjectReference
 type ObjectReference struct {
 	// API version of the referent.
-	// +optional
 	APIVersion string `json:"apiVersion,omitempty"`
 	// Kind of the referent.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-	// +optional
 	Kind string `json:"kind,omitempty"`
 	// Name of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-	// +optional
 	Name string `json:"name,omitempty"`
 }
 
