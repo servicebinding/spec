@@ -16,4 +16,4 @@ CONTROLLER_GEN ?= go run sigs.k8s.io/controller-tools/cmd/controller-gen
 
 .PHONY: generate
 generate:
-	$(CONTROLLER_GEN) crd output:crd:artifacts:config=.
+	$(CONTROLLER_GEN) crd:crdVersions=v1 output:crd:artifacts:config=.
