@@ -22,13 +22,30 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// ServiceBindingApplication defines an extension to v1.ObjectReference
-type ServiceBindingApplication struct {
-	corev1.ObjectReference `json:",inline"`
+// ServiceBindingApplicationReference defines a subset of corev1.ObjectReference with extensions
+type ServiceBindingApplicationReference struct {
+	ObjectReference `json:",inline"`
 	// Containers describes which containers in a Pod should be bound to
 	Containers []intstr.IntOrString `json:"containers,omitempty"`
 	// Selector is a query that selects the application or applications to bind the service to
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
+}
+
+// ServiceBindingServiceReference defines a subset of corev1.ObjectReference
+type ServiceBindingServiceReference struct {
+	ObjectReference `json:",inline"`
+}
+
+// ObjectReference is a subset of corev1.ObjectReference
+type ObjectReference struct {
+	// API version of the referent.
+	APIVersion string `json:"apiVersion,omitempty"`
+	// Kind of the referent.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	Kind string `json:"kind,omitempty"`
+	// Name of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	Name string `json:"name,omitempty"`
 }
 
 // ServiceBindingEnvVar defines a mapping from the value of a Secret entry to an environment variable
@@ -57,9 +74,9 @@ type ServiceBindingSpec struct {
 	// Provider is the provider of the service as projected into the application container
 	Provider string `json:"provider,omitempty"`
 	// Application is a reference to an object that fulfills the PodSpec duck type
-	Application ServiceBindingApplication `json:"application"`
+	Application ServiceBindingApplicationReference `json:"application"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
-	Service corev1.ObjectReference `json:"service"`
+	Service ServiceBindingServiceReference `json:"service"`
 	// EnvVars is the collection of mappings from Secret entries to environment variables
 	EnvVars []ServiceBindingEnvVar `json:"env,omitempty"`
 	// Mappings is the collection of mappings from existing Secret entries to new Secret entries
