@@ -169,7 +169,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.
 
@@ -195,14 +195,14 @@ spec:
   type:                 # string, optional
   provider:             # string, optional
 
-  application:          # PodSpec-able resource ObjectReference-able
+  application:          # PodSpec-able resource ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string, mutually exclusive with selector
     selector:           # metav1.LabelSelector, mutually exclusive with name
     containers:         # []intstr.IntOrString, optional
 
-  service:              # Provisioned Service-able resource ObjectReference-able
+  service:              # Provisioned Service-able resource ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string
