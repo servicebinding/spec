@@ -223,8 +223,8 @@ status:                 # empty on create, populated by the reconciler
     status:             # string
     lastTransitionTime: # Time
     reason:             # string
-  observedGeneration:   # int64
     message:            # string
+  observedGeneration:   # int64
 ```
 
 ## Minimal Example Resource
