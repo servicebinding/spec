@@ -175,7 +175,7 @@ A Service Binding Resource **MAY** define a `.spec.mappings` which is an array o
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  An `EnvVar` object **MUST** define `name` and `key` entries.  The `key` of an `EnvVar` **MUST** refer to a binding `Secret` key name including any key defined by a `Mapping`.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
-A Service Binding resource's `.status` **SHOULD** only be manipulated by the reconciler of the resource, constraints in this paragraph apply only to the reconciler. A Service Binding resource **MAY** reflect the secret projected into the application as `.status.binding.name`.  A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **MUST** define `.status.observedGeneration` to reflect the `.metadata.generation` of the resource as it was last reconciled.
+A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **MAY** reflect the secret projected into the application as `.status.binding.name`.
 
 [crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
@@ -215,7 +215,7 @@ spec:
   - name:               # string
     key:                # string
 
-status:                 # empty on create, populated by the reconciler
+status:
   binding:              # LocalObjectReference, optional
     name:               # string
   conditions:           # []Condition containing at least one entry for `Ready`
