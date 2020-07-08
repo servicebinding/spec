@@ -1,5 +1,3 @@
-// +build tools
-
 /*
  * Copyright 2020 the original author or authors.
  *
@@ -16,7 +14,7 @@
  * limitations under the License.
  */
 
-package hack
+package internal
 
 import (
 	_ "sigs.k8s.io/controller-tools/pkg/version"
