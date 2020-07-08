@@ -1,4 +1,4 @@
-module github.com/k8s-service-bindings/examplar-crd
+module github.com/k8s-service-bindings/spec/internal
 
 go 1.14
 
