@@ -165,11 +165,11 @@ $SERVICE_BINDING_ROOT
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It is codified as a concrete resource type.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It is codified as a concrete resource type.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.  An exemplar CRD can be found [here][crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-able declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-able declaration to a Provisioned Service-able resource.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.
 
@@ -177,6 +177,7 @@ A Service Binding Resource **MAY** define a `.spec.env` which is an array of `En
 
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **MAY** reflect the secret projected into the application as `.status.binding.name`.
 
+[crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [gt]: https://golang.org/pkg/text/template/#pkg-overview
 
@@ -187,34 +188,32 @@ apiVersion: service.binding/v1alpha1
 kind: ServiceBinding
 metadata:
   name:                 # string
+  generation:           # int64, defined by the Kubernetes control plane
+  ...
 spec:
   name:                 # string, optional, default: .metadata.name
   type:                 # string, optional
   provider:             # string, optional
 
-  application:          # PodSpec-able resource ObjectReference-able
+  application:          # PodSpec-able resource ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string, mutually exclusive with selector
     selector:           # metav1.LabelSelector, mutually exclusive with name
     containers:         # []intstr.IntOrString, optional
-    ...
 
-  service:              # Provisioned Service-able resource ObjectReference-able
+  service:              # Provisioned Service-able resource ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string
-    ...
 
   mappings:             # []Mapping, optional
   - name:               # string
     value:              # string
-  ...
 
   env:                  # []EnvVar, optional
   - name:               # string
     key:                # string
-  ...
 
 status:
   binding:              # LocalObjectReference, optional
@@ -225,6 +224,7 @@ status:
     lastTransitionTime: # Time
     reason:             # string
     message:            # string
+  observedGeneration:   # int64
 ```
 
 ## Minimal Example Resource
@@ -248,7 +248,7 @@ spec:
 status:
   conditions:
   - type:   Ready
-    status: True
+    status: 'True'
 ```
 
 ## Label Selector Example Resource
@@ -277,7 +277,7 @@ spec:
 status:
   conditions:
   - type:   Ready
-    status: True
+    status: 'True'
 ```
 
 ## Mappings Example Resource
@@ -307,7 +307,7 @@ status:
     name: prod-account-service-projection
   conditions:
   - type:   Ready
-    status: True
+    status: 'True'
 ```
 
 ## Environment Variables Example Resource
@@ -343,9 +343,11 @@ spec:
     key:  accountServiceUri
 
 status:
+  binding:
+    name: prod-account-service-projection
   conditions:
   - type:   Ready
-    status: True
+    status: 'True'
 ```
 
 ## Reconciler Implementation

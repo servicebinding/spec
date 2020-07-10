@@ -1,0 +1,242 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: servicebindings.service.binding
+spec:
+  group: service.binding
+  names:
+    kind: ServiceBinding
+    listKind: ServiceBindingList
+    plural: servicebindings
+    singular: servicebinding
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=="Ready")].status
+      name: Ready
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="Ready")].reason
+      name: Reason
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ServiceBinding is the Schema for the servicebindings API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ServiceBindingSpec defines the desired state of ServiceBinding
+            properties:
+              application:
+                description: Application is a reference to an object that fulfills
+                  the PodSpec duck type
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  containers:
+                    description: Containers describes which containers in a Pod should
+                      be bound to
+                    items:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      x-kubernetes-int-or-string: true
+                    type: array
+                  kind:
+                    description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                    type: string
+                  selector:
+                    description: Selector is a query that selects the application
+                      or applications to bind the service to
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
+                required:
+                - apiVersion
+                - kind
+                type: object
+              env:
+                description: EnvVars is the collection of mappings from Secret entries
+                  to environment variables
+                items:
+                  description: ServiceBindingEnvVar defines a mapping from the value
+                    of a Secret entry to an environment variable
+                  properties:
+                    key:
+                      description: Key is the key in the Secret that will be exposed
+                      type: string
+                    name:
+                      description: Name is the name of the environment variable
+                      type: string
+                  required:
+                  - key
+                  - name
+                  type: object
+                type: array
+              mappings:
+                description: Mappings is the collection of mappings from existing
+                  Secret entries to new Secret entries
+                items:
+                  description: ServiceBindingMapping defines a mapping from the existing
+                    collection of Secret values to a new Secret entry.
+                  properties:
+                    name:
+                      description: Name is the name of the mapped Secret entry
+                      type: string
+                    value:
+                      description: Value is the value of the new Secret entry.  Contents
+                        may be a Go template and refer to the other secret entries
+                        by name.
+                      type: string
+                  required:
+                  - name
+                  - value
+                  type: object
+                type: array
+              name:
+                description: Name is the name of the service as projected into the
+                  application container.  Defaults to .metadata.name.
+                type: string
+              provider:
+                description: Provider is the provider of the service as projected
+                  into the application container
+                type: string
+              service:
+                description: Service is a reference to an object that fulfills the
+                  ProvisionedService duck type
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  kind:
+                    description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    type: string
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                    type: string
+                required:
+                - apiVersion
+                - kind
+                - name
+                type: object
+              type:
+                description: Type is the type of the service as projected into the
+                  application container
+                type: string
+            required:
+            - application
+            - service
+            type: object
+          status:
+            description: ServiceBindingStatus defines the observed state of ServiceBinding
+            properties:
+              conditions:
+                description: Conditions are the conditions of this ServiceBinding
+                items:
+                  description: ServiceBindingCondition contains details for the current
+                    condition of this ServiceBinding
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another
+                      format: date-time
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition
+                      type: string
+                    status:
+                      description: Status is the status of the condition Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              observedGeneration:
+                description: ObservedGeneration is the 'Generation' of the ServiceBinding
+                  that was last processed by the controller.
+                format: int64
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
