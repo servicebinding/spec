@@ -24,28 +24,30 @@ import (
 
 // ServiceBindingApplicationReference defines a subset of corev1.ObjectReference with extensions
 type ServiceBindingApplicationReference struct {
-	ObjectReference `json:",inline"`
-	// Containers describes which containers in a Pod should be bound to
-	Containers []intstr.IntOrString `json:"containers,omitempty"`
+	// API version of the referent.
+	APIVersion string `json:"apiVersion"`
+	// Kind of the referent.
+	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+	Kind string `json:"kind"`
+	// Name of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	Name string `json:"name,omitempty"`
 	// Selector is a query that selects the application or applications to bind the service to
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
+	// Containers describes which containers in a Pod should be bound to
+	Containers []intstr.IntOrString `json:"containers,omitempty"`
 }
 
 // ServiceBindingServiceReference defines a subset of corev1.ObjectReference
 type ServiceBindingServiceReference struct {
-	ObjectReference `json:",inline"`
-}
-
-// ObjectReference is a subset of corev1.ObjectReference
-type ObjectReference struct {
 	// API version of the referent.
-	APIVersion string `json:"apiVersion,omitempty"`
+	APIVersion string `json:"apiVersion"`
 	// Kind of the referent.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-	Kind string `json:"kind,omitempty"`
+	Kind string `json:"kind"`
 	// Name of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // ServiceBindingEnvVar defines a mapping from the value of a Secret entry to an environment variable
@@ -112,13 +114,13 @@ type ServiceBindingCondition struct {
 type ServiceBindingStatus struct {
 	// ObservedGeneration is the 'Generation' of the ServiceBinding that
 	// was last processed by the controller.
-	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-	// Conditions are the conditions of this ServiceBinding
-	// +optional
+
 	// +patchMergeKey=type
 	// +patchStrategy=merge
-	Conditions []ServiceBindingCondition `json:"conditions"`
+
+	// Conditions are the conditions of this ServiceBinding
+	Conditions []ServiceBindingCondition `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true

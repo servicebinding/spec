@@ -113,6 +113,9 @@ spec:
                           "value". The requirements are ANDed.
                         type: object
                     type: object
+                required:
+                - apiVersion
+                - kind
                 type: object
               env:
                 description: EnvVars is the collection of mappings from Secret entries
@@ -173,6 +176,10 @@ spec:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
                     type: string
+                required:
+                - apiVersion
+                - kind
+                - name
                 type: object
               type:
                 description: Type is the type of the service as projected into the
