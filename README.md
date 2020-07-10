@@ -184,7 +184,7 @@ A Service Binding resource **MUST** define a `.status.conditions` which is an ar
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/v1alpha2
 kind: ServiceBinding
 metadata:
   name:                 # string
@@ -230,7 +230,7 @@ status:
 ## Minimal Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/v1alpha2
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -254,7 +254,7 @@ status:
 ## Label Selector Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/v1alpha2
 kind: ServiceBinding
 metadata:
   name: online-banking-frontend-to-account-service
@@ -283,7 +283,7 @@ status:
 ## Mappings Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/v1alpha2
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -313,7 +313,7 @@ status:
 ## Environment Variables Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha1
+apiVersion: service.binding/v1alpha2
 kind: ServiceBinding
 metadata:
   name: account-service
