@@ -35,6 +35,8 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Mappings Example Resource](#mappings-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
+  - [Reconciliation Duties](#reconciliation-duties)
+  - [Reconciliation Duties Example Resource](#reconciliation-duties-example-resource)
 - [Extensions](#extensions)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
@@ -175,7 +177,7 @@ A Service Binding Resource **MAY** define a `.spec.mappings` which is an array o
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  An `EnvVar` object **MUST** define `name` and `key` entries.  The `key` of an `EnvVar` **MUST** refer to a binding `Secret` key name including any key defined by a `Mapping`.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
-A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **MAY** reflect the secret projected into the application as `.status.binding.name`.
+A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. 
 
 [crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
@@ -363,6 +365,40 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
+
+## Reconciliation Duties
+
+There are scenarios where the reconciler that processes the bindings of a provisioned service is different than the reconciler that will project those bindings into the Application. In such cases the `ServiceBinding` CR author **MUST** set `.spec.application.autoProjection` to `false`, signalling the separation of reconciliation duties between `.spec.service` and `.spec.application`.  The default value of this property is `true`.  
+
+When `.spec.application.autoProjection` is set to `false`, the reconciler that processes `.spec.service` **MUST** reflect the generated secret, which is ready for application projection, as `.status.binding.name`.  The reconciler that processes `.spec.application` can therefore watch for this particular `.status` state, and then proceed with Application projection.  When projection is completed the latter reconciler is responsible for ensuring the appropriate `.status.condition` states are set, such as the `Ready` condition.
+
+## Reconciliation Duties Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ServiceBinding
+metadata:
+  name: account-service
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+    autoProjection: false
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  binding:
+    name: prod-account-service-projection
+  conditions:
+  - type:   Ready
+    status: 'True'
+```
+
 
 # Extensions
 
