@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package v1alpha1
+package v1alpha2
 
 import (
 	corev1 "k8s.io/api/core/v1"
