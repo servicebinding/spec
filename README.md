@@ -370,7 +370,7 @@ If the modification of the Application resource is completed successfully, the `
 
 There are scenarios where the reconciler that processes the bindings of a provisioned service is different than the reconciler that will project those bindings into the Application. In such cases the `ServiceBinding` CR author **MUST** set `.spec.application.autoProjection` to `false`, signalling the separation of reconciliation duties between `.spec.service` and `.spec.application`.  The default value of this property is `true`.  
 
-When `.spec.application.autoProjection` is set to `false`, the reconciler that processes `.spec.service` **MUST** reflect the generated secret, which is ready for application projection, as `.status.binding.name`.  The reconciler that processes `.spec.application` can therefore watch for this particular `.status` state, and then proceed with Application projection.  When projection is completed the latter reconciler is responsible for ensuring the appropriate `.status.condition` states are set, such as the `Ready` condition.
+When `.spec.application.autoProjection` is set to `false`, the reconciler that processes `.spec.service` **MUST** reflect the generated secret, which is ready for Application projection, as `.status.binding.name`.  The reconciler that processes `.spec.application` can therefore watch for this particular `.status` state, and then proceed with Application projection.  When projection is completed the latter reconciler is responsible for ensuring the appropriate `.status.condition` states are set, such as the `Ready` condition.
 
 ## Reconciliation Duties Example Resource
 
