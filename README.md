@@ -389,7 +389,7 @@ spec:
     apiVersion: apps/v1
     kind:       Deployment
     name:       online-banking
-    autoProjection: false
+    projection: Custom
 
   service:
     apiVersion: com.example/v1alpha1
