@@ -35,6 +35,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Mappings Example Resource](#mappings-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
+    - [Binding Status](#binding-status)
   - [Reconciliation Duties](#reconciliation-duties)
   - [Reconciliation Duties Example Resource](#reconciliation-duties-example-resource)
 - [Extensions](#extensions)
@@ -364,13 +365,17 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
+### Binding Status
+
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
 
 ## Reconciliation Duties
 
-There are scenarios where the reconciler that processes the bindings of a provisioned service is different than the reconciler that will project those bindings into the Application. In such cases the `ServiceBinding` CR author **MUST** set `.spec.application.autoProjection` to `false`, signalling the separation of reconciliation duties between `.spec.service` and `.spec.application`.  The default value of this property is `true`.  
+There are scenarios where the reconciler that processes the bindings of a provisioned service is different than the reconciler that will project those bindings into the Application. In such cases the `ServiceBinding` CR author **MUST** set `.spec.application.projection` to `Custom`, signalling the following coordination of `ServiceBinding` ownership:
+* duty `A` involves processing `.spec.service` and `.spec.mappings` and the creation of the final binding secret, whose name **MUST** be reflected as `.status.binding.name`.  
+* duty `B` involves the projection of the final binding secret into the target application specified by `.spec.application` as well as the environment variables defined in`.spec.env`.  This duty also involves setting the appropriate [Binding Status](#binding-status).
 
-When `.spec.application.autoProjection` is set to `false`, the reconciler that processes `.spec.service` **MUST** reflect the generated secret, which is ready for Application projection, as `.status.binding.name`.  The reconciler that processes `.spec.application` can therefore watch for this particular `.status` state, and then proceed with Application projection.  When projection is completed the latter reconciler is responsible for ensuring the appropriate `.status.condition` states are set, such as the `Ready` condition.
+The default value of the `.spec.application.projection` property is `PodSpec`, which indicates a single framework will carry out both duties.
 
 ## Reconciliation Duties Example Resource
 
