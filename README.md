@@ -438,8 +438,6 @@ spec:
     key:                # string
 
 status:
-  binding:              # LocalObjectReference, optional
-    name:               # string
   conditions:           # []Condition containing at least one entry for `Ready`
   - type:               # string
     status:             # string
