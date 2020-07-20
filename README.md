@@ -424,7 +424,7 @@ metadata:
 spec:
   name:                 # string
   binding:              # LocalObjectReference  
-  application:          # PodSpec-able resource ObjectReference-like
+  application:          # ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string, mutually exclusive with selector
