@@ -377,7 +377,7 @@ Extensions are optional additions to the core specification as defined above.  I
 
 ## Custom Projection
 
-There are scenarios where the Reconciler that processes the bindings of a Provisioned Service (hereinafter referred to as `Reconciler A`) is different than the Reconciler that will project those bindings into the Application (hereinafter referred to as `Reconciler B`). To transfer the projection responsibility from Reconciler A to Reconciler B the `ServiceBinding` CR author **MUST** set the `projection.service.binding` annotation to `Custom`.  
+There are scenarios where the Reconciler that processes the bindings of a Provisioned Service (hereinafter referred to as `Reconciler A`) is different than the Reconciler that will project those bindings into the Application (hereinafter referred to as `Reconciler B`). To transfer the projection responsibility from Reconciler A to Reconciler B the `ServiceBinding` CR author **MUST** set the `projection.service.binding/type` annotation to `Custom`.  
 
 Reconciler A reacts to this annotation by creating a new `ServiceBindingProjection` CR which includes the necessary information for Reconciler B, who is watching for and takes ownership of new `ServiceBindingProjection` resources (see the [Custom Projection Definition](#custom-projection-definition) section below), to carry out the projection.  Reconciler A is responsible for updating `ServiceBindingProjection` upon corresponding changes to `ServiceBinding`.
 
@@ -392,7 +392,7 @@ kind: ServiceBinding
 metadata:
   name: account-service
   annotations:
-    projection.service.binding: "Custom"
+    projection.service.binding/type: "Custom"
 spec:
   application:
     apiVersion: apps/v1
