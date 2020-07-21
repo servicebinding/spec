@@ -417,7 +417,7 @@ status:
 ### Custom Projection Definition
 
 ```yaml
-apiVersion: projection.internal.service.binding/v1alpha2
+apiVersion: internal.service.binding/v1alpha2
 kind: ServiceBindingProjection
 metadata:
   name:                 # string
