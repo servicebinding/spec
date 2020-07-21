@@ -35,7 +35,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Mappings Example Resource](#mappings-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
-    - [Binding Status](#binding-status)
+    - [Ready Condition Status](#ready-condition-status)
 - [Extensions](#extensions)
   - [Custom Projection](#custom-projection)
     - [Requesting Custom Projection Example Resource](#requesting-custom-projection-example-resource)
@@ -367,7 +367,7 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
-### Binding Status
+### Ready Condition Status
 
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
 
@@ -381,7 +381,7 @@ There are scenarios where the Reconciler that processes the bindings of a Provis
 
 Reconciler A reacts to this annotation by creating a new `ServiceBindingProjection` CR which includes the necessary information for Reconciler B, who is watching for and takes ownership of new `ServiceBindingProjection` resources (see the [Custom Projection Definition](#custom-projection-definition) section below), to carry out the projection.  Reconciler A is responsible for updating `ServiceBindingProjection` upon corresponding changes to `ServiceBinding`.
 
-Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Binding Status](#binding-status), while Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition in a new `ProjectionReady` condition inside `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be set to `True` if its `ProjectionReady` condition is not `True`.
+Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status), while Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition in a new `ProjectionReady` condition inside `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be set to `True` if its `ProjectionReady` condition is not `True`.
 
 
 ### Requesting Custom Projection Example Resource
