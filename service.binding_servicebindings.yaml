@@ -192,6 +192,15 @@ spec:
           status:
             description: ServiceBindingStatus defines the observed state of ServiceBinding
             properties:
+              binding:
+                description: Binding exposes the projected secret for this ServiceBinding
+                properties:
+                  name:
+                    description: 'Name of the referent secret. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                    type: string
+                required:
+                - name
+                type: object
               conditions:
                 description: Conditions are the conditions of this ServiceBinding
                 items:
