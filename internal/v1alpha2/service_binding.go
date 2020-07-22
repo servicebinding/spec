@@ -50,6 +50,13 @@ type ServiceBindingServiceReference struct {
 	Name string `json:"name"`
 }
 
+// ServiceBindingSecretReference defines a mirror of corev1.LocalObjectReference
+type ServiceBindingSecretReference struct {
+	// Name of the referent secret.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	Name string `json:"name"`
+}
+
 // ServiceBindingEnvVar defines a mapping from the value of a Secret entry to an environment variable
 type ServiceBindingEnvVar struct {
 	// Name is the name of the environment variable
@@ -116,11 +123,11 @@ type ServiceBindingStatus struct {
 	// was last processed by the controller.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// +patchMergeKey=type
-	// +patchStrategy=merge
-
 	// Conditions are the conditions of this ServiceBinding
 	Conditions []ServiceBindingCondition `json:"conditions,omitempty"`
+
+	// Binding exposes the projected secret for this ServiceBinding
+	Binding *ServiceBindingSecretReference `json:"binding,omitempty"`
 }
 
 // +kubebuilder:object:root=true
