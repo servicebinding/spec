@@ -35,7 +35,12 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
   - [Mappings Example Resource](#mappings-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
+    - [Ready Condition Status](#ready-condition-status)
 - [Extensions](#extensions)
+  - [Custom Projection](#custom-projection)
+    - [Requesting Custom Projection Example Resource](#requesting-custom-projection-example-resource)
+    - [Custom Projection Definition](#custom-projection-definition)
+    - [Generated Custom Projection Example Resource](#generated-custom-projection-example-resource)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
@@ -175,7 +180,7 @@ A Service Binding Resource **MAY** define a `.spec.mappings` which is an array o
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvVar`.  An `EnvVar` object **MUST** define `name` and `key` entries.  The `key` of an `EnvVar` **MUST** refer to a binding `Secret` key name including any key defined by a `Mapping`.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
-A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **MAY** reflect the secret projected into the application as `.status.binding.name`.
+A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
 
 [crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
@@ -352,7 +357,7 @@ status:
 
 ## Reconciler Implementation
 
-A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.  If the `application` resource is managed by another Reconciler, a `ServiceBinding` Implementations **SHOULD** ensure that the `Secret` volume mount configuration remains after the other Reconciler completes.
+A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.  
 
 If a `.spec.name` is set, the directory name of the volume mount **MUST** be its value.  If a `.spec.name` is not set, the directory name of the volume mount **SHOULD** be the value of `.metadata.name`.
 
@@ -362,11 +367,106 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
+### Ready Condition Status
+
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
 
 # Extensions
 
 Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
+
+## Custom Projection
+
+There are scenarios where the Reconciler that processes a `ServiceBinding` (hereinafter referred to as `Reconciler A`) is different than the Reconciler that will project the binding into the Application (hereinafter referred to as `Reconciler B`). To transfer the projection responsibility from Reconciler A to Reconciler B the `ServiceBinding` CR author **MUST** set the `projection.service.binding/type` annotation to `Custom`.  
+
+Reconciler A reacts to this annotation by creating a new `ServiceBindingProjection` CR which includes the necessary information for Reconciler B, who is watching and takes responsibility for the new `ServiceBindingProjection` resource (see the [Custom Projection Definition](#custom-projection-definition) section below), to carry out the projection.  Reconciler A is responsible for updating `ServiceBindingProjection`'s spec upon corresponding changes to `ServiceBinding`.
+
+Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status), while Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition in a new `ProjectionReady` condition inside `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be set to `True` if its `ProjectionReady` condition is not `True`.
+
+
+### Requesting Custom Projection Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ServiceBinding
+metadata:
+  name: account-service
+  annotations:
+    projection.service.binding/type: "Custom"
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: com.example/v1alpha1
+    kind:       AccountService
+    name:       prod-account-service
+
+status:
+  binding:
+    name: prod-account-service-projection
+  conditions:
+  - type:   Ready
+    status: 'True'
+  - type:   ProjectionReady
+    status: 'True'
+```
+
+### Custom Projection Definition
+
+```yaml
+apiVersion: internal.service.binding/v1alpha2
+kind: ServiceBindingProjection
+metadata:
+  name:                 # string
+  generation:           # int64, defined by the Kubernetes control plane
+  ...
+spec:
+  name:                 # string
+  binding:              # LocalObjectReference  
+  application:          # ObjectReference-like
+    apiVersion:         # string
+    kind:               # string
+    name:               # string, mutually exclusive with selector
+    selector:           # metav1.LabelSelector, mutually exclusive with name
+    containers:         # []intstr.IntOrString, optional
+
+  env:                  # []EnvVar, optional
+  - name:               # string
+    key:                # string
+
+status:
+  conditions:           # []Condition containing at least one entry for `Ready`
+  - type:               # string
+    status:             # string
+    lastTransitionTime: # Time
+    reason:             # string
+    message:            # string
+  observedGeneration:   # int64
+```
+
+### Generated Custom Projection Example Resource
+
+```yaml
+apiVersion: internal.service.binding/v1alpha2
+kind: ServiceBindingProjection
+metadata:
+  name: account-service
+spec:
+  binding:  prod-account-service-projection
+
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+status:
+  conditions:
+  - type:   Ready
+    status: 'True'
+```
 
 ## Binding `Secret` Generation Strategies
 
