@@ -38,9 +38,9 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
     - [Ready Condition Status](#ready-condition-status)
 - [Extensions](#extensions)
   - [Custom Projection](#custom-projection)
-    - [Requesting Custom Projection Example Resource](#requesting-custom-projection-example-resource)
-    - [Custom Projection Definition](#custom-projection-definition)
-    - [Generated Custom Projection Example Resource](#generated-custom-projection-example-resource)
+    - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
+    - [Resource Type Schema](#resource-type-schema-2)
+    - [Service Binding Projection Example Resource](#service-binding-projection-example-resource)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
@@ -170,7 +170,7 @@ $SERVICE_BINDING_ROOT
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It is codified as a concrete resource type.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.  An exemplar CRD can be found [here][crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It is codified as a concrete resource type.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.  An exemplar CRD can be found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
@@ -182,7 +182,7 @@ A Service Binding Resource **MAY** define a `.spec.env` which is an array of `En
 
 A Service Binding resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A Service Binding resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
 
-[crd]: service.binding_servicebindings.yaml
+[sb-crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [gt]: https://golang.org/pkg/text/template/#pkg-overview
 
@@ -357,7 +357,7 @@ status:
 
 ## Reconciler Implementation
 
-A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.  
+A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.
 
 If a `.spec.name` is set, the directory name of the volume mount **MUST** be its value.  If a `.spec.name` is not set, the directory name of the volume mount **SHOULD** be the value of `.metadata.name`.
 
@@ -377,14 +377,15 @@ Extensions are optional additions to the core specification as defined above.  I
 
 ## Custom Projection
 
-There are scenarios where the Reconciler that processes a `ServiceBinding` (hereinafter referred to as `Reconciler A`) is different than the Reconciler that will project the binding into the Application (hereinafter referred to as `Reconciler B`). To transfer the projection responsibility from Reconciler A to Reconciler B the `ServiceBinding` CR author **MUST** set the `projection.service.binding/type` annotation to `Custom`.  
+There are scenarios where the Reconciler that processes a `ServiceBinding` (hereinafter referred to as "Reconciler A") is different than the Reconciler that will project the binding into the Application (hereinafter referred to as "Reconciler B"). To transfer the projection responsibility from Reconciler A to Reconciler B the `ServiceBinding` author **MUST** set the `projection.service.binding/type` annotation to `Custom`.  An exemplar CRD can be found [here][sbp-crd].
 
-Reconciler A reacts to this annotation by creating a new `ServiceBindingProjection` CR which includes the necessary information for Reconciler B, who is watching and takes responsibility for the new `ServiceBindingProjection` resource (see the [Custom Projection Definition](#custom-projection-definition) section below), to carry out the projection.  Reconciler A is responsible for updating `ServiceBindingProjection`'s spec upon corresponding changes to `ServiceBinding`.
+Reconciler A reacts to this annotation by creating a `ServiceBindingProjection` which includes the necessary information for Reconciler B. Reconciler B takes responsibility for the `ServiceBindingProjection` resource to perform the projection.  Reconciler A is responsible for updating the `ServiceBindingProjection`'s `spec` upon corresponding changes to `ServiceBinding`.
 
-Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status), while Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition in a new `ProjectionReady` condition inside `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be set to `True` if its `ProjectionReady` condition is not `True`.
+Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status). Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition with an additional `ProjectionReady` condition on `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be `True` unless `ProjectionReady` is `True`.
 
+[sbp-crd]: internal.service.binding_servicebindingprojections.yaml
 
-### Requesting Custom Projection Example Resource
+### Custom Projection Service Binding Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha2
@@ -414,7 +415,7 @@ status:
     status: 'True'
 ```
 
-### Custom Projection Definition
+### Resource Type Schema
 
 ```yaml
 apiVersion: internal.service.binding/v1alpha2
@@ -425,7 +426,7 @@ metadata:
   ...
 spec:
   name:                 # string
-  binding:              # LocalObjectReference  
+  binding:              # LocalObjectReference
   application:          # ObjectReference-like
     apiVersion:         # string
     kind:               # string
@@ -447,7 +448,7 @@ status:
   observedGeneration:   # int64
 ```
 
-### Generated Custom Projection Example Resource
+### Service Binding Projection Example Resource
 
 ```yaml
 apiVersion: internal.service.binding/v1alpha2

@@ -100,6 +100,10 @@ const (
 	// ServiceBindingReady means the ServiceBinding has projected the ProvisionedService secret and the Pod is ready to
 	// start
 	ServiceBindingReady ServiceBindingConditionType = "Ready"
+
+	// ServiceBindingProjectionReady means the ServiceBindingProjection has projected the ProvisionedService secret and
+	//the Pod is ready to start.  Extension.
+	ServiceBindingProjectionReady ServiceBindingConditionType = "ProjectionReady"
 )
 
 // ServiceBindingCondition contains details for the current condition of this ServiceBinding
