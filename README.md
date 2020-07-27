@@ -379,7 +379,7 @@ Extensions are optional additions to the core specification as defined above.  I
 
 There are scenarios where the Reconciler that processes a `ServiceBinding` (hereinafter referred to as "Reconciler A") is different than the Reconciler that will project the binding into the Application (hereinafter referred to as "Reconciler B"). To transfer the projection responsibility from Reconciler A to Reconciler B the `ServiceBinding` author **MUST** set the `projection.service.binding/type` annotation to `Custom`.  An exemplar CRD can be found [here][sbp-crd].
 
-Reconciler A reacts to this annotation by creating a `ServiceBindingProjection` which includes the necessary information for Reconciler B. Reconciler B takes responsibility for the `ServiceBindingProjection` resource to perform the projection.  Reconciler A is responsible for updating the `ServiceBindingProjection`'s `spec` upon corresponding changes to `ServiceBinding`.
+Reconciler A reacts to this annotation by creating a `ServiceBindingProjection` which includes the necessary information for Reconciler B. Reconciler B takes responsibility for the `ServiceBindingProjection` resource to perform the projection.  Reconciler A is responsible for updating the `ServiceBindingProjection`'s `.spec` upon corresponding changes to `ServiceBinding`.
 
 Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status). Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition with an additional `ProjectionReady` condition on `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be `True` unless `ProjectionReady` is `True`.
 
