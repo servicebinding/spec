@@ -78,10 +78,10 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>The act of or representation of the action of providing information about a Service to an Application</dd>
 
   <dt>ConfigMap</dt>
-  <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/secret/">ConfigMap</a></dd>
+  <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/configmap/">ConfigMap</a></dd>
 
   <dt>Secret</dt>
-  <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/configmap/">Secret</a></dd>
+  <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/secret/">Secret</a></dd>
 </dl>
 
 # Provisioned Service
