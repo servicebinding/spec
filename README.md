@@ -15,6 +15,19 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
 [osb]: https://www.openservicebrokerapi.org
 [cnb]: https://github.com/buildpacks/spec/blob/master/extensions/bindings.md
 
+<!-- omit in toc -->
+### Community
+
+The Service Binding Specification for Kubernetes project is a community lead effort.
+A bi-weekly [working group call][working-group] is open to the public.
+Discussions occur here on GitHub and on the [#bindings-discuss channel in the Kubernetes Sack][slack].
+
+Behavior within the project is governed by the [Contributor Covenant Code of Conduct][code-of-conduct].
+
+[working-group]: https://docs.google.com/document/d/1rR0qLpsjU38nRXxeich7F5QUy73RHJ90hnZiFIQ-JJ8/edit#heading=h.ar8ibc31ux6f
+[slack]: https://kubernetes.slack.com/archives/C012F2GPMTQ
+[code-of-conduct]: ./CODE_OF_CONDUCT.md
+
 ---
 
 <!-- Using https://github.com/yzhang-gh/vscode-markdown to manage toc -->
