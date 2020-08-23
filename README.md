@@ -543,7 +543,7 @@ status:
       - service.binding
     ```
 1.  Mount an entire `ConfigMap` as the binding `Secret`
-    ```yanl
+    ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
