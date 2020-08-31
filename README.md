@@ -22,10 +22,15 @@ The Service Binding Specification for Kubernetes project is a community lead eff
 A bi-weekly [working group call][working-group] is open to the public.
 Discussions occur here on GitHub and on the [#bindings-discuss channel in the Kubernetes Sack][slack].
 
+If you catch an error in the specification’s text, or if you write an
+implementation, please let us know by opening an issue or pull request at our
+[GitHub repository][repo].
+
 Behavior within the project is governed by the [Contributor Covenant Code of Conduct][code-of-conduct].
 
 [working-group]: https://docs.google.com/document/d/1rR0qLpsjU38nRXxeich7F5QUy73RHJ90hnZiFIQ-JJ8/edit#heading=h.ar8ibc31ux6f
 [slack]: https://kubernetes.slack.com/archives/C012F2GPMTQ
+[repo]: https://github.com/k8s-service-bindings/spec
 [code-of-conduct]: ./CODE_OF_CONDUCT.md
 
 ---
