@@ -536,46 +536,59 @@ status:
 ```
 
 1.  Mount an entire `Secret` as the binding `Secret`
+
     ```yaml
     - path: data.dbCredentials
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:Secret
       - service.binding
     ```
+
 1.  Mount an entire `ConfigMap` as the binding `Secret`
-    ```yaml
+
+	```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
       - service.binding
     ```
+
 1.  Mount an entry from a `ConfigMap` into the binding `Secret`
+
     ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
       - service.binding:certificate:sourceKey=certificate
     ```
+
 1.  Mount an entry from a `ConfigMap` into the binding `Secret` with a different key
+
     ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
       - servicebinding:timeout:sourceKey=db_timeout
     ```
+
 1.  Mount a resource definition value into the binding `Secret`
+
     ```yaml
     - path: data.uri
       x-descriptors:
       - service.binding:uri
     ```
+
 1.  Mount a resource definition value into the binding `Secret` with a different key
+
     ```yaml
     - path: data.connectionURL
       x-descriptors:
       - service.binding:uri
     ```
+
 1.  Mount the entries of a collection into the binding `Secret` selecting the key and value from each entry
+
     ```yaml
     - path: bootstrap
       x-descriptors:
