@@ -568,7 +568,7 @@ status:
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
-      - servicebinding:timeout:sourceKey=db_timeout
+      - service.binding:timeout:sourceKey=db_timeout
     ```
 
 1.  Mount a resource definition value into the binding `Secret`
