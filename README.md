@@ -225,7 +225,7 @@ spec:
     selector:           # metav1.LabelSelector, mutually exclusive with name
     containers:         # []intstr.IntOrString, optional
 
-  service:              # Provisioned Service-able resource ObjectReference-like
+  service:              # Provisioned Service resource ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string
@@ -674,7 +674,7 @@ Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to au
 
 ### For Cluster Operators and CRD Authors
 
-Cluster operators and CRD authors **MAY** opt-in resources to service binding by defining a `ClusterRole` with a label matching `service.binding/controller=true`. For Provisioned Service-able resources the `get`, `list`, and `watch` verbs **MUST** be granted. For PodSpec-able resources the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+Cluster operators and CRD authors **MAY** opt-in resources to service binding by defining a `ClusterRole` with a label matching `service.binding/controller=true`. For Provisioned Service resources the `get`, `list`, and `watch` verbs **MUST** be granted. For PodSpec-able resources the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
 
 #### Example Resource
 
@@ -686,7 +686,7 @@ metadata:
   labels:
     service.binding/controller: "true" # matches the aggregation rule selector
 rules:
-# for Provisioned Service-able resources only
+# for Provisioned Service resources only
 - apiGroups:
   - awesome.example.com
   resources:
@@ -695,7 +695,7 @@ rules:
   - get
   - list
   - watch
-# for PodSpec-able resources (also compatible with Provisioned Service-able resources)
+# for PodSpec-able resources (also compatible with Provisioned Service resources)
 - apiGroups:
   - awesome.example.com
   resources:
