@@ -20,7 +20,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
 
 The Service Binding Specification for Kubernetes project is a community lead effort.
 A bi-weekly [working group call][working-group] is open to the public.
-Discussions occur here on GitHub and on the [#bindings-discuss channel in the Kubernetes Sack][slack].
+Discussions occur here on GitHub and on the [#bindings-discuss channel in the Kubernetes Slack][slack].
 
 If you catch an error in the specification’s text, or if you write an
 implementation, please let us know by opening an issue or pull request at our
