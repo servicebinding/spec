@@ -192,7 +192,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  The application reference by-name **MAY** be extended through [Custom Projection][cp] to reference a non-`PodSpec`-able resource in addition to a `PodSpec`-able resource.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.
 
@@ -202,6 +202,7 @@ A Service Binding resource **MUST** define a `.status.conditions` which is an ar
 
 [sb-crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+[cp]: #custom-projection
 [gt]: https://golang.org/pkg/text/template/#pkg-overview
 
 ## Resource Type Schema
@@ -401,6 +402,9 @@ Reconciler A reacts to this annotation by creating a `ServiceBindingProjection` 
 
 Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status). Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition with an additional `ProjectionReady` condition on `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be `True` unless `ProjectionReady` is `True`.
 
+An implementation of the Custom Projection extension **MAY** allow defining a `.spec.application` referencing a non-`PodSpec`-able resource in addition to the mechanisms to define an application reference described in the [Service Binding][sb] section.
+
+[sb]: #service-binding
 [sbp-crd]: internal.service.binding_servicebindingprojections.yaml
 
 ### Custom Projection Service Binding Example Resource
