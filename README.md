@@ -445,6 +445,7 @@ metadata:
 spec:
   name:                 # string
   binding:              # LocalObjectReference
+    name:               # string
   application:          # ObjectReference-like
     apiVersion:         # string
     kind:               # string
@@ -474,7 +475,8 @@ kind: ServiceBindingProjection
 metadata:
   name: account-service
 spec:
-  binding:  prod-account-service-projection
+  binding:
+    name: prod-account-service-projection
 
   application:
     apiVersion: apps/v1
