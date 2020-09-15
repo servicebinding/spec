@@ -401,7 +401,7 @@ Reconciler A reacts to this annotation by creating a `ServiceBindingProjection` 
 
 Reconciler B **MUST** set the `ServiceBindingProjection`'s `Ready` condition according to the rules set in [Ready Condition Status](#ready-condition-status). Reconciler A **MUST** reflect `ServiceBindingProjection`'s `Ready` condition with an additional `ProjectionReady` condition on `ServiceBinding`.  The `Ready` condition of `ServiceBinding` **MUST NOT** be `True` unless `ProjectionReady` is `True`.
 
-An implementation of the Custom Projection extension **MAY** allow defining a `.spec.application` referencing a non-`PodSpec`-able resource in addition to the mechanisms to define an application reference described in the [Service Binding][sb] section.
+A `ServiceBinding` with a custom projection **MUST** allow defining a `.spec.application` referencing a non-`PodSpec`-able resource in addition to the mechanisms to define an application reference described in the [Service Binding][sb] section.
 
 [sb]: #service-binding
 [sbp-crd]: internal.service.binding_servicebindingprojections.yaml
