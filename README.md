@@ -59,6 +59,8 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
     - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
     - [Resource Type Schema](#resource-type-schema-2)
     - [Service Binding Projection Example Resource](#service-binding-projection-example-resource)
+  - [Direct Secret Reference](#direct-secret-reference)
+    - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
@@ -487,6 +489,39 @@ spec:
     name:       online-banking
 
 status:
+  conditions:
+  - type:   Ready
+    status: 'True'
+```
+
+## Direct Secret Reference
+
+There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This extension allows a `ServiceBinding` resource to directly reference a secret.
+
+When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
+
+### Direct Secret Reference Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ServiceBinding
+metadata:
+  name: account-service
+
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: v1
+    kind:       Secret
+    name:       prod-account-service-secret
+
+status:
+  binding:
+    name: prod-account-service-reference
   conditions:
   - type:   Ready
     status: 'True'
