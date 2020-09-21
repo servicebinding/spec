@@ -69,7 +69,6 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
       - [Example Resource](#example-resource-1)
     - [For Service Binding Implementors](#for-service-binding-implementors)
       - [Example Resource](#example-resource-2)
-
 ---
 
 ## Notational Conventions
@@ -104,7 +103,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference`-able to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
@@ -375,7 +374,7 @@ status:
 
 ## Reconciler Implementation
 
-A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.
+A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.
 
 If a `.spec.name` is set, the directory name of the volume mount **MUST** be its value.  If a `.spec.name` is not set, the directory name of the volume mount **SHOULD** be the value of `.metadata.name`.
 
@@ -556,7 +555,7 @@ status:
 
 1.  Mount an entire `ConfigMap` as the binding `Secret`
 
-	```yaml
+	  ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
