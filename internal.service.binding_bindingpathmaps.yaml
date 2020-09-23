@@ -1,0 +1,146 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: bindingpathmaps.internal.service.binding
+spec:
+  group: internal.service.binding
+  names:
+    kind: BindingPathMap
+    listKind: BindingPathMapList
+    plural: bindingpathmaps
+    singular: bindingpathmap
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=="Ready")].status
+      name: Ready
+      type: string
+    - jsonPath: .status.conditions[?(@.type=="Ready")].reason
+      name: Reason
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        description: BindingPathMap is the Schema for the bindingpathmaps
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BindingPathMapSpec defines the desired state of BindingPathMap
+            properties:
+              application:
+                description: Application is a reference to an object that fulfills one or more of
+                  https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#volume-v1-core
+                  https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#volumemount-v1-core
+                  https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#envvar-v1-core
+                properties:
+                  apiVersion:
+                    description: API version of the referent.
+                    type: string
+                  kind:
+                    description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    type: string
+                required:
+                - apiVersion
+                - kind
+                type: object
+              bindingPaths:
+                description: bindingPaths set custom locations for various binding paths.
+                  This includes volume, volumeMount, env, and containers.
+                properties:
+                  volume:
+                    description: The attribute in the target resource must be a Volume conforming this API
+                      https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#volume-v1-core
+                    type: string
+                  volumeMount:
+                    description: The attribute in the target resource must be a VolumeMount conforming this API
+                      https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumemount-v1-core
+                    type: string
+                  env:
+                    description: The attribute in the target resource must be a EnvVar conforming this API
+                      https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core
+                    type: string
+                  containers:
+                    description: The attribute in the target resource must be an array of integers or string
+                      Containers describes which containers in a Pod should be bound to
+                    type: string
+                anyOf:
+                - required: ["volume"]
+                - required:
+                  allOf:
+                    - required: ["volume", "volumeMount"]
+                - required: ["env"]
+                - required: ["containers"]
+                type: object
+            required:
+            - application
+            - bindingPaths
+            type: object
+          status:
+            description: BindingPathMapStatus defines the observed state of BindingPathMap
+            properties:
+              conditions:
+                description: Conditions are the conditions of this BindingPathMap
+                items:
+                  description: BindingPathMapCondition contains details for the current
+                    condition of this BindingPathMap
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another
+                      format: date-time
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition
+                      type: string
+                    reason:
+                      description: Unique, one-word, CamelCase reason for the condition's
+                        last transition
+                      type: string
+                    status:
+                      description: Status is the status of the condition Can be True,
+                        False, Unknown.
+                      type: string
+                    type:
+                      description: Type is the type of the condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              observedGeneration:
+                description: ObservedGeneration is the 'Generation' of the BindingPathMap
+                  that was last processed by the controller.
+                format: int64
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

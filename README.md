@@ -59,6 +59,9 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
     - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
     - [Resource Type Schema](#resource-type-schema-2)
     - [Service Binding Projection Example Resource](#service-binding-projection-example-resource)
+  - [Custom Binding Paths](#custom-binding-paths)
+    - [Resource Type Schema](#resource-type-schema-3)
+    - [Custom Binding Paths Example](#custom-binding-paths-example)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
@@ -485,6 +488,92 @@ spec:
     apiVersion: apps/v1
     kind:       Deployment
     name:       online-banking
+
+status:
+  conditions:
+  - type:   Ready
+    status: 'True'
+```
+
+## Custom Binding Paths
+
+There are scenarios where the application resource is not PodSpec-able and yet bind `volume`, `volumeMount`, and `env` at custom locations.  The reconciler can also bind the optional `containers` list specified by the user in the `ServiceBinding` resource into the application resource.  So that, the application reconciler can bind containers in the destination Pod based on the `containers` list.  This extension provides the customized binding functionality through a `BindingPathMap` resource available, which **MUST** be in the same namespaces as that of `ServiceBinding` resource.  The `ServiceBinding` reconciler **MUST** watch for the `BindingPathMap` and the `ServiceBinding` resources and react.  The allowed custom binding paths are `volume`, `volumeMount`, `env`, and `containers`.  The value for each of these custom binding paths **MUST** be a string type.  If `volumeMount` is specified, `volume` also **MUST** be defined.  The values of these items **MUST** be dot-delimited paths pointing to the fields on the application resource.  The reconciler **MUST** bind each of these specified values in application resource at the given location.  An exemplar CRD can be found [here][cbp-crd].
+
+1. The `volume` field in the application resource **MUST** conform to the [Volume][volume] API.
+2. The `volumeMount` field in the application resource **MUST** conform to the [VolumeMount][volumemount] API.
+3. The `env` field in the application resource **MUST** conform to the [EnvVar][env] API.
+4. The `containers` field in the application resource **MUST** conform to the API schema given here:
+
+    ```yaml
+    schema:
+      openAPIV3Schema:
+        properties:
+          containers:
+            description: Containers describes which containers in a Pod should be bound to
+            items:
+              anyOf:
+              - type: integer
+              - type: string
+              x-kubernetes-int-or-string: true
+            type: array
+    ```
+
+A `CustomBindingPath` resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A `CustomBindingPath` resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  There could be multiple application resources matching the `apiVersion` and `kind`.  Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
+
+The reconciler **MUST** set the `CustomBindingPath`'s `Ready` condition according to the same rules set in [Ready Condition Status](#ready-condition-status) for `ServiceBinding` resource.
+
+[cbp-crd]: internal.service.binding_bindingpathmaps.yaml
+[volume]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#volume-v1-core
+[volumemount]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#volumemount-v1-core
+[env]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#envvar-v1-core
+
+### Resource Type Schema
+
+```yaml
+apiVersion: internal.service.binding/v1alpha2
+kind: CustomBindingPath
+metadata:
+  name:                 # string
+  generation:           # int64, defined by the Kubernetes control plane
+  ...
+spec:
+  application:          # ObjectReference-like
+    apiVersion:         # string
+    kind:               # string
+
+  bindingPaths:
+    volume:             # string, optional
+    volumeMount:        # string, optional, volume must be specified along with this
+    env:                # string, optional
+    containers:         # string, optional
+
+status:
+  conditions:           # []Condition containing at least one entry for `Ready`
+  - type:               # string
+    status:             # string
+    lastTransitionTime: # Time
+    reason:             # string
+    message:            # string
+  observedGeneration:   # int64
+```
+
+### Custom Binding Paths Example
+
+```yaml
+apiVersion: internal.service.binding/v1alpha2
+kind: BindingPathMap
+metadata:
+  name: example-binding-paths
+spec:
+  application:
+    apiVersion: apps.examples.org/v1alpha1
+    kind: ExampleAppBuilder
+
+  bindingPaths:
+    volume: spec.volume
+    volumeMount: spec.volumeMount
+    env: spec.env
+    containers: spec.containers
 
 status:
   conditions:
