@@ -496,7 +496,7 @@ status:
 
 ## Direct Secret Reference
 
-There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This extension allows a `ServiceBinding` resource to directly reference a secret.
+There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This extension allows a `ServiceBinding` resource to directly reference a `Secret`.
 
 When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
 
