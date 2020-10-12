@@ -518,9 +518,9 @@ There are scenarios where the application resource is not PodSpec-able and yet b
             type: array
     ```
 
-A `CustomBindingPath` resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A `CustomBindingPath` resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  There could be multiple application resources matching the `apiVersion` and `kind`.  Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
+A `BindingPathMap` resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A `BindingPathMap` resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  There could be multiple application resources matching the `apiVersion` and `kind`.  Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
 
-The reconciler **MUST** set the `CustomBindingPath`'s `Ready` condition according to the same rules set in [Ready Condition Status](#ready-condition-status) for `ServiceBinding` resource.
+The reconciler **MUST** set the `BindingPathMap`'s `Ready` condition according to the same rules set in [Ready Condition Status](#ready-condition-status) for `ServiceBinding` resource.
 
 [cbp-crd]: internal.service.binding_bindingpathmaps.yaml
 [volume]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.19/#volume-v1-core
@@ -531,7 +531,7 @@ The reconciler **MUST** set the `CustomBindingPath`'s `Ready` condition accordin
 
 ```yaml
 apiVersion: internal.service.binding/v1alpha2
-kind: CustomBindingPath
+kind: BindingPathMap
 metadata:
   name:                 # string
   generation:           # int64, defined by the Kubernetes control plane
