@@ -13,7 +13,7 @@ spec:
     listKind: BindingPathMapList
     plural: bindingpathmaps
     singular: bindingpathmap
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.conditions[?(@.type=="Ready")].status
