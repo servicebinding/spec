@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: bindingpathmaps.internal.service.binding
+  name: bindingpathmaps.service.binding
 spec:
-  group: internal.service.binding
+  group: service.binding
   names:
     kind: BindingPathMap
     listKind: BindingPathMapList

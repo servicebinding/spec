@@ -530,7 +530,7 @@ The reconciler **MUST** set the `BindingPathMap`'s `Ready` condition according t
 ### Resource Type Schema
 
 ```yaml
-apiVersion: internal.service.binding/v1alpha2
+apiVersion: service.binding/v1alpha2
 kind: BindingPathMap
 metadata:
   name:                 # string
@@ -560,7 +560,7 @@ status:
 ### Custom Binding Paths Example
 
 ```yaml
-apiVersion: internal.service.binding/v1alpha2
+apiVersion: service.binding/v1alpha2
 kind: BindingPathMap
 metadata:
   name: example-binding-paths
