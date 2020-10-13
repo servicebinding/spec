@@ -62,6 +62,8 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Custom Binding Paths](#custom-binding-paths)
     - [Resource Type Schema](#resource-type-schema-3)
     - [Custom Binding Paths Example](#custom-binding-paths-example)
+  - [Direct Secret Reference](#direct-secret-reference)
+    - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
@@ -196,6 +198,12 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
 
 A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
+
+The Service Binding resource **MAY** define `.spec.application.containers`, as a list of integers or strings, to limit which containers in the application are bound.  Binding to a container is opt-in, unless `.spec.application.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
+- if the value is an integer (`${containerInteger}`), the container matching by index (`.spec.template.spec.containers[${containerInteger}]`) **MUST** be bound. Init containers **MUST NOT** be bound
+- if the value is a string (`${containerString}`), a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
+- values that do not match a container or init container **SHOULD** be ignored
+
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.
 
@@ -576,6 +584,39 @@ spec:
     containers: spec.containers
 
 status:
+  conditions:
+  - type:   Ready
+    status: 'True'
+```
+
+## Direct Secret Reference
+
+There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This extension allows a `ServiceBinding` resource to directly reference a `Secret`.
+
+When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
+
+### Direct Secret Reference Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ServiceBinding
+metadata:
+  name: account-service
+
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: v1
+    kind:       Secret
+    name:       prod-account-service-secret
+
+status:
+  binding:
+    name: prod-account-service-reference
   conditions:
   - type:   Ready
     status: 'True'
