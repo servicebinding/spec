@@ -563,7 +563,7 @@ status:
 apiVersion: service.binding/v1alpha2
 kind: BindingPathMap
 metadata:
-  name: example-binding-paths
+  name: v1alpha1.exampleappbuilders.apps.examples.org
 spec:
   application:
     apiVersion: apps.examples.org/v1alpha1
