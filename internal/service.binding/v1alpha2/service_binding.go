@@ -17,7 +17,6 @@
 package v1alpha2
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -92,34 +91,13 @@ type ServiceBindingSpec struct {
 	Mappings []ServiceBindingMapping `json:"mappings,omitempty"`
 }
 
-// ServiceBindingConditionType is a valid value for ServiceBindingCondition.Type
-type ServiceBindingConditionType string
-
 // These are valid conditions of ServiceBinding.
 const (
-	// ServiceBindingReady means the ServiceBinding has projected the ProvisionedService secret and the Pod is ready to
-	// start
-	ServiceBindingReady ServiceBindingConditionType = "Ready"
-
-	// ServiceBindingProjectionReady means the ServiceBindingProjection has projected the ProvisionedService secret and
-	// the Pod is ready to start.  Extension.
-	ServiceBindingProjectionReady ServiceBindingConditionType = "ProjectionReady"
+	// ServiceBindingReady means the ServiceBinding has projected the ProvisionedService
+	// secret and the Application is ready to start. It does not indicate the condition
+	// of either the Service or the Application resources referenced.
+	ServiceBindingConditionReady = "Ready"
 )
-
-// ServiceBindingCondition contains details for the current condition of this ServiceBinding
-type ServiceBindingCondition struct {
-	// Type is the type of the condition
-	Type ServiceBindingConditionType `json:"type"`
-	// Status is the status of the condition
-	// Can be True, False, Unknown.
-	Status corev1.ConditionStatus `json:"status"`
-	// Last time the condition transitioned from one status to another
-	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
-	// Unique, one-word, CamelCase reason for the condition's last transition
-	Reason string `json:"reason,omitempty"`
-	// Human-readable message indicating details about last transition
-	Message string `json:"message,omitempty"`
-}
 
 // ServiceBindingStatus defines the observed state of ServiceBinding
 type ServiceBindingStatus struct {
@@ -128,7 +106,7 @@ type ServiceBindingStatus struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Conditions are the conditions of this ServiceBinding
-	Conditions []ServiceBindingCondition `json:"conditions,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
 	// Binding exposes the projected secret for this ServiceBinding
 	Binding *ServiceBindingSecretReference `json:"binding,omitempty"`
