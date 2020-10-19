@@ -105,7 +105,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.
 
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
@@ -150,6 +150,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: production-db
+type: service.binding/mysql
 stringData:
   type: mysql
   provider: bitnami
@@ -163,7 +164,7 @@ stringData:
 
 A Binding `Secret` **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
-The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **MUST** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
 
 The name of a secret entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  The contents of a secret entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
 
