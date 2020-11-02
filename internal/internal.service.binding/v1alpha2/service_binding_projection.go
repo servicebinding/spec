@@ -45,8 +45,8 @@ type ServiceBindingProjectionApplicationReference struct {
 	Containers []intstr.IntOrString `json:"containers,omitempty"`
 }
 
-// ServiceBindingProjectionEnvVar defines a mapping from the value of a Secret entry to an environment variable
-type ServiceBindingProjectionEnvVar struct {
+// EnvMapping defines a mapping from the value of a Secret entry to an environment variable
+type EnvMapping struct {
 	// Name is the name of the environment variable
 	Name string `json:"name"`
 	// Key is the key in the Secret that will be exposed
@@ -61,8 +61,8 @@ type ServiceBindingProjectionSpec struct {
 	Binding ServiceBindingProjectionSecretReference `json:"binding"`
 	// Application is a reference to an object that fulfills the PodSpec duck type
 	Application ServiceBindingProjectionApplicationReference `json:"application"`
-	// EnvVars is the collection of mappings from Secret entries to environment variables
-	EnvVars []ServiceBindingProjectionEnvVar `json:"env,omitempty"`
+	// Env is the collection of mappings from Secret entries to environment variables
+	Env []EnvMapping `json:"env,omitempty"`
 }
 
 // ServiceBindingProjectionConditionType is a valid value for ServiceBindingProjectionCondition.Type
@@ -98,7 +98,6 @@ type ServiceBindingProjectionStatus struct {
 
 	// Conditions are the conditions of this ServiceBindingProjection
 	Conditions []ServiceBindingProjectionCondition `json:"conditions,omitempty"`
-
 }
 
 // +kubebuilder:object:root=true
