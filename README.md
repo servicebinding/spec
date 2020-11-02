@@ -196,11 +196,9 @@ Restricting service binding to resources within the same namespace is strongly *
 
 A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
 
-The Service Binding resource **MAY** define `.spec.application.containers`, as a list of integers or strings, to limit which containers in the application are bound.  Binding to a container is opt-in, unless `.spec.application.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
-- if the value is an integer (`${containerInteger}`), the container matching by index (`.spec.template.spec.containers[${containerInteger}]`) **MUST** be bound. Init containers **MUST NOT** be bound
-- if the value is a string (`${containerString}`), a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
+The Service Binding resource **MAY** define `.spec.application.containers`, as a list of strings, to limit which containers in the application are bound.  Binding to a container is opt-in, unless `.spec.application.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
+- a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerName}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerName}')]`) **MUST** be bound
 - values that do not match a container or init container **SHOULD** be ignored
-
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.
 
@@ -231,7 +229,7 @@ spec:
     kind:               # string
     name:               # string, mutually exclusive with selector
     selector:           # metav1.LabelSelector, mutually exclusive with name
-    containers:         # []intstr.IntOrString, optional
+    containers:         # []string, optional
 
   service:              # Provisioned Service resource ObjectReference-like
     apiVersion:         # string
@@ -462,7 +460,7 @@ spec:
     kind:               # string
     name:               # string, mutually exclusive with selector
     selector:           # metav1.LabelSelector, mutually exclusive with name
-    containers:         # []intstr.IntOrString, optional
+    containers:         # []string, optional
 
   env:                  # []EnvVar, optional
   - name:               # string

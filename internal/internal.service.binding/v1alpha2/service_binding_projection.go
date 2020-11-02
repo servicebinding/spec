@@ -19,7 +19,6 @@ package v1alpha2
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // ServiceBindingProjectionSecretReference defines a mirror of corev1.LocalObjectReference
@@ -42,7 +41,7 @@ type ServiceBindingProjectionApplicationReference struct {
 	// Selector is a query that selects the application or applications to bind the service to
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
 	// Containers describes which containers in a Pod should be bound to
-	Containers []intstr.IntOrString `json:"containers,omitempty"`
+	Containers []string `json:"containers,omitempty"`
 }
 
 // ServiceBindingProjectionEnvVar defines a mapping from the value of a Secret entry to an environment variable
@@ -98,7 +97,6 @@ type ServiceBindingProjectionStatus struct {
 
 	// Conditions are the conditions of this ServiceBindingProjection
 	Conditions []ServiceBindingProjectionCondition `json:"conditions,omitempty"`
-
 }
 
 // +kubebuilder:object:root=true
