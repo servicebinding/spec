@@ -63,7 +63,7 @@ spec:
                 type: object
               bindingPaths:
                 description: bindingPaths set custom locations for various binding paths.
-                  This includes volume, volumeMount, env, and containers.
+                  This includes volume, volumeMount, and env.
                 properties:
                   volume:
                     description: The attribute in the target resource must be a Volume conforming this API
@@ -77,17 +77,12 @@ spec:
                     description: The attribute in the target resource must be a EnvVar conforming this API
                       https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#envvar-v1-core
                     type: string
-                  containers:
-                    description: The attribute in the target resource must be an array of integers or string
-                      Containers describes which containers in a Pod should be bound to
-                    type: string
                 anyOf:
                 - required: ["volume"]
                 - required:
                   allOf:
                     - required: ["volume", "volumeMount"]
                 - required: ["env"]
-                - required: ["containers"]
                 type: object
             required:
             - application

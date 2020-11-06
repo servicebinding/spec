@@ -505,26 +505,11 @@ status:
 
 ## Custom Binding Paths
 
-There are scenarios where the application resource is not PodSpec-able and yet bind `volume`, `volumeMount`, and `env` at custom locations.  The reconciler can also bind the optional `containers` list specified by the user in the `ServiceBinding` resource into the application resource.  So that, the application reconciler can bind containers in the destination Pod based on the `containers` list.  This extension provides the customized binding functionality through a `BindingPathMap` resource.  The `ServiceBinding` reconciler **MUST** watch for the `BindingPathMap` and the `ServiceBinding` resources and react.  The `BindingPathMap` resource **MUST** be a cluster-scoped resource.  The allowed custom binding paths are `volume`, `volumeMount`, `env`, and `containers`.  The value for each of these custom binding paths **MUST** be a string type.  If `volumeMount` is specified, `volume` also **MUST** be defined.  The values of these items **MUST** be dot-delimited paths pointing to the fields on the application resource.  The reconciler **MUST** bind each of these specified values in application resource at the given location.  An exemplar CRD can be found [here][cbp-crd].
+There are scenarios where the application resource is not PodSpec-able and yet bind `volume`, `volumeMount`, and `env` at custom locations.  This extension provides the customized binding functionality through a `BindingPathMap` resource.  The `ServiceBinding` reconciler **MUST** watch for the `BindingPathMap` and the `ServiceBinding` resources and react.  The `BindingPathMap` resource **MUST** be a cluster-scoped resource.  The allowed custom binding paths are `volume`, `volumeMount`, and `env`.  The value for each of these custom binding paths **MUST** be a string type.  If `volumeMount` is specified, `volume` also **MUST** be defined.  The values of these items **MUST** be dot-delimited paths pointing to the fields on the application resource.  The reconciler **MUST** bind each of these specified values in application resource at the given location.  An exemplar CRD can be found [here][cbp-crd].
 
 1. The `volume` field in the application resource **MUST** conform to the [Volume][volume] API.
 2. The `volumeMount` field in the application resource **MUST** conform to the [VolumeMount][volumemount] API.
 3. The `env` field in the application resource **MUST** conform to the [EnvVar][env] API.
-4. The `containers` field in the application resource **MUST** conform to the API schema given here:
-
-    ```yaml
-    schema:
-      openAPIV3Schema:
-        properties:
-          containers:
-            description: Containers describes which containers in a Pod should be bound to
-            items:
-              anyOf:
-              - type: integer
-              - type: string
-              x-kubernetes-int-or-string: true
-            type: array
-    ```
 
 A `BindingPathMap` resource **MUST** define a `.status.conditions` which is an array of `Condition` objects.  A `Condition` object **MUST** define `type`, `status`, and `lastTransitionTime` entries.  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `status` of the `Ready` condition **MUST** have a value of `True`, `False`, or `Unknown`.  The `lastTransitionTime` **MUST** contain the last time that the condition transitioned from one status to another.  A `BindingPathMap` resource **MAY** define `reason` and `message` entries to describe the last `status` transition.  There could be multiple application resources matching the `apiVersion` and `kind`.  Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.
 
@@ -553,7 +538,6 @@ spec:
     volume:             # string, optional
     volumeMount:        # string, optional, volume must be specified along with this
     env:                # string, optional
-    containers:         # string, optional
 
 status:
   conditions:           # []Condition containing at least one entry for `Ready`
@@ -581,7 +565,6 @@ spec:
     volume: spec.volume
     volumeMount: spec.volumeMount
     env: spec.env
-    containers: spec.containers
 
 status:
   conditions:
