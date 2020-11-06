@@ -1,14 +1,14 @@
 # Service Binding Specification for Kubernetes
 
-Today in Kubernetes, the exposure of secrets for connecting applications to external services such as REST APIs, databases, event buses, and more is both manual and bespoke.  Each service provider suggests a different way to access their secrets and each application developer consumes those secrets in a way that is custom to their applications.  While there is a good deal of value to this level of flexibility, large development teams lose overall velocity dealing with each unique solution.  To combat this, we already see teams adopting internal patterns for how to achieve this application-to-service linkage.
+Today in Kubernetes, the exposure of secrets for connecting applications to external services such as REST APIs, databases, event buses, and many more is manual and bespoke.  Each service provider suggests a different way to access their secrets, and each application developer consumes those secrets in a custom way to their applications.  While there is a good deal of value to this flexibility level, large development teams lose overall velocity dealing with each unique solution.  To combat this, we already see teams adopting internal patterns for how to achieve this application-to-service linkage.
 
-The goal of this specification is to create a Kubernetes-wide specification for communicating service secrets to applications in an automated way.  It aims to create a mechanism that is widely applicable, but _without_ excluding other strategies for systems that it does not fit easily.  The benefit of a Kubernetes-wide specification is that all of the actors in an ecosystem can work towards a clearly defined abstraction at the edge of their expertise and depend on other parties to complete the chain.
+This specification aims to create a Kubernetes-wide specification for communicating service secrets to applications in an automated way.  It aims to create a widely applicable mechanism but _without_ excluding other strategies for systems that it does not fit easily.  The benefit of Kubernetes-wide specification is that all of the actors in an ecosystem can work towards a clearly defined abstraction at the edge of their expertise and depend on other parties to complete the chain.
 
-* Application Developers expect secrets to be exposed in a consistent and predictable way
-* Service Providers expect their secrets to be collected and exposed to users in a consistent and predictable way
-* Platforms expect to retrieve secrets from Service Providers and expose them to Application Developers in a consistent and predictable way
+* Application Developers expect their secrets to be exposed consistently and predictably.
+* Service Providers expect their secrets to be collected and exposed to users consistently and predictably.
+* Platforms expect to retrieve secrets from Service Providers and expose them to Application Developers consistently and predictably.
 
-The pattern of Service Binding has prior art in non-Kubernetes platforms.  Heroku pioneered this model with [Add-ons][h] and Cloud Foundry adopted similar ideas with their [Services][cf]. Other open source projects like the [Open Service Broker][osb] aim to help with this pattern on those non-Kubernetes platforms.  In the Kubernetes ecosystem, the CNCF Sandbox Cloud Native Buildpacks project has proposed a [buildpack-specific specification][cnb] exclusively addressing the application developer portion of this pattern.
+The pattern of Service Binding has prior art in non-Kubernetes platforms.  Heroku pioneered this model with [Add-ons][h], and Cloud Foundry adopted similar ideas with their [Services][cf].  Other open source projects like the [Open Service Broker][osb] aim to help with this pattern on those non-Kubernetes platforms.  In the Kubernetes ecosystem, the CNCF Sandbox Cloud Native Buildpacks project has proposed a [buildpack-specific specification][cnb] exclusively addressing the application developer portion of this pattern.
 
 [h]: https://devcenter.heroku.com/articles/add-ons
 [cf]: https://docs.cloudfoundry.org/devguide/services/
@@ -74,7 +74,6 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
       - [Example Resource](#example-resource-1)
     - [For Service Binding Implementors](#for-service-binding-implementors)
       - [Example Resource](#example-resource-2)
-
 ---
 
 ## Notational Conventions
@@ -109,7 +108,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding.name` which is a `LocalObjectReference`-able to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.
 
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
@@ -154,6 +153,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: production-db
+type: service.binding/mysql
 stringData:
   type: mysql
   provider: bitnami
@@ -167,7 +167,7 @@ stringData:
 
 A Binding `Secret` **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
-The `Secret` **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the `Secret` also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` **MAY** contain any other entry.
+The `Secret` data **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **MUST** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.
 
 The name of a secret entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  The contents of a secret entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
 
@@ -195,7 +195,7 @@ $SERVICE_BINDING_ROOT
 
 A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.  An exemplar CRD can be found [here][sb-crd].
 
-Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Cross-namespace service binding **SHOULD** be secured appropriately by the implementor to prevent attacks like privilege escalation and secret enumeration.
+Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
 A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
 
@@ -386,7 +386,7 @@ status:
 
 ## Reconciler Implementation
 
-A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding.name` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.
+A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into an Application.  The `Secret` referred to by `.status.binding` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `application`.
 
 If a `.spec.name` is set, the directory name of the volume mount **MUST** be its value.  If a `.spec.name` is not set, the directory name of the volume mount **SHOULD** be the value of `.metadata.name`.
 
@@ -686,7 +686,7 @@ status:
 
 1.  Mount an entire `ConfigMap` as the binding `Secret`
 
-	```yaml
+    ```yaml
     - path: data.dbConfiguration
       x-descriptors:
       - urn:alm:descriptor:io.kubernetes:ConfigMap
