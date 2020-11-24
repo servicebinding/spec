@@ -57,8 +57,8 @@ type ServiceBindingSecretReference struct {
 	Name string `json:"name"`
 }
 
-// ServiceBindingEnvVar defines a mapping from the value of a Secret entry to an environment variable
-type ServiceBindingEnvVar struct {
+// EnvMapping defines a mapping from the value of a Secret entry to an environment variable
+type EnvMapping struct {
 	// Name is the name of the environment variable
 	Name string `json:"name"`
 	// Key is the key in the Secret that will be exposed
@@ -86,8 +86,8 @@ type ServiceBindingSpec struct {
 	Application ServiceBindingApplicationReference `json:"application"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
 	Service ServiceBindingServiceReference `json:"service"`
-	// EnvVars is the collection of mappings from Secret entries to environment variables
-	EnvVars []ServiceBindingEnvVar `json:"env,omitempty"`
+	// Env is the collection of mappings from Secret entries to environment variables
+	Env []EnvMapping `json:"env,omitempty"`
 	// Mappings is the collection of mappings from existing Secret entries to new Secret entries
 	Mappings []ServiceBindingMapping `json:"mappings,omitempty"`
 }

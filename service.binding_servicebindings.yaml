@@ -118,10 +118,10 @@ spec:
                 - kind
                 type: object
               env:
-                description: EnvVars is the collection of mappings from Secret entries
+                description: Env is the collection of mappings from Secret entries
                   to environment variables
                 items:
-                  description: ServiceBindingEnvVar defines a mapping from the value
+                  description: EnvMapping defines a mapping from the value
                     of a Secret entry to an environment variable
                   properties:
                     key:
