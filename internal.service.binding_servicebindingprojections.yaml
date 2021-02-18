@@ -132,8 +132,8 @@ spec:
                 description: Env is the collection of mappings from Secret entries
                   to environment variables
                 items:
-                  description: EnvMapping defines a mapping from
-                    the value of a Secret entry to an environment variable
+                  description: EnvMapping defines a mapping from the value of a Secret
+                    entry to an environment variable
                   properties:
                     key:
                       description: Key is the key in the Secret that will be exposed
