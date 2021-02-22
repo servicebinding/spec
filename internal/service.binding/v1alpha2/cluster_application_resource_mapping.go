@@ -32,7 +32,6 @@ type ClusterApplicationResourceMappingVersion struct {
 	Volumes string `json:"volumes"`
 }
 
-
 // ClusterApplicationResourceMappingSpec defines the desired state of ClusterApplicationResourceMapping
 type ClusterApplicationResourceMappingSpec struct {
 	// Versions is the collection of versions for a given resource, with mappings.
@@ -41,7 +40,6 @@ type ClusterApplicationResourceMappingSpec struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:storageversion
-// +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
 // ClusterApplicationResourceMapping is the Schema for the clusterapplicationresourcemappings API
@@ -49,7 +47,7 @@ type ClusterApplicationResourceMapping struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ClusterApplicationResourceMappingSpec   `json:"spec,omitempty"`
+	Spec ClusterApplicationResourceMappingSpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true

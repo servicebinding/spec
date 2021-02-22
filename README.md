@@ -61,6 +61,7 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
     - [Resource Type Schema](#resource-type-schema-2)
     - [Container-based Example Resource](#container-based-example-resource)
     - [Element-based Example Resource](#element-based-example-resource)
+    - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
     - [Reconciler Implementation](#reconciler-implementation-1)
   - [Custom Projection](#custom-projection)
     - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
@@ -520,6 +521,22 @@ spec:
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
+### PodSpec-able (Default) Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ClusterApplicationResourceMapping
+metadata:
+  name: deployments.apps
+spec:
+  versions:
+  - version: "*"
+    containers:
+    - .spec.template.spec.containers
+    - .spec.template.spec.initContainers
+    volumes: .spec.template.spec.volumes
+```
+
 ### Reconciler Implementation
 
 A reconciler implementation that supports `ClusterApplicationResourceMapping`s **MUST** support `ServiceBinding` resources that refer to applications that are not PodSpec-able.  If no Application Resource Mapping exists for the `ServiceBinding` application resource type, the reconciliation **MUST** fail.
@@ -527,6 +544,8 @@ A reconciler implementation that supports `ClusterApplicationResourceMapping`s *
 If a `ClusterApplicationResourceMapping` defines `containers`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` using the `Container` type (`.env`, `.volumeMounts`) for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
 
 If a `ClusterApplicationResourceMapping` defines `env` and `volumeMounts`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
+
+If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `Int`-based index, that index **MUST** be used to filter the first entry in the `.containers`, `.env`, and `.volumeMounts` lists and all entries in those lists are ineligible for mapping.  If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `string`-based index that index **MUST** be used to filter all entries in the `.containers`, `.env`, and `.volumeMounts` lists.
 
 A reconciler **MUST** apply the appropriate modification to the application resource addressed by the `ServiceBinding` as defined by `volumes`.
 
