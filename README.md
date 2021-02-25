@@ -54,13 +54,13 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
     - [Ready Condition Status](#ready-condition-status)
+  - [Direct Secret Reference](#direct-secret-reference)
+    - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
 - [Extensions](#extensions)
   - [Custom Projection](#custom-projection)
     - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
     - [Resource Type Schema](#resource-type-schema-2)
     - [Service Binding Projection Example Resource](#service-binding-projection-example-resource)
-  - [Direct Secret Reference](#direct-secret-reference)
-    - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
@@ -397,6 +397,39 @@ If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be s
 
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
 
+## Direct Secret Reference
+
+There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This feature allows a `ServiceBinding` resource to directly reference a `Secret`.
+
+When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
+
+### Direct Secret Reference Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ServiceBinding
+metadata:
+  name: account-service
+
+spec:
+  application:
+    apiVersion: apps/v1
+    kind:       Deployment
+    name:       online-banking
+
+  service:
+    apiVersion: v1
+    kind:       Secret
+    name:       prod-account-service-secret
+
+status:
+  binding:
+    name: prod-account-service-reference
+  conditions:
+  - type:   Ready
+    status: 'True'
+```
+
 # Extensions
 
 Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
@@ -495,39 +528,6 @@ spec:
     name:       online-banking
 
 status:
-  conditions:
-  - type:   Ready
-    status: 'True'
-```
-
-## Direct Secret Reference
-
-There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This extension allows a `ServiceBinding` resource to directly reference a `Secret`.
-
-When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
-
-### Direct Secret Reference Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha2
-kind: ServiceBinding
-metadata:
-  name: account-service
-
-spec:
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: v1
-    kind:       Secret
-    name:       prod-account-service-secret
-
-status:
-  binding:
-    name: prod-account-service-reference
   conditions:
   - type:   Ready
     status: 'True'
