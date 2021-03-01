@@ -47,8 +47,7 @@ spec:
             description: ServiceBindingSpec defines the desired state of ServiceBinding
             properties:
               application:
-                description: Application is a reference to an object that fulfills
-                  the PodSpec duck type
+                description: Application is a reference to an object
                 properties:
                   apiVersion:
                     description: API version of the referent.
