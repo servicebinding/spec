@@ -54,8 +54,8 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
     - [Ready Condition Status](#ready-condition-status)
-  - [Direct Secret Reference](#direct-secret-reference)
-    - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
+- [Direct Secret Reference](#direct-secret-reference)
+  - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
 - [Extensions](#extensions)
   - [Application Resource Mapping](#application-resource-mapping)
     - [Resource Type Schema](#resource-type-schema-2)
@@ -402,13 +402,13 @@ If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be s
 
 If the modification of the Application resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Application resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
 
-## Direct Secret Reference
+# Direct Secret Reference
 
 There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This feature allows a `ServiceBinding` resource to directly reference a `Secret`.
 
 When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
 
-### Direct Secret Reference Example Resource
+## Direct Secret Reference Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha2
