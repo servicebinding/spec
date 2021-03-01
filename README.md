@@ -482,12 +482,7 @@ metadata:
  name:  cronjobs.batch
 spec:
   versions:
-  - version: v1beta1
-    containers:
-    - .spec.jobTemplate.spec.template.spec.containers
-    - .spec.jobTemplate.spec.template.spec.initContainers
-    volumes: .spec.jobTemplate.spec.template.spec.volumes
-  - version: v2alpha1
+  - version: "*"
     containers:
     - .spec.jobTemplate.spec.template.spec.containers
     - .spec.jobTemplate.spec.template.spec.initContainers
@@ -503,15 +498,7 @@ metadata:
  name:  cronjobs.batch
 spec:
   versions:
-  - version: v1beta1
-    envs:
-    - .spec.jobTemplate.spec.template.spec.containers[*].env
-    - .spec.jobTemplate.spec.template.spec.initContainers[*].env
-    volumeMounts:
-    - .spec.jobTemplate.spec.template.spec.containers[*].volumeMounts
-    - .spec.jobTemplate.spec.template.spec.initContainers[*].volumeMounts
-    volumes: .spec.jobTemplate.spec.template.spec.volumes
-  - version: v2alpha1
+  - version: "*"
     envs:
     - .spec.jobTemplate.spec.template.spec.containers[*].env
     - .spec.jobTemplate.spec.template.spec.initContainers[*].env
