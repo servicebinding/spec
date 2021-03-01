@@ -443,7 +443,7 @@ Extensions are optional additions to the core specification as defined above.  I
 
 There are scenarios where an application resource is not strictly PodSpec-able but does include the `env`, `volumeMounts`, and `volumes` elements that are required to project a service binding.  This extension defines a mapping of those elements onto any type.  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ClusterApplicationResourceMapping`.  An exemplar CRD can be found [here][carm-crd].
 
-An Application Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  An Application Resource Mapping **MUST** define a `spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`Container`][container] entries in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`EnvVar`][envvar] entries in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`VolumeMount`][volumemount] entries in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`Volume`][volume] entries in the target resource.
+An Application Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  An Application Resource Mapping **MUST** define a `spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]Container`][container] arrays in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]EnvVar`][envvar] arrays in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]VolumeMount`][volumemount] arrays in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`[]Volume`][volume] arrays in the target resource.
 
 If an Application Resource Mapping defines `containers`, it **MUST NOT** define `envs` and `volumeMounts`.  If an Application resources does not define `containers`, it **MUST** define `envs` and `volumeMounts`.
 
@@ -504,7 +504,7 @@ metadata:
 spec:
   versions:
   - version: v1beta1
-    env:
+    envs:
     - .spec.jobTemplate.spec.template.spec.containers[*].env
     - .spec.jobTemplate.spec.template.spec.initContainers[*].env
     volumeMounts:
@@ -512,7 +512,7 @@ spec:
     - .spec.jobTemplate.spec.template.spec.initContainers[*].volumeMounts
     volumes: .spec.jobTemplate.spec.template.spec.volumes
   - version: v2alpha1
-    env:
+    envs:
     - .spec.jobTemplate.spec.template.spec.containers[*].env
     - .spec.jobTemplate.spec.template.spec.initContainers[*].env
     volumeMounts:
@@ -541,11 +541,11 @@ spec:
 
 A reconciler implementation that supports `ClusterApplicationResourceMapping`s **MUST** support `ServiceBinding` resources that refer to applications that are not PodSpec-able.  If no Application Resource Mapping exists for the `ServiceBinding` application resource type, the reconciliation **MUST** fail.
 
-If a `ClusterApplicationResourceMapping` defines `containers`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` using the `Container` type (`.env`, `.volumeMounts`) for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
+If a `ClusterApplicationResourceMapping` defines `containers`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` using the `Container` type (`.envs`, `.volumeMounts`) for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
 
-If a `ClusterApplicationResourceMapping` defines `env` and `volumeMounts`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
+If a `ClusterApplicationResourceMapping` defines `envs` and `volumeMounts`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
 
-If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `Int`-based index, that index **MUST** be used to filter the first entry in the `.containers` list and all other entries in those lists are ineligible for mapping.  If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `string`-based index that index **MUST** be used to filter all entries in the `.containers` list.  If a `ServiceBinding` specifies a `.spec.applications.containers` value and `ClusterApplicationResourceMapping` for the mapped type defines `env` and `volumeMounts`, the reconciler **MUST** fail to reconcile.
+If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `Int`-based index, that index **MUST** be used to filter the first entry in the `.containers` list and all other entries in those lists are ineligible for mapping.  If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `string`-based index that index **MUST** be used to filter all entries in the `.containers` list.  If a `ServiceBinding` specifies a `.spec.applications.containers` value and `ClusterApplicationResourceMapping` for the mapped type defines `envs` and `volumeMounts`, the reconciler **MUST** fail to reconcile.
 
 A reconciler **MUST** apply the appropriate modification to the application resource addressed by the `ServiceBinding` as defined by `volumes`.
 
