@@ -82,7 +82,7 @@ type ServiceBindingSpec struct {
 	Type string `json:"type,omitempty"`
 	// Provider is the provider of the service as projected into the application container
 	Provider string `json:"provider,omitempty"`
-	// Application is a reference to an object that fulfills the PodSpec duck type
+	// Application is a reference to an object
 	Application ServiceBindingApplicationReference `json:"application"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
 	Service ServiceBindingServiceReference `json:"service"`

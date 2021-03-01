@@ -56,13 +56,13 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
     - [Ready Condition Status](#ready-condition-status)
 - [Direct Secret Reference](#direct-secret-reference)
   - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
+- [Application Resource Mapping](#application-resource-mapping)
+  - [Resource Type Schema](#resource-type-schema-2)
+  - [Container-based Example Resource](#container-based-example-resource)
+  - [Element-based Example Resource](#element-based-example-resource)
+  - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
+  - [Reconciler Implementation](#reconciler-implementation-1)
 - [Extensions](#extensions)
-  - [Application Resource Mapping](#application-resource-mapping)
-    - [Resource Type Schema](#resource-type-schema-2)
-    - [Container-based Example Resource](#container-based-example-resource)
-    - [Element-based Example Resource](#element-based-example-resource)
-    - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
-    - [Reconciler Implementation](#reconciler-implementation-1)
   - [Custom Projection](#custom-projection)
     - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
     - [Resource Type Schema](#resource-type-schema-3)
@@ -200,7 +200,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration to a `PodSpec`-able resource.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
 
 The Service Binding resource **MAY** define `.spec.application.containers`, as a list of integers or strings, to limit which containers in the application are bound.  Binding to a container is opt-in, unless `.spec.application.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
 - if the value is an integer (`${containerInteger}`), the container matching by index (`.spec.template.spec.containers[${containerInteger}]`) **MUST** be bound. Init containers **MUST NOT** be bound
@@ -231,7 +231,7 @@ spec:
   type:                 # string, optional
   provider:             # string, optional
 
-  application:          # PodSpec-able resource ObjectReference-like
+  application:          # ObjectReference-like
     apiVersion:         # string
     kind:               # string
     name:               # string, mutually exclusive with selector
@@ -435,13 +435,9 @@ status:
     status: 'True'
 ```
 
-# Extensions
+# Application Resource Mapping
 
-Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
-
-## Application Resource Mapping
-
-There are scenarios where an application resource is not strictly PodSpec-able but does include the `.env`, `.volumeMounts`, and `.volumes` entries that are required to project a service binding.  This extension defines a mapping of those elements onto any type.  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ClusterApplicationResourceMapping`.  An exemplar CRD can be found [here][carm-crd].
+An Application Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Application Projection](#application-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ClusterApplicationResourceMapping`.  An exemplar CRD can be found [here][carm-crd].
 
 An Application Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  An Application Resource Mapping **MUST** define a `.spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]Container`][container] arrays in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]EnvVar`][envvar] arrays in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]VolumeMount`][volumemount] arrays in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`[]Volume`][volume] arrays in the target resource.
 
@@ -455,7 +451,7 @@ If an Application Resource Mapping defines `containers`, it **MUST NOT** define 
 [volume]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/volume
 [volumemount]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/#volumes
 
-### Resource Type Schema
+## Resource Type Schema
 
 ```yaml
 apiVersion: service.binding/v1alpha2
@@ -473,7 +469,7 @@ spec:
     volumes:            # string
 ```
 
-### Container-based Example Resource
+## Container-based Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha2
@@ -489,7 +485,7 @@ spec:
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
-### Element-based Example Resource
+## Element-based Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha2
@@ -508,7 +504,7 @@ spec:
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
-### PodSpec-able (Default) Example Resource
+## PodSpec-able (Default) Example Resource
 
 ```yaml
 apiVersion: service.binding/v1alpha2
@@ -524,9 +520,9 @@ spec:
     volumes: .spec.template.spec.volumes
 ```
 
-### Reconciler Implementation
+## Reconciler Implementation
 
-A reconciler implementation that supports `ClusterApplicationResourceMapping`s **MUST** support `ServiceBinding` resources that refer to applications that are not PodSpec-able.  If no Application Resource Mapping exists for the `ServiceBinding` application resource type, the reconciliation **MUST** fail.
+A reconciler implementation **MUST** support mapping to PodSpec-able resources without defining a Application Resource Mapping for those types.  If no Application Resource Mapping exists for the `ServiceBinding` application resource type and the application resource is not PodSpec-able, the reconciliation **MUST** fail.
 
 If a `ClusterApplicationResourceMapping` defines `containers`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` using the `Container` type (`.envs`, `.volumeMounts`) for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
 
@@ -535,6 +531,10 @@ If a `ClusterApplicationResourceMapping` defines `.envs` and `.volumeMounts`, th
 If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `Int`-based index, that index **MUST** be used to filter the first entry in the `.containers` list and all other entries in those lists are ineligible for mapping.  If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `string`-based index that index **MUST** be used to filter all entries in the `.containers` list.  If a `ServiceBinding` specifies a `.spec.applications.containers` value and `ClusterApplicationResourceMapping` for the mapped type defines `.envs` and `.volumeMounts`, the reconciler **MUST** fail to reconcile.
 
 A reconciler **MUST** apply the appropriate modification to the application resource addressed by the `ServiceBinding` as defined by `.volumes`.
+
+# Extensions
+
+Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
 
 ## Custom Projection
 
@@ -822,7 +822,7 @@ Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to au
 
 ### For Cluster Operators and CRD Authors
 
-Cluster operators and CRD authors **MAY** opt-in resources to service binding by defining a `ClusterRole` with a label matching `service.binding/controller=true`. For Provisioned Service resources the `get`, `list`, and `watch` verbs **MUST** be granted. For PodSpec-able resources the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+Cluster operators and CRD authors **MAY** opt-in resources to service binding by defining a `ClusterRole` with a label matching `service.binding/controller=true`. For Provisioned Service resources the `get`, `list`, and `watch` verbs **MUST** be granted. For Application resources resources the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
 
 #### Example Resource
 
@@ -843,7 +843,7 @@ rules:
   - get
   - list
   - watch
-# for PodSpec-able resources (also compatible with Provisioned Service resources)
+# for Application resources (also compatible with Provisioned Service resources)
 - apiGroups:
   - awesome.example.com
   resources:
