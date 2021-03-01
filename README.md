@@ -57,9 +57,15 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Direct Secret Reference](#direct-secret-reference)
     - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
 - [Extensions](#extensions)
+  - [Application Resource Mapping](#application-resource-mapping)
+    - [Resource Type Schema](#resource-type-schema-2)
+    - [Container-based Example Resource](#container-based-example-resource)
+    - [Element-based Example Resource](#element-based-example-resource)
+    - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
+    - [Reconciler Implementation](#reconciler-implementation-1)
   - [Custom Projection](#custom-projection)
     - [Custom Projection Service Binding Example Resource](#custom-projection-service-binding-example-resource)
-    - [Resource Type Schema](#resource-type-schema-2)
+    - [Resource Type Schema](#resource-type-schema-3)
     - [Service Binding Projection Example Resource](#service-binding-projection-example-resource)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
@@ -200,7 +206,6 @@ The Service Binding resource **MAY** define `.spec.application.containers`, as a
 - if the value is an integer (`${containerInteger}`), the container matching by index (`.spec.template.spec.containers[${containerInteger}]`) **MUST** be bound. Init containers **MUST NOT** be bound
 - if the value is a string (`${containerString}`), a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
 - values that do not match a container or init container **SHOULD** be ignored
-
 
 A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.  If the `name` of a `Mapping` matches that of a Provisioned Service `Secret` key, the value from `Mapping` **MUST** be used for binding.
 
@@ -433,6 +438,103 @@ status:
 # Extensions
 
 Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
+
+## Application Resource Mapping
+
+There are scenarios where an application resource is not strictly PodSpec-able but does include the `.env`, `.volumeMounts`, and `.volumes` entries that are required to project a service binding.  This extension defines a mapping of those elements onto any type.  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ClusterApplicationResourceMapping`.  An exemplar CRD can be found [here][carm-crd].
+
+An Application Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  An Application Resource Mapping **MUST** define a `.spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]Container`][container] arrays in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]EnvVar`][envvar] arrays in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]VolumeMount`][volumemount] arrays in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`[]Volume`][volume] arrays in the target resource.
+
+If an Application Resource Mapping defines `containers`, it **MUST NOT** define `.envs` and `.volumeMounts`.  If an Application resources does not define `containers`, it **MUST** define `.envs` and `.volumeMounts`.
+
+[carm-crd]: service.binding_clusterapplicationresourcemappings.yaml
+[container]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/
+[crd-syntax]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition
+[envvar]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/#environment-variables
+[jsonpath]: https://kubernetes.io/docs/reference/kubectl/jsonpath/
+[volume]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/volume
+[volumemount]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/#volumes
+
+### Resource Type Schema
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ClusterApplicationResourceMapping
+metadata:
+  name:                 # string
+  generation:           # int64, defined by the Kubernetes control plane
+  ...
+spec:
+  versions:             # []Version
+  - version:            # string
+    containers:         # []string, optional
+    envs:               # []string, optional
+    volumeMounts:       # []string, optional
+    volumes:            # string
+```
+
+### Container-based Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ClusterApplicationResourceMapping
+metadata:
+ name:  cronjobs.batch
+spec:
+  versions:
+  - version: "*"
+    containers:
+    - .spec.jobTemplate.spec.template.spec.containers
+    - .spec.jobTemplate.spec.template.spec.initContainers
+    volumes: .spec.jobTemplate.spec.template.spec.volumes
+```
+
+### Element-based Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ClusterApplicationResourceMapping
+metadata:
+ name:  cronjobs.batch
+spec:
+  versions:
+  - version: "*"
+    envs:
+    - .spec.jobTemplate.spec.template.spec.containers[*].env
+    - .spec.jobTemplate.spec.template.spec.initContainers[*].env
+    volumeMounts:
+    - .spec.jobTemplate.spec.template.spec.containers[*].volumeMounts
+    - .spec.jobTemplate.spec.template.spec.initContainers[*].volumeMounts
+    volumes: .spec.jobTemplate.spec.template.spec.volumes
+```
+
+### PodSpec-able (Default) Example Resource
+
+```yaml
+apiVersion: service.binding/v1alpha2
+kind: ClusterApplicationResourceMapping
+metadata:
+  name: deployments.apps
+spec:
+  versions:
+  - version: "*"
+    containers:
+    - .spec.template.spec.containers
+    - .spec.template.spec.initContainers
+    volumes: .spec.template.spec.volumes
+```
+
+### Reconciler Implementation
+
+A reconciler implementation that supports `ClusterApplicationResourceMapping`s **MUST** support `ServiceBinding` resources that refer to applications that are not PodSpec-able.  If no Application Resource Mapping exists for the `ServiceBinding` application resource type, the reconciliation **MUST** fail.
+
+If a `ClusterApplicationResourceMapping` defines `containers`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` using the `Container` type (`.envs`, `.volumeMounts`) for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
+
+If a `ClusterApplicationResourceMapping` defines `.envs` and `.volumeMounts`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
+
+If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `Int`-based index, that index **MUST** be used to filter the first entry in the `.containers` list and all other entries in those lists are ineligible for mapping.  If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the value contains an `string`-based index that index **MUST** be used to filter all entries in the `.containers` list.  If a `ServiceBinding` specifies a `.spec.applications.containers` value and `ClusterApplicationResourceMapping` for the mapped type defines `.envs` and `.volumeMounts`, the reconciler **MUST** fail to reconcile.
+
+A reconciler **MUST** apply the appropriate modification to the application resource addressed by the `ServiceBinding` as defined by `.volumes`.
 
 ## Custom Projection
 
