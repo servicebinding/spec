@@ -44,8 +44,12 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Example Resource](#example-resource)
   - [Well-known Secret Entries](#well-known-secret-entries)
   - [Example Secret](#example-secret)
+  - [Considerations for Role-Based Access Control (RBAC)](#considerations-for-role-based-access-control-rbac)
+    - [Example Resource](#example-resource-1)
 - [Application Projection](#application-projection)
   - [Example Directory Structure](#example-directory-structure)
+  - [Considerations for Role-Base Access Control (RBAC)](#considerations-for-role-base-access-control-rbac)
+    - [Example Resource](#example-resource-2)
 - [Service Binding](#service-binding)
   - [Resource Type Schema](#resource-type-schema-1)
   - [Minimal Example Resource](#minimal-example-resource)
@@ -62,17 +66,14 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Element-based Example Resource](#element-based-example-resource)
   - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
   - [Reconciler Implementation](#reconciler-implementation-1)
+- [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
+  - [Example Resource](#example-resource-3)
 - [Extensions](#extensions)
   - [Binding `Secret` Generation Strategies](#binding-secret-generation-strategies)
     - [OLM Operator Descriptors](#olm-operator-descriptors)
     - [Descriptor Examples](#descriptor-examples)
     - [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
     - [Annotation Examples](#annotation-examples)
-  - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
-    - [For Cluster Operators and CRD Authors](#for-cluster-operators-and-crd-authors)
-      - [Example Resource](#example-resource-1)
-    - [For Service Binding Implementors](#for-service-binding-implementors)
-      - [Example Resource](#example-resource-2)
 ---
 
 ## Notational Conventions
@@ -162,6 +163,32 @@ stringData:
   password: root
 ```
 
+## Considerations for Role-Based Access Control (RBAC)
+
+Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `service.binding/controller=true`. The `get`, `list`, and `watch` verbs **MUST** be granted.
+
+See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
+
+### Example Resource
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: awesome-service-bindings
+  labels:
+    service.binding/controller: "true" # matches the aggregation rule selector
+rules:
+- apiGroups:
+  - awesome.example.com
+  resources:
+  - awesomeservices
+  verbs:
+  - get
+  - list
+  - watch
+```
+
 # Application Projection
 
 A Binding `Secret` **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
@@ -188,6 +215,34 @@ $SERVICE_BINDING_ROOT
     ├── uri
     ├── certificates
     └── private-key
+```
+
+## Considerations for Role-Base Access Control (RBAC)
+
+Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `service.binding/controller=true`. The `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+
+See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
+
+### Example Resource
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: awesome-service-bindings
+  labels:
+    service.binding/controller: "true" # matches the aggregation rule selector
+rules:
+- apiGroups:
+  - awesome.example.com
+  resources:
+  - awesomeapplications
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
 ```
 
 # Service Binding
@@ -539,6 +594,29 @@ If a `ServiceBinding` specifies a `.spec.applications.containers` value, and the
 
 A reconciler **MUST** apply the appropriate modification to the application resource addressed by the `ServiceBinding` as defined by `.volumes`.
 
+# Role-Based Access Control (RBAC)
+
+Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources. When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into. This extension defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler. Cluster operators **MAY** impose additional access controls beyond RBAC.
+
+If a service binding reconciler implementation is using Role-Based Access Control (RBAC) it **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `service.binding/controller=true`. This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
+
+[rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+[acr]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
+
+## Example Resource
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ...
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+      service.binding/controller: "true"
+rules: [] # The control plane automatically fills in the rules
+```
+
 # Extensions
 
 Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
@@ -721,65 +799,3 @@ status:
     “service.binding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
     ```
-
-## Role-Based Access Control (RBAC)
-
-Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources. When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into. This extension defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler. Cluster operators **MAY** impose additional access controls beyond RBAC.
-
-[rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
-
-### For Cluster Operators and CRD Authors
-
-Cluster operators and CRD authors **MAY** opt-in resources to service binding by defining a `ClusterRole` with a label matching `service.binding/controller=true`. For Provisioned Service resources the `get`, `list`, and `watch` verbs **MUST** be granted. For Application resources resources the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
-
-#### Example Resource
-
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: awesome-service-bindings
-  labels:
-    service.binding/controller: "true" # matches the aggregation rule selector
-rules:
-# for Provisioned Service resources only
-- apiGroups:
-  - awesome.example.com
-  resources:
-  - awesomeservices
-  verbs:
-  - get
-  - list
-  - watch
-# for Application resources (also compatible with Provisioned Service resources)
-- apiGroups:
-  - awesome.example.com
-  resources:
-  - awesomeapplications
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
-```
-
-### For Service Binding Implementors
-
-Service binding reconciler implementations **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `service.binding/controller=true`. This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
-
-[acr]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
-
-#### Example Resource
-
-```yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: ...
-aggregationRule:
-  clusterRoleSelectors:
-  - matchLabels:
-      service.binding/controller: "true"
-rules: [] # The control plane automatically fills in the rules
-```
