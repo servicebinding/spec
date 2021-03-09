@@ -48,7 +48,7 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
     - [Example Resource](#example-resource-1)
 - [Application Projection](#application-projection)
   - [Example Directory Structure](#example-directory-structure)
-  - [Considerations for Role-Base Access Control (RBAC)](#considerations-for-role-base-access-control-rbac)
+  - [Considerations for Role-Based Access Control (RBAC)](#considerations-for-role-based-access-control-rbac-1)
     - [Example Resource](#example-resource-2)
 - [Service Binding](#service-binding)
   - [Resource Type Schema](#resource-type-schema-1)
@@ -217,7 +217,7 @@ $SERVICE_BINDING_ROOT
     └── private-key
 ```
 
-## Considerations for Role-Base Access Control (RBAC)
+## Considerations for Role-Based Access Control (RBAC)
 
 Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `service.binding/controller=true`. The `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
 
