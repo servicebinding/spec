@@ -192,7 +192,7 @@ $SERVICE_BINDING_ROOT
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Application Projection](#application-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1beta1` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same application.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
@@ -217,7 +217,7 @@ A Service Binding resource **MUST** define `.status.conditions` which is an arra
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ServiceBinding
 metadata:
   name:                 # string
@@ -258,7 +258,7 @@ status:
 ## Minimal Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -285,7 +285,7 @@ status:
 ## Label Selector Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ServiceBinding
 metadata:
   name: online-banking-frontend-to-account-service
@@ -317,7 +317,7 @@ status:
 ## Mappings Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -350,7 +350,7 @@ status:
 ## Environment Variables Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -415,7 +415,7 @@ When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersio
 ## Direct Secret Reference Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -444,7 +444,7 @@ status:
 
 # Application Resource Mapping
 
-An Application Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Application Projection](#application-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ClusterApplicationResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][carm-crd].
+An Application Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Application Projection](#application-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1beta1` and kind `ClusterApplicationResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][carm-crd].
 
 An Application Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  An Application Resource Mapping **MUST** define a `.spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]Container`][container] arrays in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]EnvVar`][envvar] arrays in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]VolumeMount`][volumemount] arrays in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`[]Volume`][volume] arrays in the target resource.
 
@@ -461,7 +461,7 @@ If an Application Resource Mapping defines `containers`, it **MUST NOT** define 
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ClusterApplicationResourceMapping
 metadata:
   name:                 # string
@@ -479,7 +479,7 @@ spec:
 ## Container-based Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ClusterApplicationResourceMapping
 metadata:
  name:  cronjobs.batch
@@ -495,7 +495,7 @@ spec:
 ## Element-based Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ClusterApplicationResourceMapping
 metadata:
  name:  cronjobs.batch
@@ -514,7 +514,7 @@ spec:
 ## PodSpec-able (Default) Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1beta1
 kind: ClusterApplicationResourceMapping
 metadata:
   name: deployments.apps

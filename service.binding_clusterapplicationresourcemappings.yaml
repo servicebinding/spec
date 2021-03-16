@@ -20,7 +20,7 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    name: v1alpha2
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: ClusterApplicationResourceMapping is the Schema for the clusterapplicationresourcemappings API
