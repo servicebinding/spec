@@ -799,3 +799,8 @@ status:
     “service.binding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
     ```
+1.  Mount a static key-value pair into the binding `Secret`
+    ```plain
+    “service.binding/key”:
+      "value={GO_TEMPLATE}"
+    ```
