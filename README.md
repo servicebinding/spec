@@ -37,6 +37,7 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
 
 <!-- Using https://github.com/yzhang-gh/vscode-markdown to manage toc -->
 - [Service Binding Specification for Kubernetes](#service-binding-specification-for-kubernetes)
+  - [Status](#status)
   - [Notational Conventions](#notational-conventions)
   - [Terminology definition](#terminology-definition)
 - [Provisioned Service](#provisioned-service)
@@ -75,6 +76,10 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
     - [Non-OLM Operator and Resource Annotations](#non-olm-operator-and-resource-annotations)
     - [Annotation Examples](#annotation-examples)
 ---
+
+## Status
+
+This document is a pre-release, working draft of the Service Bindings for Kubernetes specification, representing the collective efforts of the [community](#community). It is published for early implementors and users to provide feedback. Any part of this spec may change before the spec reaches 1.0 with no promise of backwards compatibility.
 
 ## Notational Conventions
 
