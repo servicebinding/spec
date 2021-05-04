@@ -157,7 +157,7 @@ Other than the recommended `type` and `provider` entries, there are no other res
 apiVersion: v1
 kind: Secret
 metadata:
-  name: production-db
+  name: production-db-secret
 type: service.binding/mysql
 stringData:
   type: mysql
