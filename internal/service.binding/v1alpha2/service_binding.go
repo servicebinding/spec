@@ -64,31 +64,16 @@ type EnvMapping struct {
 	Key string `json:"key"`
 }
 
-// ServiceBindingMapping defines a mapping from the existing collection of Secret values to a new Secret entry.
-type ServiceBindingMapping struct {
-	// Name is the name of the mapped Secret entry
-	Name string `json:"name"`
-	// Value is the value of the new Secret entry.  Contents may be a Go template and refer to the other secret entries
-	// by name.
-	Value string `json:"value"`
-}
-
 // ServiceBindingSpec defines the desired state of ServiceBinding
 type ServiceBindingSpec struct {
 	// Name is the name of the service as projected into the application container.  Defaults to .metadata.name.
 	Name string `json:"name,omitempty"`
-	// Type is the type of the service as projected into the application container
-	Type string `json:"type,omitempty"`
-	// Provider is the provider of the service as projected into the application container
-	Provider string `json:"provider,omitempty"`
 	// Application is a reference to an object
 	Application ServiceBindingApplicationReference `json:"application"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
 	Service ServiceBindingServiceReference `json:"service"`
 	// Env is the collection of mappings from Secret entries to environment variables
 	Env []EnvMapping `json:"env,omitempty"`
-	// Mappings is the collection of mappings from existing Secret entries to new Secret entries
-	Mappings []ServiceBindingMapping `json:"mappings,omitempty"`
 }
 
 // These are valid conditions of ServiceBinding.

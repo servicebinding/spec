@@ -55,7 +55,6 @@ Behavior within the project is governed by the [Contributor Covenant Code of Con
   - [Resource Type Schema](#resource-type-schema-1)
   - [Minimal Example Resource](#minimal-example-resource)
   - [Label Selector Example Resource](#label-selector-example-resource)
-  - [Mappings Example Resource](#mappings-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
     - [Ready Condition Status](#ready-condition-status)
@@ -263,9 +262,7 @@ The Service Binding resource **MAY** define `.spec.application.containers`, as a
 - if the value is a string (`${containerString}`), a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
 - values that do not match a container or init container **SHOULD** be ignored
 
-A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.  If the `name` of a `Mapping` matches that of a Provisioned Service `Secret` key, the value from `Mapping` **MUST** be used for binding.
-
-A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name including any key defined by a `Mapping`.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
+A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
 A Service Binding resource **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
 
@@ -285,8 +282,6 @@ metadata:
   ...
 spec:
   name:                 # string, optional, default: .metadata.name
-  type:                 # string, optional
-  provider:             # string, optional
 
   application:          # ObjectReference-like
     apiVersion:         # string
@@ -299,10 +294,6 @@ spec:
     apiVersion:         # string
     kind:               # string
     name:               # string
-
-  mappings:             # []Mapping, optional
-  - name:               # string
-    value:              # string
 
   env:                  # []EnvMapping, optional
   - name:               # string
@@ -374,39 +365,6 @@ status:
     lastTransitionTime: '2021-01-20T17:00:00Z'
 ```
 
-## Mappings Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha2
-kind: ServiceBinding
-metadata:
-  name: account-service
-spec:
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-  mappings:
-  - name:  accountServiceUri
-    value: https://{{ urlquery .username }}:{{ urlquery .password }}@{{ .host }}:{{ .port }}/{{ .path }}
-
-status:
-  binding:
-    name: prod-account-service-projection
-  conditions:
-  - type:   Ready
-    status: 'True'
-    reason: 'Projected'
-    message: ''
-    lastTransitionTime: '2021-01-20T17:00:00Z'
-```
-
 ## Environment Variables Example Resource
 
 ```yaml
@@ -425,10 +383,6 @@ spec:
     kind:       AccountService
     name:       prod-account-service
 
-  mappings:
-  - name:  accountServiceUri
-    value: https://{{ urlquery .username }}:{{ urlquery .password }}@{{ .host }}:{{ .port }}/{{ .path }}
-
   env:
   - name: ACCOUNT_SERVICE_HOST
     key:  host
@@ -436,8 +390,6 @@ spec:
     key:  username
   - name: ACCOUNT_SERVICE_PASSWORD
     key:  password
-  - name: ACCOUNT_SERVICE_URI
-    key:  accountServiceUri
 
 status:
   binding:
@@ -459,8 +411,6 @@ If a `.spec.name` is set, the directory name of the volume mount **MUST** be its
 If the `$SERVICE_BINDING_ROOT` environment variable has already been configured on the resource represented by `application`, the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  If the `$SERVICE_BINDING_ROOT` environment variable has not been configured on the resource represented by `application`, the `$SERVICE_BINDING_ROOT` environment variable **MUST** be set and the Provisioned Service binding `Secret` **MUST** be mounted relative to that location.  A **RECOMMENDED** value to use is `/bindings`.
 
 The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is already configured on the resource represented by `application`.
-
-If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
 
 ### Ready Condition Status
 
