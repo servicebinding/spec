@@ -114,6 +114,8 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `service.binding/provisioned-service: "true"` as a label.
 
+> Note: While the Provisioned Service referenced `Secret` data should contain a `type` entry, the `type` must be defined before it is projected into an application workload. This allows a mapping to enrich an existing secret.
+
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
 ## Resource Type Schema
