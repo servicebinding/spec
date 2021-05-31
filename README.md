@@ -636,7 +636,9 @@ To handle the majority of existing resources and CRDs, `Secret` generation needs
 1.  Extract an entire `ConfigMap`/`Secret` refrenced from a resource
 1.  Extract a specific entry in a `ConfigMap`/`Secret` referenced from a resource
 1.  Extract entries from a collection of objects, mapping keys and values from entries in a `ConfigMap`/`Secret` referenced from a resource
+1.  Exctact a collection of specific entry values in a resource's collection of objects
 1.  Map each value to a specific key
+1.  Map each value of a collection to a key with generated name
 
 While the syntax of the generation strategies are specific to the system they are annotating, they are based on a common data model.
 
@@ -646,7 +648,7 @@ While the syntax of the generation strategies are specific to the system they ar
 | `objectType` | Specifies the type of the object selected by the `path`.  One of `ConfigMap`, `Secret`, or `string` (default).
 | `elementType` | Specifies the type of object in an array selected by the `path`.  One of `sliceOfMaps`, `sliceOfStrings`, `string` (default).
 | `sourceKey` | Specifies a particular key to select if a `ConfigMap` or `Secret` is selected by the `path`.  Specifies a value to use for the key for an entry in a binding `Secret` when `elementType` is `sliceOfMaps`.
-| `sourceValue` | Specifies a particular value to use for the value for an entry in a binding `Secret` when `elementType` is `sliceOfMaps`
+| `sourceValue` | Specifies a particular value to use for the value for an entry in a binding `Secret` when `elementType` is `sliceOfMaps` or `sliceOfStrings`.
 
 
 ### OLM Operator Descriptors
@@ -663,6 +665,10 @@ kind: Database
 metadata:
   name: my-cluster
 spec:
+  tags:
+  - Brno
+  - PWR
+  - stage
   ...
 
 status:
@@ -739,6 +745,22 @@ status:
       - service.binding:endpoints:elementType=sliceOfMaps:sourceKey=type:sourceValue=url
     ```
 
+1. Mount the items of a collection into the binding `Secret` with one key per item
+
+    ```yaml
+    - path: spec.tags
+      x-descriptors:
+      - service.binding:tags:elementType=sliceOfStrings
+    ```
+
+1. Mount the values of collection entries into the binding `Secret` with one key per entry value
+
+    ```yaml
+   - path: bootstrap
+      x-descriptors:
+      - service.binding:endpoints:elementType=sliceOfStrings:sourceValue=url
+    ```
+
 ### Non-OLM Operator and Resource Annotations
 
 Non-OLM Operators are configured by adding annotations to the Operator's CRD with mapping configuration.  All Kubernetes resources are configured by adding annotations to the resource.
@@ -753,6 +775,10 @@ kind: Database
 metadata:
   name: my-cluster
 spec:
+  tags:
+  - Brno
+  - PWR
+  - stage
   ...
 
 status:
@@ -803,4 +829,14 @@ status:
     ```plain
     “service.binding/endpoints”:
       "path={.status.bootstrap},elementType=sliceOfMaps,sourceKey=type,sourceValue=url"
+    ```
+1. Mount the items of a collection into the binding `Secret` with one key per item
+    ```plain
+    "service.binding/tags":
+      "path={.spec.tags},elementType=sliceOfStrings
+    ```
+1. Mount the values of collection entries into the binding `Secret` with one key per entry value
+    ```plain
+    “service.binding/endpoints”:
+      "path={.status.bootstrap},elementType=sliceOfStrings,sourceValue=url"
     ```
