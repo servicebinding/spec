@@ -115,6 +115,9 @@ spec:
               name:
                 description: Name is the name of the service as projected into the application container.  Defaults to .metadata.name.
                 type: string
+              provider:
+                description: Provider is the provider of the service as projected into the application container
+                type: string
               service:
                 description: Service is a reference to an object that fulfills the ProvisionedService duck type
                 properties:
@@ -132,6 +135,9 @@ spec:
                 - kind
                 - name
                 type: object
+              type:
+                description: Type is the type of the service as projected into the application container
+                type: string
             required:
             - application
             - service

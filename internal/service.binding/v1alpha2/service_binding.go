@@ -68,6 +68,10 @@ type EnvMapping struct {
 type ServiceBindingSpec struct {
 	// Name is the name of the service as projected into the application container.  Defaults to .metadata.name.
 	Name string `json:"name,omitempty"`
+	// Type is the type of the service as projected into the application container
+	Type string `json:"type,omitempty"`
+	// Provider is the provider of the service as projected into the application container
+	Provider string `json:"provider,omitempty"`
 	// Application is a reference to an object
 	Application ServiceBindingApplicationReference `json:"application"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
