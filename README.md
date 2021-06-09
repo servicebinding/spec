@@ -16,7 +16,7 @@ The pattern of Service Binding has prior art in non-Kubernetes platforms.  Herok
 [cnb]: https://github.com/buildpacks/spec/blob/master/extensions/bindings.md
 
 <!-- omit in toc -->
-### Community, discussion, contribution, and support
+## Community, discussion, contribution, and support
 
 The Service Binding Specification for Kubernetes project is a community lead effort.
 A bi-weekly [working group call][working-group] is open to the public.
