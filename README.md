@@ -26,6 +26,7 @@ If you catch an error in the specification’s text, or if you write an
 implementation, please let us know by opening an issue or pull request at our
 [GitHub repository][repo].
 
+<!-- omit in toc -->
 ### Code of conduct
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct][code-of-conduct].
