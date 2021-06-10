@@ -71,7 +71,6 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
   - [Reconciler Implementation](#reconciler-implementation-1)
 - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
   - [Example Resource](#example-resource-3)
-- [Extensions](#extensions)
 ---
 
 ## Status
@@ -576,7 +575,3 @@ aggregationRule:
       service.binding/controller: "true"
 rules: [] # The control plane automatically fills in the rules
 ```
-
-# Extensions
-
-Extensions are optional additions to the core specification as defined above.  Implementation and support of these specifications are not required in order for a platform to be considered compliant.  However, if the features addressed by these specifications are supported a platform **MUST** be in compliance with the specification that governs that feature.
