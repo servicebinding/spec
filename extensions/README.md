@@ -4,4 +4,4 @@ This directory contains extensions to the [Service Binding Specification for Kub
 
 | No. | Title                                                | Status |
 | --- | ---------------------------------------------------- | ------ |
-| 1   | [Secret Generator Extension](./secret-generation.md) |  Draft |
+| 1   | [Secret Generation Extension](./secret-generation.md) |  Draft |
