@@ -58,7 +58,6 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
   - [Resource Type Schema](#resource-type-schema-1)
   - [Minimal Example Resource](#minimal-example-resource)
   - [Label Selector Example Resource](#label-selector-example-resource)
-  - [Mappings Example Resource](#mappings-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
     - [Ready Condition Status](#ready-condition-status)
@@ -117,6 +116,8 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 # Provisioned Service
 
 A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `service.binding/provisioned-service: "true"` as a label.
+
+> Note: While the Provisioned Service referenced `Secret` data should contain a `type` entry, the `type` must be defined before it is projected into an application workload. This allows a mapping to enrich an existing secret.
 
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
@@ -199,11 +200,11 @@ rules:
 
 # Application Projection
 
-A Binding `Secret` **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
+A projected binding **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
-The `Secret` data **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **MUST** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.
+The projected binding **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the projected binding also contain a `provider` entry with a value that identifies the provider of the binding.  The projected binding data **MAY** contain any other entry.
 
-The name of a secret entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  The contents of a secret entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
+The name of a binding entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  The contents of a binding entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
 
 The collection of files within the directory **MAY** change between container launches.  The collection of files within the directory **SHOULD NOT** change during the lifetime of the container.
 
@@ -266,9 +267,7 @@ The Service Binding resource **MAY** define `.spec.application.containers`, as a
 - if the value is a string (`${containerString}`), a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
 - values that do not match a container or init container **SHOULD** be ignored
 
-A Service Binding Resource **MAY** define a `.spec.mappings` which is an array of `Mapping` objects.  A `Mapping` object **MUST** define `name` and `value` entries.  The `value` of a `Mapping` **MUST** be handled as a [Go Template][gt] exposing binding `Secret` keys for substitution. The executed output of the template **MUST** be added to the `Secret` exposed to the resource represented by `application` as the key specified by the `name` of the `Mapping`.  If the `name` of a `Mapping` matches that of a Provisioned Service `Secret` key, the value from `Mapping` **MUST** be used for binding.
-
-A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name including any key defined by a `Mapping`.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
+A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
 A Service Binding resource **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
 
@@ -302,10 +301,6 @@ spec:
     apiVersion:         # string
     kind:               # string
     name:               # string
-
-  mappings:             # []Mapping, optional
-  - name:               # string
-    value:              # string
 
   env:                  # []EnvMapping, optional
   - name:               # string
@@ -377,39 +372,6 @@ status:
     lastTransitionTime: '2021-01-20T17:00:00Z'
 ```
 
-## Mappings Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha2
-kind: ServiceBinding
-metadata:
-  name: account-service
-spec:
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-  mappings:
-  - name:  accountServiceUri
-    value: https://{{ urlquery .username }}:{{ urlquery .password }}@{{ .host }}:{{ .port }}/{{ .path }}
-
-status:
-  binding:
-    name: prod-account-service-projection
-  conditions:
-  - type:   Ready
-    status: 'True'
-    reason: 'Projected'
-    message: ''
-    lastTransitionTime: '2021-01-20T17:00:00Z'
-```
-
 ## Environment Variables Example Resource
 
 ```yaml
@@ -428,10 +390,6 @@ spec:
     kind:       AccountService
     name:       prod-account-service
 
-  mappings:
-  - name:  accountServiceUri
-    value: https://{{ urlquery .username }}:{{ urlquery .password }}@{{ .host }}:{{ .port }}/{{ .path }}
-
   env:
   - name: ACCOUNT_SERVICE_HOST
     key:  host
@@ -439,8 +397,6 @@ spec:
     key:  username
   - name: ACCOUNT_SERVICE_PASSWORD
     key:  password
-  - name: ACCOUNT_SERVICE_URI
-    key:  accountServiceUri
 
 status:
   binding:
@@ -463,7 +419,7 @@ If the `$SERVICE_BINDING_ROOT` environment variable has already been configured 
 
 The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is already configured on the resource represented by `application`.
 
-If a `.spec.type` is set, the `type` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the binding `Secret` **MUST** be set to its value overriding any existing value.
+If a `.spec.type` is set, the `type` entry in the application projection **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the application projection **MUST** be set to its value overriding any existing value.
 
 ### Ready Condition Status
 
