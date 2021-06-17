@@ -271,6 +271,8 @@ A Service Binding Resource **MAY** define a `.spec.env` which is an array of `En
 
 A Service Binding resource **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
 
+When updating the status of the `ServiceBinding` resource, the controller **MUST** set the value of `.status.observedGeneration` to the value of `.metadata.generation`.  The `.metadata.generation` field is always the current generation of the `ServiceBinding` resource, which is incremented by the API server when writes are made to the `ServiceBinding` resource spec field.  Therefore, consumers **SHOULD** compare the value of the observed and current generations to know if the status reflects the current resource definition.
+
 [sb-crd]: service.binding_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [gt]: https://golang.org/pkg/text/template/#pkg-overview
