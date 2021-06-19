@@ -488,9 +488,9 @@ metadata:
 spec:
   versions:             # []Version
   - version:            # string
-    containers:         # []string, optional
-    envs:               # []string, optional
-    volumeMounts:       # []string, optional
+    containers:         # []string, mutually exclusive with a combination of envs and volumeMounts
+    envs:               # []string, a combination of envs and volumeMounts is mutually exclusive with containers
+    volumeMounts:       # []string, a combination of envs and volumeMounts is mutually exclusive with containers
     volumes:            # string
 ```
 
