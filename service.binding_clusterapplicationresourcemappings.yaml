@@ -14,7 +14,7 @@ spec:
     listKind: ClusterApplicationResourceMappingList
     plural: clusterapplicationresourcemappings
     singular: clusterapplicationresourcemapping
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .metadata.creationTimestamp
