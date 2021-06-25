@@ -51,10 +51,7 @@ spec:
                   containers:
                     description: Containers describes which containers in a Pod should be bound to
                     items:
-                      anyOf:
-                      - type: integer
-                      - type: string
-                      x-kubernetes-int-or-string: true
+                      type: string
                     type: array
                   kind:
                     description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'

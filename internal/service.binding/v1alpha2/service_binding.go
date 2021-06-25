@@ -18,7 +18,6 @@ package v1alpha2
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // ServiceBindingApplicationReference defines a subset of corev1.ObjectReference with extensions
@@ -34,7 +33,7 @@ type ServiceBindingApplicationReference struct {
 	// Selector is a query that selects the application or applications to bind the service to
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
 	// Containers describes which containers in a Pod should be bound to
-	Containers []intstr.IntOrString `json:"containers,omitempty"`
+	Containers []string `json:"containers,omitempty"`
 }
 
 // ServiceBindingServiceReference defines a subset of corev1.ObjectReference
