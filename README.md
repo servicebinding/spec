@@ -294,7 +294,7 @@ spec:
     kind:               # string
     name:               # string, mutually exclusive with selector
     selector:           # metav1.LabelSelector, mutually exclusive with name
-    containers:         # []intstr.IntOrString, optional
+    containers:         # []string, optional
 
   service:              # Provisioned Service resource ObjectReference-like
     apiVersion:         # string
