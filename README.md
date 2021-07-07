@@ -200,7 +200,7 @@ rules:
 
 # Application Projection
 
-A projected binding **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>`, where `<binding-name>` **MUST** be unique and **MUST** match `[a-z0-9\-\.]{1,253}`.  The uniqueness of the `<binding-name>` can often be achieved by picking the `ServiceBinding`'s `metadata.name` or `spec.name` (if defined), but in cases where that name already exists implementations **MUST** derive a unique name.  For example, the implementation can use the target service's `<kind>.<metadata.name>`, or any other naming strategy that yield a unique name. The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
+A projected binding **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>`, where `<binding-name>` **MUST** be unique and **MUST** match `[a-z0-9\-\.]{1,253}`.  The uniqueness of the `<binding-name>` can often be achieved by picking the `ServiceBinding`'s `metadata.name` or `spec.name` (if defined), but in cases where that file path already exists implementations **MUST** derive a unique name.  For example, the implementation can use the target service's `<kind>.<metadata.name>`, or any other naming strategy that yields a unique name. The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
 The projected binding **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the projected binding also contain a `provider` entry with a value that identifies the provider of the binding.  The projected binding data **MAY** contain any other entry.
 
