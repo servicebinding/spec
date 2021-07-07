@@ -200,7 +200,7 @@ rules:
 
 # Application Projection
 
-A projected binding **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>` with directory names matching the name of the binding.  Binding names **MUST** match `[a-z0-9\-\.]{1,253}`.  The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
+A projected binding **MUST** be volume mounted into a container at `$SERVICE_BINDING_ROOT/<binding-name>`, where `<binding-name>` **MUST** be unique and **MUST** match `[a-z0-9\-\.]{1,253}`.  The uniqueness of the `<binding-name>` can often be achieved by picking the `ServiceBinding`'s `metadata.name` or `spec.name` (if defined), but in cases where that name already exists implementations **MUST** derive a unique name.  For example, the implementation can use the target service's `<kind>.<metadata.name>`, or any other naming strategy that yield a unique name. The `$SERVICE_BINDING_ROOT` environment variable **MUST** be declared and can point to any valid file system location.
 
 The projected binding **MUST** contain a `type` entry with a value that identifies the abstract classification of the binding.  It is **RECOMMENDED** that the projected binding also contain a `provider` entry with a value that identifies the provider of the binding.  The projected binding data **MAY** contain any other entry.
 
@@ -260,7 +260,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  A `ServiceBinding` **MAY** define the service reference by-name or by-[label selector][ls].  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
 
 The Service Binding resource **MAY** define `.spec.application.containers`, as a list of integers or strings, to limit which containers in the application are bound.  Referencing containers by index is fragile in the presence of admission webhooks that inject sidecar containers.  It is **RECOMMENDED** to match containers by name. Binding to a container is opt-in, unless `.spec.application.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
 - if the value is an integer (`${containerInteger}`), the container matching by index (`.spec.template.spec.containers[${containerInteger}]`) **MUST** be bound. Init containers **MUST NOT** be bound
@@ -301,6 +301,7 @@ spec:
     apiVersion:         # string
     kind:               # string
     name:               # string
+    selector:           # metav1.LabelSelector, mutually exclusive with name
 
   env:                  # []EnvMapping, optional
   - name:               # string
@@ -361,7 +362,10 @@ spec:
   service:
     apiVersion: com.example/v1alpha1
     kind:       AccountService
-    name:       prod-account-service
+    selector:
+      matchLabels:
+        app.kubernetes.io/part-of: online-banking
+        app.kubernetes.io/component: backend
 
 status:
   conditions:
