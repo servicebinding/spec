@@ -551,7 +551,7 @@ A reconciler implementation **MUST** support mapping to PodSpec-able resources w
 
 If a `ClusterApplicationResourceMapping` defines `containers`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` using the `Container` type (`.envs`, `.volumeMounts`) for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
 
-If a `ClusterApplicationResourceMapping` defines `.envs` and `.volumeMounts`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` for all available containers and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
+If a `ClusterApplicationResourceMapping` defines `.envs` and `.volumeMounts`, the reconciler **MUST** first resolve a set of candidate locations in the application resource addressed by the `ServiceBinding` and then filter that collection by the `ServiceBinding` `.spec.application.containers` filter before applying the appropriate modification.
 
 If a `ServiceBinding` specifies `.spec.applications.containers` value, that value **MUST** be used to filter all entries in the `.containers` list.  If a `ServiceBinding` specifies a `.spec.applications.containers` value and `ClusterApplicationResourceMapping` for the mapped type defines `.envs` and `.volumeMounts`, the reconciler **MUST** fail to reconcile.
 
