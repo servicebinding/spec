@@ -168,7 +168,7 @@ stringData:
 
 ## Considerations for Role-Based Access Control (RBAC)
 
-Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `service.binding/controller=true`. The `get`, `list`, and `watch` verbs **MUST** be granted.
+Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `service.binding/controller=true`, the `get`, `list`, and `watch` verbs **MUST** be granted.
 
 See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
 
@@ -222,7 +222,7 @@ $SERVICE_BINDING_ROOT
 
 ## Considerations for Role-Based Access Control (RBAC)
 
-Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `service.binding/controller=true`. The `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `service.binding/controller=true`, the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
 
 See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
 
