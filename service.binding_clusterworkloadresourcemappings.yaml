@@ -6,14 +6,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: clusterapplicationresourcemappings.service.binding
+  name: clusterworkloadresourcemappings.service.binding
 spec:
   group: service.binding
   names:
-    kind: ClusterApplicationResourceMapping
-    listKind: ClusterApplicationResourceMappingList
-    plural: clusterapplicationresourcemappings
-    singular: clusterapplicationresourcemapping
+    kind: ClusterWorkloadResourceMapping
+    listKind: ClusterWorkloadResourceMappingList
+    plural: clusterworkloadresourcemappings
+    singular: clusterworkloadresourcemapping
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -23,7 +23,7 @@ spec:
     name: v1alpha2
     schema:
       openAPIV3Schema:
-        description: ClusterApplicationResourceMapping is the Schema for the clusterapplicationresourcemappings API
+        description: ClusterWorkloadResourceMapping is the Schema for the clusterworkloadresourcemappings API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -34,12 +34,12 @@ spec:
           metadata:
             type: object
           spec:
-            description: ClusterApplicationResourceMappingSpec defines the desired state of ClusterApplicationResourceMapping
+            description: ClusterWorkloadResourceMappingSpec defines the desired state of ClusterWorkloadResourceMapping
             properties:
               versions:
                 description: Versions is the collection of versions for a given resource, with mappings.
                 items:
-                  description: ClusterApplicationResourceMappingVersion defines the mapping for a specific version of an application resource.
+                  description: ClusterWorkloadResourceMappingVersion defines the mapping for a specific version of a workload resource.
                   properties:
                     containers:
                       description: Containers is the collection of JSONPaths that container configuration may be written to.
@@ -52,7 +52,7 @@ spec:
                         type: string
                       type: array
                     version:
-                      description: Version is the version of the application resource that this mapping is for.
+                      description: Version is the version of the workload resource that this mapping is for.
                       type: string
                     volumeMounts:
                       description: VolumeMounts is the collection of JSONPaths that volume mount configuration may be written to.

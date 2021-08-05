@@ -18,9 +18,9 @@ package v1alpha2
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-// ClusterApplicationResourceMappingVersion defines the mapping for a specific version of an application resource.
-type ClusterApplicationResourceMappingVersion struct {
-	// Version is the version of the application resource that this mapping is for.
+// ClusterWorkloadResourceMappingVersion defines the mapping for a specific version of a workload resource.
+type ClusterWorkloadResourceMappingVersion struct {
+	// Version is the version of the workload resource that this mapping is for.
 	Version string `json:"version"`
 	// Containers is the collection of JSONPaths that container configuration may be written to.
 	Containers []string `json:"containers,omitempty"`
@@ -32,10 +32,10 @@ type ClusterApplicationResourceMappingVersion struct {
 	Volumes string `json:"volumes"`
 }
 
-// ClusterApplicationResourceMappingSpec defines the desired state of ClusterApplicationResourceMapping
-type ClusterApplicationResourceMappingSpec struct {
+// ClusterWorkloadResourceMappingSpec defines the desired state of ClusterWorkloadResourceMapping
+type ClusterWorkloadResourceMappingSpec struct {
 	// Versions is the collection of versions for a given resource, with mappings.
-	Versions []ClusterApplicationResourceMappingVersion `json:"versions,omitempty"`
+	Versions []ClusterWorkloadResourceMappingVersion `json:"versions,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -43,20 +43,20 @@ type ClusterApplicationResourceMappingSpec struct {
 // +kubebuilder:storageversion
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 
-// ClusterApplicationResourceMapping is the Schema for the clusterapplicationresourcemappings API
-type ClusterApplicationResourceMapping struct {
+// ClusterWorkloadResourceMapping is the Schema for the clusterworkloadresourcemappings API
+type ClusterWorkloadResourceMapping struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ClusterApplicationResourceMappingSpec `json:"spec,omitempty"`
+	Spec ClusterWorkloadResourceMappingSpec `json:"spec,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// ClusterApplicationResourceMappingList contains a list of ClusterApplicationResourceMapping
-type ClusterApplicationResourceMappingList struct {
+// ClusterWorkloadResourceMappingList contains a list of ClusterWorkloadResourceMapping
+type ClusterWorkloadResourceMappingList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []ClusterApplicationResourceMapping `json:"items"`
+	Items []ClusterWorkloadResourceMapping `json:"items"`
 }
