@@ -20,8 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ServiceBindingApplicationReference defines a subset of corev1.ObjectReference with extensions
-type ServiceBindingApplicationReference struct {
+// ServiceBindingWorkloadReference defines a subset of corev1.ObjectReference with extensions
+type ServiceBindingWorkloadReference struct {
 	// API version of the referent.
 	APIVersion string `json:"apiVersion"`
 	// Kind of the referent.
@@ -30,7 +30,7 @@ type ServiceBindingApplicationReference struct {
 	// Name of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	Name string `json:"name,omitempty"`
-	// Selector is a query that selects the application or applications to bind the service to
+	// Selector is a query that selects the workload or workloads to bind the service to
 	Selector metav1.LabelSelector `json:"selector,omitempty"`
 	// Containers describes which containers in a Pod should be bound to
 	Containers []string `json:"containers,omitempty"`
@@ -65,14 +65,14 @@ type EnvMapping struct {
 
 // ServiceBindingSpec defines the desired state of ServiceBinding
 type ServiceBindingSpec struct {
-	// Name is the name of the service as projected into the application container.  Defaults to .metadata.name.
+	// Name is the name of the service as projected into the workload container.  Defaults to .metadata.name.
 	Name string `json:"name,omitempty"`
-	// Type is the type of the service as projected into the application container
+	// Type is the type of the service as projected into the workload container
 	Type string `json:"type,omitempty"`
-	// Provider is the provider of the service as projected into the application container
+	// Provider is the provider of the service as projected into the workload container
 	Provider string `json:"provider,omitempty"`
-	// Application is a reference to an object
-	Application ServiceBindingApplicationReference `json:"application"`
+	// Workload is a reference to an object
+	Workload ServiceBindingWorkloadReference `json:"workload"`
 	// Service is a reference to an object that fulfills the ProvisionedService duck type
 	Service ServiceBindingServiceReference `json:"service"`
 	// Env is the collection of mappings from Secret entries to environment variables
@@ -82,8 +82,8 @@ type ServiceBindingSpec struct {
 // These are valid conditions of ServiceBinding.
 const (
 	// ServiceBindingReady means the ServiceBinding has projected the ProvisionedService
-	// secret and the Application is ready to start. It does not indicate the condition
-	// of either the Service or the Application resources referenced.
+	// secret and the Workload is ready to start. It does not indicate the condition
+	// of either the Service or the Workload resources referenced.
 	ServiceBindingConditionReady = "Ready"
 )
 
