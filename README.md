@@ -95,7 +95,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>Any software that exposes functionality.  Examples include a database, a message broker, a workload with REST endpoints, an event stream, an Application Performance Monitor, or a Hardware Security Module.</dd>
 
   <dt>Workload</dt>
-  <dd>A <a href="https://kubernetes.io/docs/concepts/workloads/">workload</a> is an application running on Kubernetes..  Examples include processing using a framework like Spring Boot, NodeJS Express, or Ruby Rails. Workloads are the part of an application that runs. Workloads may colloquially be referred to as an application.</dd>
+  <dd>A <a href="https://kubernetes.io/docs/concepts/workloads/">workload</a> is an application running on Kubernetes.  Examples include processing using a framework like Spring Boot, NodeJS Express, or Ruby Rails. Workloads are the part of an application that runs. Workloads may colloquially be referred to as an application.</dd>
 
   <dt>Service Binding</dt>
   <dd>The act of or representation of the action of providing information about a Service to a workload</dd>
