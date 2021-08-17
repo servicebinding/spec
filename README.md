@@ -57,7 +57,6 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 - [Service Binding](#service-binding)
   - [Resource Type Schema](#resource-type-schema-1)
   - [Minimal Example Resource](#minimal-example-resource)
-  - [Label Selector Example Resource](#label-selector-example-resource)
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
     - [Ready Condition Status](#ready-condition-status)
@@ -254,7 +253,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
-A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the application reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
+A Service Binding resource **MUST** define a `.spec.application` which is an `ObjectReference`-like declaration.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of applications and services to be referenced.
 
 The Service Binding resource **MAY** define `.spec.application.containers`, to limit which containers in the application are bound.  If `.spec.application.containers` is defined, the value **MUST** be a list of strings.  Binding to a container is opt-in, unless `.spec.application.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
 - a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
@@ -262,12 +261,11 @@ The Service Binding resource **MAY** define `.spec.application.containers`, to l
 
 A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `application`.
 
-A Service Binding resource **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
+A Service Binding resource **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  A Service Binding resource **SHOULD** reflect the secret projected into the application as `.status.binding.name`.
 
 When updating the status of the `ServiceBinding` resource, the controller **MUST** set the value of `.status.observedGeneration` to the value of `.metadata.generation`.  The `.metadata.generation` field is always the current generation of the `ServiceBinding` resource, which is incremented by the API server when writes are made to the `ServiceBinding` resource spec field.  Therefore, consumers **SHOULD** compare the value of the observed and current generations to know if the status reflects the current resource definition.
 
 [sb-crd]: service.binding_servicebindings.yaml
-[ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [gt]: https://golang.org/pkg/text/template/#pkg-overview
 [mv1c]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#condition-v1-meta
 
@@ -288,8 +286,7 @@ spec:
   application:          # ObjectReference-like
     apiVersion:         # string
     kind:               # string
-    name:               # string, mutually exclusive with selector
-    selector:           # metav1.LabelSelector, mutually exclusive with name
+    name:               # string
     containers:         # []string, optional
 
   service:              # Provisioned Service resource ObjectReference-like
@@ -320,38 +317,6 @@ spec:
     apiVersion: apps/v1
     kind:       Deployment
     name:       online-banking
-
-  service:
-    apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
-
-status:
-  conditions:
-  - type:   Ready
-    status: 'True'
-    reason: 'Projected'
-    message: ''
-    lastTransitionTime: '2021-01-20T17:00:00Z'
-```
-
-## Label Selector Example Resource
-
-```yaml
-apiVersion: service.binding/v1alpha2
-kind: ServiceBinding
-metadata:
-  name: online-banking-frontend-to-account-service
-spec:
-  name: account-service
-
-  application:
-    apiVersion: apps/v1
-    kind:       Deployment
-    selector:
-      matchLabels:
-        app.kubernetes.io/part-of: online-banking
-        app.kubernetes.io/component: frontend
 
   service:
     apiVersion: com.example/v1alpha1
