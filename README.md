@@ -247,7 +247,7 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha3` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
@@ -271,7 +271,7 @@ When updating the status of the `ServiceBinding` resource, the controller **MUST
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ServiceBinding
 metadata:
   name:                 # string
@@ -308,7 +308,7 @@ status:
 ## Minimal Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -335,7 +335,7 @@ status:
 ## Label Selector Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ServiceBinding
 metadata:
   name: online-banking-frontend-to-account-service
@@ -367,7 +367,7 @@ status:
 ## Environment Variables Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -426,7 +426,7 @@ When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersio
 ## Direct Secret Reference Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -455,7 +455,7 @@ status:
 
 # Workload Resource Mapping
 
-A Workload Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha2` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][carm-crd].
+A Workload Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][carm-crd].
 
 A Workload Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A Workload Resource Mapping **MUST** define a `.spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]Container`][container] arrays in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]EnvVar`][envvar] arrays in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]VolumeMount`][volumemount] arrays in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`[]Volume`][volume] arrays in the target resource.
 
@@ -472,7 +472,7 @@ If a Workload Resource Mapping defines `containers`, it **MUST NOT** define `.en
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
   name:                 # string
@@ -490,7 +490,7 @@ spec:
 ## Container-based Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
  name:  cronjobs.batch
@@ -506,7 +506,7 @@ spec:
 ## Element-based Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
  name:  cronjobs.batch
@@ -525,7 +525,7 @@ spec:
 ## PodSpec-able (Default) Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha2
+apiVersion: service.binding/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
   name: deployments.apps
