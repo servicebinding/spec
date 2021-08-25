@@ -16,7 +16,7 @@
 
 // Package v1alpha3 contains API Schema definitions for the service v1alpha3 API group
 // +kubebuilder:object:generate=true
-// +groupName=service.binding
+// +groupName=binding.servicebinding.io
 package v1alpha3
 
 import (
@@ -26,7 +26,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "service.binding", Version: "v1alpha3"}
+	GroupVersion = schema.GroupVersion{Group: "binding.servicebinding.io", Version: "v1alpha3"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
