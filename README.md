@@ -106,7 +106,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `service.binding/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `service.binding/provisioned-service: "true"` as a label.
+A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** be in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `binding.servicebinding.io/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `binding.servicebinding.io/provisioned-service: "true"` as a label.
 
 > Note: While the Provisioned Service referenced `Secret` data should contain a `type` entry, the `type` must be defined before it is projected into a workload. This allows a mapping to enrich an existing secret.
 
@@ -153,7 +153,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: production-db-secret
-type: service.binding/mysql
+type: binding.servicebinding.io/mysql
 stringData:
   type: mysql
   provider: bitnami
@@ -165,7 +165,7 @@ stringData:
 
 ## Considerations for Role-Based Access Control (RBAC)
 
-Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `service.binding/controller=true`, the `get`, `list`, and `watch` verbs **MUST** be granted.
+Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `binding.servicebinding.io/controller=true`, the `get`, `list`, and `watch` verbs **MUST** be granted.
 
 See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
 
@@ -177,7 +177,7 @@ kind: ClusterRole
 metadata:
   name: awesome-service-bindings
   labels:
-    service.binding/controller: "true" # matches the aggregation rule selector
+    binding.servicebinding.io/controller: "true" # matches the aggregation rule selector
 rules:
 - apiGroups:
   - awesome.example.com
@@ -219,7 +219,7 @@ $SERVICE_BINDING_ROOT
 
 ## Considerations for Role-Based Access Control (RBAC)
 
-Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `service.binding/controller=true`, the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `binding.servicebinding.io/controller=true`, the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
 
 See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
 
@@ -231,7 +231,7 @@ kind: ClusterRole
 metadata:
   name: awesome-service-bindings
   labels:
-    service.binding/controller: "true" # matches the aggregation rule selector
+    binding.servicebinding.io/controller: "true" # matches the aggregation rule selector
 rules:
 - apiGroups:
   - awesome.example.com
@@ -247,7 +247,7 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha3` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `binding.servicebinding.io/v1alpha3` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
@@ -263,7 +263,7 @@ A Service Binding resource **MUST** define `.status.conditions` which is an arra
 
 When updating the status of the `ServiceBinding` resource, the controller **MUST** set the value of `.status.observedGeneration` to the value of `.metadata.generation`.  The `.metadata.generation` field is always the current generation of the `ServiceBinding` resource, which is incremented by the API server when writes are made to the `ServiceBinding` resource spec field.  Therefore, consumers **SHOULD** compare the value of the observed and current generations to know if the status reflects the current resource definition.
 
-[sb-crd]: service.binding_servicebindings.yaml
+[sb-crd]: binding.servicebinding.io_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [gt]: https://golang.org/pkg/text/template/#pkg-overview
 [mv1c]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#condition-v1-meta
@@ -271,7 +271,7 @@ When updating the status of the `ServiceBinding` resource, the controller **MUST
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ServiceBinding
 metadata:
   name:                 # string
@@ -308,7 +308,7 @@ status:
 ## Minimal Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -335,7 +335,7 @@ status:
 ## Label Selector Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ServiceBinding
 metadata:
   name: online-banking-frontend-to-account-service
@@ -367,7 +367,7 @@ status:
 ## Environment Variables Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -426,7 +426,7 @@ When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersio
 ## Direct Secret Reference Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -455,13 +455,13 @@ status:
 
 # Workload Resource Mapping
 
-A Workload Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `service.binding/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][carm-crd].
+A Workload Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `binding.servicebinding.io/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
 
 A Workload Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A Workload Resource Mapping **MUST** define a `.spec.versions` which is an array of `Version` objects.  A `Version` object must define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `Version` object **MAY** define `.containers`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]Container`][container] arrays in the target resource.  A `Version` object **MAY** define `.envs`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]EnvVar`][envvar] arrays in the target resource.  A `Version` object **MAY** define `.volumeMounts`, as an array of strings containing [JSONPath][jsonpath], that describes the location of [`[]VolumeMount`][volumemount] arrays in the target resource.  A `Version` object **MUST** define `.volumes`, as a string containing [JSONPath][jsonpath], that describes the location of [`[]Volume`][volume] arrays in the target resource.
 
 If a Workload Resource Mapping defines `containers`, it **MUST NOT** define `.envs` and `.volumeMounts`.  If a Workload resources does not define `containers`, it **MUST** define `.envs` and `.volumeMounts`.
 
-[cwrm-crd]: service.binding_clusterworkloadresourcemappings.yaml
+[cwrm-crd]: binding.servicebinding.io_clusterworkloadresourcemappings.yaml
 [container]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/
 [crd-syntax]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition
 [envvar]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/#environment-variables
@@ -472,7 +472,7 @@ If a Workload Resource Mapping defines `containers`, it **MUST NOT** define `.en
 ## Resource Type Schema
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
   name:                 # string
@@ -490,7 +490,7 @@ spec:
 ## Container-based Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
  name:  cronjobs.batch
@@ -506,7 +506,7 @@ spec:
 ## Element-based Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
  name:  cronjobs.batch
@@ -525,7 +525,7 @@ spec:
 ## PodSpec-able (Default) Example Resource
 
 ```yaml
-apiVersion: service.binding/v1alpha3
+apiVersion: binding.servicebinding.io/v1alpha3
 kind: ClusterWorkloadResourceMapping
 metadata:
   name: deployments.apps
@@ -554,7 +554,7 @@ A reconciler **MUST** apply the appropriate modification to the workload resourc
 
 Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources. When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into. This section defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler. Cluster operators **MAY** impose additional access controls beyond RBAC.
 
-If a service binding reconciler implementation is using Role-Based Access Control (RBAC) it **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `service.binding/controller=true`. This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
+If a service binding reconciler implementation is using Role-Based Access Control (RBAC) it **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `binding.servicebinding.io/controller=true`. This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
 
 [rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 [acr]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
@@ -569,6 +569,6 @@ metadata:
 aggregationRule:
   clusterRoleSelectors:
   - matchLabels:
-      service.binding/controller: "true"
+      binding.servicebinding.io/controller: "true"
 rules: [] # The control plane automatically fills in the rules
 ```
