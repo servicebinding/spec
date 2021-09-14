@@ -31,7 +31,7 @@ type ServiceBindingWorkloadReference struct {
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	Name string `json:"name,omitempty"`
 	// Selector is a query that selects the workload or workloads to bind the service to
-	Selector metav1.LabelSelector `json:"selector,omitempty"`
+	Selector *metav1.LabelSelector `json:"selector,omitempty"`
 	// Containers describes which containers in a Pod should be bound to
 	Containers []string `json:"containers,omitempty"`
 }
