@@ -558,7 +558,7 @@ spec:
       name: .name
       env: .env
       volumeMounts: .volumeMounts
-    volumes: .spec/template.spec.volumes
+    volumes: .spec.template.spec.volumes
 ```
 
 Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
