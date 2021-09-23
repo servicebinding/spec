@@ -23,15 +23,15 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type ClusterWorkloadResourceMappingTemplate struct {
 	// Version is the version of the workload resource that this mapping is for.
 	Version string `json:"version"`
-	// Annotations is a JSON Pointer that references the annotations map within the workload resource. These
+	// Annotations is a Restricted JSONPath that references the annotations map within the workload resource. These
 	// annotations must end up in the resulting Pod, and are generally not the workload resource's annotations.
-	// Defaults to `/spec/template/metadata/annotations`.
+	// Defaults to `.spec.template.metadata.annotations`.
 	Annotations string `json:"annotations"`
 	// Containers is the collection of mappings to container-like fragments of the workload resource. Defaults to
 	// mappings appropriate for a PodSpecable resource.
 	Containers []ClusterWorkloadResourceMappingContainer `json:"containers,omitempty"`
-	// Volumes is a JSON Pointer that references the slice of volumes within the workload resource. Defaults to
-	// `/spec/template/spec/volumes`.
+	// Volumes is a Restricted JSONPath that references the slice of volumes within the workload resource. Defaults to
+	// `.spec.template.spec.volumes`.
 	Volumes string `json:"volumes"`
 }
 
@@ -39,21 +39,21 @@ type ClusterWorkloadResourceMappingTemplate struct {
 // to a Container-like structure.
 //
 // Each mapping defines exactly one path that may match multiple container-like fragments within the workload
-// resource. For each object matching the path the name, env and volumeMounts pointers are resolved to find those
+// resource. For each object matching the path the name, env and volumeMounts expressions are resolved to find those
 // structures.
 type ClusterWorkloadResourceMappingContainer struct {
 	// Path is the JSONPath within the workload resource that matches an existing fragment that is container-like.
 	Path string `json:"path"`
-	// Name is a JSON Pointer that references the name of the container with the container-like workload resource
+	// Name is a Restricted JSONPath that references the name of the container with the container-like workload resource
 	// fragment. If not defined, container name filtering is ignored.
 	Name string `json:"name,omitempty"`
-	// Env is a JSON Pointer that references the slice of environment variables for the container with the
+	// Env is a Restricted JSONPath that references the slice of environment variables for the container with the
 	// container-like workload resource fragment. The referenced location is created if it does not exist. Defaults
-	// to `/envs`.
+	// to `.envs`.
 	Env string `json:"env,omitempty"`
-	// VolumeMounts is a JSON Pointer that references the slice of volume mounts for the container with the
+	// VolumeMounts is a Restricted JSONPath that references the slice of volume mounts for the container with the
 	// container-like workload resource fragment. The referenced location is created if it does not exist. Defaults
-	// to `/volumeMounts`.
+	// to `.volumeMounts`.
 	VolumeMounts string `json:"volumeMounts,omitempty"`
 }
 

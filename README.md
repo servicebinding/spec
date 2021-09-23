@@ -64,6 +64,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 - [Direct Secret Reference](#direct-secret-reference)
   - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
 - [Workload Resource Mapping](#workload-resource-mapping)
+  - [Restricted JSONPath](#restricted-jsonpath)
   - [Resource Type Schema](#resource-type-schema-2)
   - [Example Resource](#example-resource-3)
   - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
@@ -459,18 +460,42 @@ A Workload Resource Mapping describes how to apply [Service Binding](#service-bi
 
 A Workload Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A Workload Resource Mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` objects.
 
-A `MappingTemplate` object **MUST** define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` object **MAY** define `annotations`, as a string containing a [JSON Pointer][jsonpointer] that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` pointer **MUST** be appropriate for mapping to a PodSpecable resource (`/spec/template/metadata/annotations`).  A `MappingTemplate` object **MAY** define `containers`, as an array of `MappingContainer` objects. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a PodSpecable resource.  A `MappingTemplate` object **MAY** define `volumes`, as a string containing a [JSON Pointer][jsonpointer] that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` pointer **MUST** be appropriate for mapping to a PodSpecable resource (`/spec/template/spec/volumes`).
+A `MappingTemplate` object **MUST** define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` object **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a PodSpecable resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` object **MAY** define `containers`, as an array of `MappingContainer` objects. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a PodSpecable resource.  A `MappingTemplate` object **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a PodSpecable resource (`.spec.template.spec.volumes`).
 
-A `MappingContainer` object **MUST** define a `path` entry is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following pointer references **MUST** be applied to each object matched by the path.  A `MappingTemplate` object **MAY** define `name`, as a string containing a [JSON Pointer][jsonpointer] that describes the location of a string in the target resource that names the container. A `MappingTemplate` object **MAY** define `env`, as a string containing a [JSON Pointer][jsonpointer] that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` pointer **MUST** be appropriate for mapping within an actual Container object (`/env`). A `MappingTemplate` object **MAY** define `volumeMounts`, as a string containing a [JSON Pointer][jsonpointer] that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` pointer **MUST** be appropriate for mapping within an actual Container object (`/volumeMounts`).
+A `MappingContainer` object **MUST** define a `path` entry is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` object **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container. A `MappingTemplate` object **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual Container object (`.env`). A `MappingTemplate` object **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual Container object (`.volumeMounts`).
 
 [cwrm-crd]: servicebinding.io_clusterworkloadresourcemappings.yaml
 [container]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/
 [crd-syntax]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#create-a-customresourcedefinition
 [envvar]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/#environment-variables
 [jsonpath]: http://goessner.net/articles/JsonPath/
-[jsonpointer]: https://datatracker.ietf.org/doc/html/rfc6901
 [volume]: https://kubernetes.io/docs/reference/kubernetes-api/config-and-storage-resources/volume
 [volumemount]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/#volumes
+
+## Restricted JSONPath
+
+> Note: only expression labels as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
+
+A Restricted JSONPath is a subset of [JSONPath][jsonpath] expressions that **MUST NOT** use type and operators other than fields separated by the child operator.
+
+For example, these expressions are allowed:
+
+- `.name`
+- `['name']`
+- `.spec.template.spec.volumes`
+- `.spec['template'].spec['volumes']`
+
+All other types and operators are disallowed, including but not limited to:
+
+- texts
+- identifiers
+- filters
+- ints
+- floats
+- wildcards
+- recursives
+- unions
+- bools
 
 ## Resource Type Schema
 
@@ -486,10 +511,10 @@ spec:
   - version:            # string
     containers:         # []MappingContainer, optional
     - path:             # string (JSONPath)
-      name:             # string (JSON Pointer), optional
-      env:              # string (JSON Pointer), optional
-      volumeMounts:     # string (JSON Pointer), optional
-    volumes:            # string (JSON Pointer), optional
+      name:             # string (Restricted JSONPath), optional
+      env:              # string (Restricted JSONPath), optional
+      volumeMounts:     # string (Restricted JSONPath), optional
+    volumes:            # string (Restricted JSONPath), optional
 ```
 
 ## Example Resource
@@ -504,14 +529,14 @@ spec:
   - version: "*"
     containers:
     - path: .spec.jobTemplate.spec.template.spec.containers[*]
-      name: /name
-      env: /env                     # this is the default value
-      volumeMounts: /volumeMounts   # this is the default value
+g      name: .name
+      env: .env                     # this is the default value
+      volumeMounts: .volumeMounts   # this is the default value
     - path: .spec.jobTemplate.spec.template.spec.initContainers[*]
-      name: /name
-      env: /env                     # this is the default value
-      volumeMounts: /volumeMounts   # this is the default value
-    volumes: /spec/jobTemplate/spec/template/spec/volumes
+      name: .name
+      env: .env                     # this is the default value
+      volumeMounts: .volumeMounts   # this is the default value
+    volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
 ## PodSpec-able (Default) Example Resource
@@ -526,14 +551,14 @@ spec:
   - version: "*"
     containers:
     - path: .spec.template.spec.containers[*]
-      name: /name
-      env: /env
-      volumeMounts: /volumeMounts
+      name: .name
+      env: .env
+      volumeMounts: .volumeMounts
     - path: .spec.template.spec.initContainers[*]
-      name: /name
-      env: /env
-      volumeMounts: /volumeMounts
-    volumes: /spec/template/spec/volumes
+      name: .name
+      env: .env
+      volumeMounts: .volumeMounts
+    volumes: .spec/template.spec.volumes
 ```
 
 Note: this example is equivalent to not specifying a mapping, or specifying an empty mapping.
@@ -542,9 +567,9 @@ Note: this example is equivalent to not specifying a mapping, or specifying an e
 
 A reconciler implementation **MUST** support mapping to PodSpec-able resources without defining a `ClusterWorkloadResourceMapping` for those types.
 
-If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` pointer, the resolved name **MUST** limit which containers in the workload are bound.
+If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound.
 
-A reconciler **MUST** create empty values at locations referenced by JSON Pointers that do not exist on the workload resource. Values referenced by JSON Pointers in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
+A reconciler **MUST** create empty values at locations referenced by Restricted JSONPaths that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
 
 # Role-Based Access Control (RBAC)
 
