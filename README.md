@@ -67,8 +67,8 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
   - [Restricted JSONPath](#restricted-jsonpath)
   - [Resource Type Schema](#resource-type-schema-2)
   - [Example Resource](#example-resource-3)
-  - [PodSpec-able (Default) Example Resource](#podspec-able-default-example-resource)
-  - [Reconciler Implementation](#reconciler-implementation-1)
+  - [PodSpecable (Default) Example Resource](#podspecable-default-example-resource)
+  - [Runtime Behavior](#runtime-behavior)
 - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
   - [Example Resource](#example-resource-4)
 
@@ -508,13 +508,13 @@ metadata:
   ...
 spec:
   versions:             # []MappingTemplate
-  - version:            # string
-    containers:         # []MappingContainer, optional
-    - path:             # string (JSONPath)
-      name:             # string (Restricted JSONPath), optional
-      env:              # string (Restricted JSONPath), optional
-      volumeMounts:     # string (Restricted JSONPath), optional
-    volumes:            # string (Restricted JSONPath), optional
+  - version:              # string
+    containers:           # []MappingContainer, optional
+    - path:                 # string (JSONPath)
+      name:                 # string (Restricted JSONPath), optional
+      env:                  # string (Restricted JSONPath), optional
+      volumeMounts:         # string (Restricted JSONPath), optional
+    volumes:              # string (Restricted JSONPath), optional
 ```
 
 ## Example Resource
@@ -529,7 +529,7 @@ spec:
   - version: "*"
     containers:
     - path: .spec.jobTemplate.spec.template.spec.containers[*]
-g      name: .name
+      name: .name
       env: .env                     # this is the default value
       volumeMounts: .volumeMounts   # this is the default value
     - path: .spec.jobTemplate.spec.template.spec.initContainers[*]
@@ -539,7 +539,7 @@ g      name: .name
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
-## PodSpec-able (Default) Example Resource
+## PodSpecable (Default) Example Resource
 
 ```yaml
 apiVersion: servicebinding.io/v1alpha3
@@ -563,13 +563,13 @@ spec:
 
 Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
 
-## Reconciler Implementation
+## Runtime Behavior
 
-A reconciler implementation **MUST** support mapping to PodSpec-able resources without defining a `ClusterWorkloadResourceMapping` for those types.
+When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a workload resource it **MUST** be used to map the binding that type. If no mapping is available for the type, the implementation **MUST** treat the workload resource as a PodSpecable type.
 
-If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound.
+If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound. If either key is not defined, the container **SHOULD** be bound.
 
-A reconciler **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
+An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
 
 # Role-Based Access Control (RBAC)
 
