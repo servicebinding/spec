@@ -474,7 +474,7 @@ A `MappingContainer` object **MUST** define a `path` entry is a string containin
 
 ## Restricted JSONPath
 
-> Note: only expression labels as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
+> Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
 
 A Restricted JSONPath is a subset of [JSONPath][jsonpath] expressions that **MUST NOT** use type and operators other than fields separated by the child operator.
 
@@ -561,7 +561,7 @@ spec:
     volumes: .spec/template.spec.volumes
 ```
 
-Note: this example is equivalent to not specifying a mapping, or specifying an empty mapping.
+Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
 
 ## Reconciler Implementation
 
@@ -569,7 +569,7 @@ A reconciler implementation **MUST** support mapping to PodSpec-able resources w
 
 If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound.
 
-A reconciler **MUST** create empty values at locations referenced by Restricted JSONPaths that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
+A reconciler **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
 
 # Role-Based Access Control (RBAC)
 
