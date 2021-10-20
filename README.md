@@ -198,6 +198,8 @@ The projected binding **MUST** contain a `type` entry with a value that identifi
 
 The name of a binding entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  The contents of a binding entry may be anything representable as bytes on the file system including, but not limited to, a literal string value (e.g. `db-password`), a language-specific binary (e.g. a Java `KeyStore` with a private key and X.509 certificate), or an indirect pointer to another system for value resolution (e.g. `vault://production-database/password`).
 
+The collection of files within the directory **MAY** change during the lifetime of the container or between container launches.
+
 ## Example Directory Structure
 
 ```plain
