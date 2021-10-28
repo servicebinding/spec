@@ -67,7 +67,7 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
   - [Restricted JSONPath](#restricted-jsonpath)
   - [Resource Type Schema](#resource-type-schema-2)
   - [Example Resource](#example-resource-3)
-  - [PodSpecable (Default) Example Resource](#podspecable-default-example-resource)
+  - [`PodSpec`-able (Default) Example Resource](#podspec-able-default-example-resource)
   - [Runtime Behavior](#runtime-behavior)
 - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
   - [Example Resource](#example-resource-4)
@@ -80,7 +80,7 @@ This document is a pre-release, working draft of the Service Bindings for Kubern
 
 ## Notational Conventions
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14](https://tools.ietf.org/html/bcp14) [[RFC2119](https://tools.ietf.org/html/rfc2119)] [[RFC8174](https://tools.ietf.org/html/rfc8174)] when, and only when, they appear in all capitals, as shown here.
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [BCP 14](https://tools.ietf.org/html/bcp14) [RFC2119](https://tools.ietf.org/html/rfc2119) [RFC8174](https://tools.ietf.org/html/rfc8174) when, and only when, they appear in all capitals, as shown here.
 
 The key words "unspecified", "undefined", and "implementation-defined" are to be interpreted as described in the [rationale for the C99 standard](http://www.open-std.org/jtc1/sc22/wg14/www/C99RationaleV5.10.pdf#page=18).
 
@@ -102,7 +102,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>The act of or representation of the action of providing information about a Service to a workload</dd>
 
   <dt>Secret</dt>
-  <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/secret/">Secret</a></dd>
+  <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/secret/"><code>Secret</code></a></dd>
 </dl>
 
 # Provisioned Service
@@ -248,21 +248,21 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1alpha3` and kind `ServiceBinding`.  Multiple Service Bindings can refer to the same service.  Multiple Service Bindings can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1alpha3` and kind `ServiceBinding`.  Multiple `ServiceBinding`s can refer to the same service.  Multiple `ServiceBinding`s can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
-A Service Binding resource **MUST** define a `.spec.workload` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the workload reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A Service Binding resource **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of workloads and services to be referenced.
+A `ServiceBinding` **MUST** define a `.spec.workload` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the workload reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A `ServiceBinding` **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of workloads and services to be referenced.
 
-The Service Binding resource **MAY** define `.spec.workload.containers`, to limit which containers in the workload are bound.  If `.spec.workload.containers` is defined, the value **MUST** be a list of strings.  Binding to a container is opt-in, unless `.spec.workload.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
+The `ServiceBinding` **MAY** define `.spec.workload.containers`, to limit which containers in the workload are bound.  If `.spec.workload.containers` is defined, the value **MUST** be a list of strings.  Binding to a container is opt-in, unless `.spec.workload.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
 - a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
 - values that do not match a container or init container **SHOULD** be ignored
 
-A Service Binding Resource **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `workload`.
+A `ServiceBinding` **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `workload`.
 
-A Service Binding resource **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding` resource. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A Service Binding resource **SHOULD** reflect the secret projected into the workload as `.status.binding.name`.
+A `ServiceBinding` **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding`. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A `ServiceBinding` **SHOULD** reflect the secret projected into the workload as `.status.binding.name`.
 
-When updating the status of the `ServiceBinding` resource, the controller **MUST** set the value of `.status.observedGeneration` to the value of `.metadata.generation`.  The `.metadata.generation` field is always the current generation of the `ServiceBinding` resource, which is incremented by the API server when writes are made to the `ServiceBinding` resource spec field.  Therefore, consumers **SHOULD** compare the value of the observed and current generations to know if the status reflects the current resource definition.
+When updating the status of the `ServiceBinding`, the controller **MUST** set the value of `.status.observedGeneration` to the value of `.metadata.generation`.  The `.metadata.generation` field is always the current generation of the `ServiceBinding`, which is incremented by the API server when writes are made to the `ServiceBinding` spec field.  Therefore, consumers **SHOULD** compare the value of the observed and current generations to know if the status reflects the current resource definition.
 
 [sb-crd]: servicebinding.io_servicebindings.yaml
 [ls]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
@@ -404,7 +404,7 @@ status:
 
 ## Reconciler Implementation
 
-A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into a Workload.  The `Secret` referred to by `.status.binding` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `workload`.
+A Reconciler implementation for the `ServiceBinding` type is responsible for binding the Provisioned Service binding `Secret` into a workload.  The `Secret` referred to by `.status.binding` on the resource represented by `service` **MUST** be mounted as a volume on the resource represented by `workload`.
 
 If a `.spec.name` is set, the directory name of the volume mount **MUST** be its value.  If a `.spec.name` is not set, the directory name of the volume mount **SHOULD** be the value of `.metadata.name`.
 
@@ -416,11 +416,11 @@ If a `.spec.type` is set, the `type` entry in the workload projection **MUST** b
 
 ### Ready Condition Status
 
-If the modification of the Workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the Workload resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
+If the modification of the workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the workload resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
 
 # Direct Secret Reference
 
-There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This feature allows a `ServiceBinding` resource to directly reference a `Secret`.
+There are scenarios where an appropriate resource conforming to the Provisioned Service duck-type does not exist, but there is a `Secret` available for binding.  This feature allows a `ServiceBinding` to directly reference a `Secret`.
 
 When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersion` is `v1`, the `.spec.service.name` attribute **MUST** be treated as `.status.binding.name` for a Provisioned Service.
 
@@ -456,13 +456,13 @@ status:
 
 # Workload Resource Mapping
 
-A Workload Resource Mapping describes how to apply [Service Binding](#service-binding) transformations to an [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
+A workload resource mapping describes how to apply [service binding](#service-binding) transformations to a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
 
-A Workload Resource Mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A Workload Resource Mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` objects.
+A workload resource mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A workload resource mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` objects.
 
-A `MappingTemplate` object **MUST** define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` object **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a PodSpecable resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` object **MAY** define `containers`, as an array of `MappingContainer` objects. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a PodSpecable resource.  A `MappingTemplate` object **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a PodSpecable resource (`.spec.template.spec.volumes`).
+A `MappingTemplate` object **MUST** define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` object **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` object **MAY** define `containers`, as an array of `MappingContainer` objects. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a `PodSpec`-able resource.  A `MappingTemplate` object **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.spec.volumes`).
 
-A `MappingContainer` object **MUST** define a `path` entry is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` object **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container. A `MappingTemplate` object **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual Container object (`.env`). A `MappingTemplate` object **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual Container object (`.volumeMounts`).
+A `MappingContainer` object **MUST** define a `path` entry is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` object **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container. A `MappingTemplate` object **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.env`). A `MappingTemplate` object **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.volumeMounts`).
 
 [cwrm-crd]: servicebinding.io_clusterworkloadresourcemappings.yaml
 [container]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/
@@ -539,7 +539,7 @@ spec:
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
-## PodSpecable (Default) Example Resource
+## `PodSpec`-able (Default) Example Resource
 
 ```yaml
 apiVersion: servicebinding.io/v1alpha3
@@ -565,7 +565,7 @@ Note: This example is equivalent to not specifying a mapping or specifying an em
 
 ## Runtime Behavior
 
-When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a workload resource it **MUST** be used to map the binding that type. If no mapping is available for the type, the implementation **MUST** treat the workload resource as a PodSpecable type.
+When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a workload resource it **MUST** be used to map the binding that type. If no mapping is available for the type, the implementation **MUST** treat the workload resource as a `PodSpec`-able type.
 
 If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound. If either key is not defined, the container **SHOULD** be bound.
 
