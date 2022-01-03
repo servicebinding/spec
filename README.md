@@ -414,9 +414,11 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.type` is set, the `type` entry in the workload projection **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the workload projection **MUST** be set to its value overriding any existing value.
 
+The `ServiceBinding` status **MUST NOT** be updated as the result of a transient error unless the implementation is unable to retry the binding. A transient error is an api error where retrying may result in success without any other Kubernetes resource being mutated. For example, a conflict when updating the workload resource is transient because retrying may allow the update to succeed, while a not found error is not-transient as the workload will never be found until it is created (which is a resource mutation). An implementation **MAY** record an event as a result of an error.
+
 ### Ready Condition Status
 
-If the modification of the workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the workload resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
+If the modification of the workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`. If the modification of the workload resource cannot be completed the `Ready` condition status **MUST** be set to `False`. If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
 
 # Direct Secret Reference
 
