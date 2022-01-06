@@ -509,6 +509,7 @@ metadata:
 spec:
   versions:             # []MappingTemplate
   - version:              # string
+    annotations:          # string (Restricted JSONPath), optional
     containers:           # []MappingContainer, optional
     - path:                 # string (JSONPath)
       name:                 # string (Restricted JSONPath), optional
@@ -527,6 +528,7 @@ metadata:
 spec:
   versions:
   - version: "*"
+    annotations: .spec.jobTemplate.spec.template.metadata.annotations
     containers:
     - path: .spec.jobTemplate.spec.template.spec.containers[*]
       name: .name
@@ -549,6 +551,7 @@ metadata:
 spec:
   versions:
   - version: "*"
+    annotations: .spec.template.metadata.annotations
     containers:
     - path: .spec.template.spec.containers[*]
       name: .name
