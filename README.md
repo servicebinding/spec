@@ -414,9 +414,11 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.type` is set, the `type` entry in the workload projection **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the workload projection **MUST** be set to its value overriding any existing value.
 
+The `ServiceBinding` status **MUST** be updated for the result of an error when the implementation is unable to retry the binding, or user interaction is required to recover from the error. For example, when updating a workload resource to project a binding a conflict **SHOULD NOT** be reflected because retrying may allow the update to succeed. A not found error fetching the workload resource **SHOULD** be reflected as the error is not recoverable until the target workload resource is created. An implementation **MAY** record an event as a result of any error.
+
 ### Ready Condition Status
 
-If the modification of the workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the modification of the workload resource is not completed successfully the `Ready` condition status **MUST NOT** be set to `True`.
+If the modification of the workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`. If the modification of the workload resource cannot be completed the `Ready` condition status **MUST** be set to `False`. If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
 
 # Direct Secret Reference
 
