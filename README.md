@@ -564,6 +564,8 @@ spec:
 
 When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a workload resource it **MUST** be used to map the binding that type.  If no mapping is available for the type, the implementation **MUST** treat the workload resource as a `PodSpec`-able type.
 
+When a service binding projection is removed, the controller **MUST** use the same mappings from the projection creation.  After a `ClusterWorkloadResourceMapping` resource is modified, each binding targeting the mapped workload type **MUST** be removed, then reattempted with the latest mapping.
+
 If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound.  If either key is not defined, the container **SHOULD** be bound.
 
 An implementation **MUST** create empty values at locations referenced by [Fixed JSONPaths](#fixed-jsonpath) that do not exist on the workload resource.  Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer` fragments **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a [`corev1.PodTemplateSpec`][cv1pts].  A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
