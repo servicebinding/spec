@@ -418,7 +418,7 @@ The `ServiceBinding` status **MUST** be updated for the result of an error when 
 
 ### Ready Condition Status
 
-If the modification of the workload resource is completed successfully, the `Ready` condition status **MUST** be set to `True`. If the modification of the workload resource cannot be completed the `Ready` condition status **MUST** be set to `False`. If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
+If the service binding is completed successfully, the `Ready` condition status **MUST** be set to `True`. If the service binding cannot be completed, including cases where the service or workload resource are not found or do not conform to the specification requirements, the `Ready` condition status **MUST** be set to `False`. If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
 
 # Direct Secret Reference
 
