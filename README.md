@@ -458,7 +458,7 @@ status:
 
 # Workload Resource Mapping
 
-A workload resource mapping describes how to apply [service binding](#service-binding) transformations to a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
+A workload resource mapping describes how to apply [service binding](#service-binding) transformations to a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type (cluster scoped resource) with API version `servicebinding.io/v1alpha3` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
 
 A workload resource mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A workload resource mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` objects.
 
