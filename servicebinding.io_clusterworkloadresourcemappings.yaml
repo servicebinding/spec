@@ -20,7 +20,7 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    name: v1alpha3
+    name: v1beta1
     schema:
       openAPIV3Schema:
         description: ClusterWorkloadResourceMapping is the Schema for the clusterworkloadresourcemappings API
