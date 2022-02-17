@@ -29,12 +29,12 @@ implementation, please let us know by opening an issue or pull request at our
 <!-- omit in toc -->
 ### Code of conduct
 
-Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct][code-of-conduct].
+Participation in the Service Binding community is governed by the [Contributor Covenant][code-of-conduct].
 
 [working-group]: https://docs.google.com/document/d/1rR0qLpsjU38nRXxeich7F5QUy73RHJ90hnZiFIQ-JJ8/edit#heading=h.ar8ibc31ux6f
 [slack]: https://kubernetes.slack.com/archives/C012F2GPMTQ
 [repo]: https://github.com/k8s-service-bindings/spec
-[code-of-conduct]: ./code-of-conduct.md
+[code-of-conduct]: ./CODE_OF_CONDUCT.md
 
 ---
 
