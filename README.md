@@ -566,7 +566,7 @@ spec:
     volumes: .spec.template.spec.volumes
 ```
 
-Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
+> Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
 
 ## Runtime Behavior
 
