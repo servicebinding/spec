@@ -248,7 +248,7 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  Multiple `ServiceBinding`s can refer to the same service.  Multiple `ServiceBinding`s can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  Multiple `ServiceBinding` objects can refer to the same service.  Multiple `ServiceBinding` objects can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
@@ -574,7 +574,7 @@ When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a wor
 
 If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound. If either key is not defined, the container **SHOULD** be bound.
 
-An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
+An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer` objects **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
 
 # Role-Based Access Control (RBAC)
 
