@@ -316,17 +316,17 @@ metadata:
 spec:
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
+    kind: Deployment
+    name: online-banking
 
   service:
     apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
+    kind: AccountService
+    name: prod-account-service
 
 status:
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -345,7 +345,7 @@ spec:
 
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
+    kind: Deployment
     selector:
       matchLabels:
         app.kubernetes.io/part-of: online-banking
@@ -353,12 +353,12 @@ spec:
 
   service:
     apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
+    kind: AccountService
+    name: prod-account-service
 
 status:
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -375,27 +375,27 @@ metadata:
 spec:
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
+    kind: Deployment
+    name: online-banking
 
   service:
     apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
+    kind: AccountService
+    name: prod-account-service
 
   env:
   - name: ACCOUNT_SERVICE_HOST
-    key:  host
+    key: host
   - name: ACCOUNT_SERVICE_USERNAME
-    key:  username
+    key: username
   - name: ACCOUNT_SERVICE_PASSWORD
-    key:  password
+    key: password
 
 status:
   binding:
     name: prod-account-service-projection
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -437,19 +437,19 @@ metadata:
 spec:
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
+    kind: Deployment
+    name: online-banking
 
   service:
     apiVersion: v1
-    kind:       Secret
-    name:       prod-account-service-secret
+    kind: Secret
+    name: prod-account-service-secret
 
 status:
   binding:
     name: prod-account-service-reference
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -510,14 +510,14 @@ metadata:
   ...
 spec:
   versions:             # []MappingTemplate
-  - version:              # string
-    annotations:          # string (Restricted JSONPath), optional
-    containers:           # []MappingContainer, optional
-    - path:                 # string (JSONPath)
-      name:                 # string (Restricted JSONPath), optional
-      env:                  # string (Restricted JSONPath), optional
-      volumeMounts:         # string (Restricted JSONPath), optional
-    volumes:              # string (Restricted JSONPath), optional
+  - version:            # string
+    annotations:        # string (Restricted JSONPath), optional
+    containers:         # []MappingContainer, optional
+    - path:             # string (JSONPath)
+      name:             # string (Restricted JSONPath), optional
+      env:              # string (Restricted JSONPath), optional
+      volumeMounts:     # string (Restricted JSONPath), optional
+    volumes:            # string (Restricted JSONPath), optional
 ```
 
 ## Example Resource
@@ -526,7 +526,7 @@ spec:
 apiVersion: servicebinding.io/v1beta1
 kind: ClusterWorkloadResourceMapping
 metadata:
- name:  cronjobs.batch
+ name: cronjobs.batch
 spec:
   versions:
   - version: "*"
