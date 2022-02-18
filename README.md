@@ -476,7 +476,7 @@ A `MappingContainer` object **MUST** define a `path` entry which is a string con
 
 ## Restricted JSONPath
 
-> Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
+> Note: Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
 
 A Restricted JSONPath is a subset of [JSONPath][jsonpath] expressions that **MUST NOT** use type and operators other than fields separated by the child operator.
 
