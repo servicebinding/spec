@@ -1,6 +1,6 @@
 # Secret Generation Extension
 
-This document defines an extension to the [Service Binding Specification for Kubernetes](https://github.com/k8s-service-bindings/spec) ("Service Binding spec" for short henceforth).  This extension specifies generating a Kubernetes Secret resource that can be consumed by any Service Binding spec compliant implementation.  The Secret resource is generated from one of these sources:
+This document defines an extension to the [Service Binding Specification for Kubernetes](https://github.com/servicebinding/spec) ("Service Binding spec" for short henceforth).  This extension specifies generating a Kubernetes Secret resource that can be consumed by any Service Binding spec compliant implementation.  The Secret resource is generated from one of these sources:
 
 - Operator Lifecycle Manager Descriptors
 - Custom Resource Definition Annotations
