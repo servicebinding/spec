@@ -30,4 +30,4 @@ If you catch an error in the specification’s text, or if you write an
 implementation, please let us know by opening an issue or pull request at our
 [GitHub repository][repo].
 
-[repo]: https://github.com/k8s-service-bindings/spec
+[repo]: https://github.com/servicebinding/spec

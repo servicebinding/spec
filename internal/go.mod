@@ -1,4 +1,4 @@
-module github.com/k8s-service-bindings/spec/internal
+module github.com/servicebinding/spec/internal
 
 go 1.14
 
