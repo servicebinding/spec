@@ -118,7 +118,7 @@ Extensions and implementations **MAY** define additional mechanisms to consume a
 ```yaml
 status:
   binding:
-    name:  # string
+    name: # string
 ```
 
 ## Example Resource
@@ -275,35 +275,35 @@ When updating the status of the `ServiceBinding`, the controller **MUST** set th
 apiVersion: servicebinding.io/v1beta1
 kind: ServiceBinding
 metadata:
-  name:                 # string
-  generation:           # int64, defined by the Kubernetes control plane
+  name: # string
+  generation: # int64, defined by the Kubernetes control plane
   ...
 spec:
-  name:                 # string, optional, default: .metadata.name
-  type:                 # string, optional
-  provider:             # string, optional
+  name: # string, optional, default: .metadata.name
+  type: # string, optional
+  provider: # string, optional
 
-  workload:             # ObjectReference-like
-    apiVersion:         # string
-    kind:               # string
-    name:               # string, mutually exclusive with selector
-    selector:           # metav1.LabelSelector, mutually exclusive with name
-    containers:         # []string, optional
+  workload: # ObjectReference-like
+    apiVersion: # string
+    kind: # string
+    name: # string, mutually exclusive with selector
+    selector: # metav1.LabelSelector, mutually exclusive with name
+    containers: # []string, optional
 
-  service:              # Provisioned Service resource ObjectReference-like
-    apiVersion:         # string
-    kind:               # string
-    name:               # string
+  service: # Provisioned Service resource ObjectReference-like
+    apiVersion: # string
+    kind: # string
+    name: # string
 
-  env:                  # []EnvMapping, optional
-  - name:               # string
-    key:                # string
+  env: # []EnvMapping, optional
+  - name: # string
+    key: # string
 
 status:
-  binding:              # LocalObjectReference, optional
-    name:               # string
-  conditions:           # []metav1.Condition containing at least one entry for `Ready`
-  observedGeneration:   # int64
+  binding: # LocalObjectReference, optional
+    name: # string
+  conditions: # []metav1.Condition containing at least one entry for `Ready`
+  observedGeneration: # int64
 ```
 
 ## Minimal Example Resource
@@ -505,19 +505,19 @@ All other types and operators are disallowed, including but not limited to:
 apiVersion: servicebinding.io/v1beta1
 kind: ClusterWorkloadResourceMapping
 metadata:
-  name:                 # string
-  generation:           # int64, defined by the Kubernetes control plane
+  name: # string
+  generation: # int64, defined by the Kubernetes control plane
   ...
 spec:
-  versions:             # []MappingTemplate
-  - version:            # string
-    annotations:        # string (Restricted JSONPath), optional
-    containers:         # []MappingContainer, optional
-    - path:             # string (JSONPath)
-      name:             # string (Restricted JSONPath), optional
-      env:              # string (Restricted JSONPath), optional
-      volumeMounts:     # string (Restricted JSONPath), optional
-    volumes:            # string (Restricted JSONPath), optional
+  versions: # []MappingTemplate
+  - version: # string
+    annotations: # string (Restricted JSONPath), optional
+    containers: # []MappingContainer, optional
+    - path: # string (JSONPath)
+      name: # string (Restricted JSONPath), optional
+      env: # string (Restricted JSONPath), optional
+      volumeMounts: # string (Restricted JSONPath), optional
+    volumes: # string (Restricted JSONPath), optional
 ```
 
 ## Example Resource
@@ -534,12 +534,12 @@ spec:
     containers:
     - path: .spec.jobTemplate.spec.template.spec.containers[*]
       name: .name
-      env: .env                     # this is the default value
-      volumeMounts: .volumeMounts   # this is the default value
+      env: .env # this is the default value
+      volumeMounts: .volumeMounts # this is the default value
     - path: .spec.jobTemplate.spec.template.spec.initContainers[*]
       name: .name
-      env: .env                     # this is the default value
-      volumeMounts: .volumeMounts   # this is the default value
+      env: .env # this is the default value
+      volumeMounts: .volumeMounts # this is the default value
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
