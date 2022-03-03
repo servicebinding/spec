@@ -76,7 +76,7 @@ Participation in the Service Binding community is governed by the [Contributor C
 
 ## Status
 
-This document is a pre-release, working draft of the Service Bindings for Kubernetes specification, representing the collective efforts of the [community](#community). It is published for early implementors and users to provide feedback. Any part of this spec may change before the spec reaches 1.0 with no promise of backwards compatibility.
+This document is a pre-release, working draft of the Service Bindings for Kubernetes specification, representing the collective efforts of the [community](#community).  It is published for early implementors and users to provide feedback.  Any part of this spec may change before the spec reaches 1.0 with no promise of backwards compatibility.
 
 ## Notational Conventions
 
@@ -96,7 +96,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>Any software that exposes functionality.  Examples include a database, a message broker, a workload with REST endpoints, an event stream, an Application Performance Monitor, or a Hardware Security Module.</dd>
 
   <dt>Workload</dt>
-  <dd>A <a href="https://kubernetes.io/docs/concepts/workloads/">workload</a> is an application running on Kubernetes.  Examples include processing using a framework like Spring Boot, NodeJS Express, or Ruby Rails. Workloads are the part of an application that runs. Workloads may colloquially be referred to as an application.</dd>
+  <dd>A <a href="https://kubernetes.io/docs/concepts/workloads/">workload</a> is an application running on Kubernetes.  Examples include processing using a framework like Spring Boot, NodeJS Express, or Ruby on Rails.  Workloads are the part of an application that runs.  Workloads may colloquially be referred to as an application.</dd>
 
   <dt>Service Binding</dt>
   <dd>The act of or representation of the action of providing information about a Service to a workload</dd>
@@ -112,7 +112,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 A Provisioned Service resource **MUST** define a `.status.binding` which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** exist in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type`) **SHOULD** reflect this value as `servicebinding.io/{type}`, replacing `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `servicebinding.io/provisioned-service: "true"` as a label.
 
-> Note: While the Provisioned Service referenced `Secret` data should contain a `type` entry, the `type` must be defined before it is projected into a workload. This allows a mapping to enrich an existing secret.
+> Note: While the Provisioned Service referenced `Secret` data should contain a `type` entry, the `type` must be defined before it is projected into a workload.  This allows a mapping to enrich an existing secret.
 
 Extensions and implementations **MAY** define additional mechanisms to consume a Provisioned Service that does not conform to the duck type.
 
@@ -169,7 +169,7 @@ stringData:
 
 ## Considerations for Role-Based Access Control (RBAC)
 
-Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `servicebinding.io/controller=true`, the `get`, `list`, and `watch` verbs **MUST** be granted.
+Cluster operators and CRD authors **SHOULD** opt-in resources to expose provisioned services by defining a `ClusterRole` with a label matching `servicebinding.io/controller=true`.  The `get`, `list`, and `watch` verbs **MUST** be granted in the `ClusterRole`.
 
 See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
 
@@ -223,7 +223,7 @@ $SERVICE_BINDING_ROOT
 
 ## Considerations for Role-Based Access Control (RBAC)
 
-Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `servicebinding.io/controller=true`, the `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted.
+Cluster operators and CRD authors **SHOULD** opt-in resources to binding projection by defining a `ClusterRole` with a label matching `servicebinding.io/controller=true`.  The `get`, `list`, `watch`, `update`, and `patch` verbs **MUST** be granted in the `ClusterRole`.
 
 See [Role-Based Access Control (RBAC)](#role-based-access-control-rbac) for how the `ClusterRole` is consumed.
 
@@ -255,7 +255,7 @@ A Service Binding describes the connection between a [Provisioned Service](#prov
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
-A `ServiceBinding` **MUST** define a `.spec.workload` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the workload reference by-name or by-[label selector][ls]. A name and selector **MUST NOT** be defined in the same reference.  A `ServiceBinding` **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of workloads and services to be referenced.
+A `ServiceBinding` **MUST** define a `.spec.workload` which is an `ObjectReference`-like declaration.  A `ServiceBinding` **MAY** define the workload reference by-name or by-[label selector][ls].  A name and selector **MUST NOT** be defined in the same reference.  A `ServiceBinding` **MUST** define a `.spec.service` which is an `ObjectReference`-like declaration to a Provisioned Service-able resource.  Extensions and implementations **MAY** allow additional kinds of workloads and services to be referenced.
 
 The `ServiceBinding` **MAY** define `.spec.workload.containers`, to limit which containers in the workload are bound.  If `.spec.workload.containers` is defined, the value **MUST** be a list of strings.  Binding to a container is opt-in, unless `.spec.workload.containers` is undefined then all containers **MUST** be bound.  For each item in the containers list:
 - a container or init container matching by name (`.spec.template.spec.containers[?(@.name=='${containerString}')]` or `.spec.template.spec.initContainers[?(@.name=='${containerString}')]`) **MUST** be bound
@@ -263,7 +263,7 @@ The `ServiceBinding` **MAY** define `.spec.workload.containers`, to limit which 
 
 A `ServiceBinding` **MAY** define a `.spec.env` which is an array of `EnvMapping`.  An `EnvMapping` object **MUST** define `name` and `key` entries.  The `key` of an `EnvMapping` **MUST** refer to a binding `Secret` key name.  The value of this `Secret` entry **MUST** be configured as an environment variable on the resource represented by `workload`.
 
-A `ServiceBinding` **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding`. Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition. A `ServiceBinding` **SHOULD** reflect the secret projected into the workload as `.status.binding.name`.
+A `ServiceBinding` **MUST** define `.status.conditions` which is an array of `Condition` objects as defined in [meta/v1 Condition][mv1c].  At least one condition containing a `type` of `Ready` **MUST** be defined.  The `Ready` condition **SHOULD** contain appropriate values defined by the implementation.  As label selectors are inherently queries that return zero-to-many resources, it is **RECOMMENDED** that `ServiceBinding` authors use a combination of labels that yield a single resource, but implementors **MUST** handle each matching resource as if it was specified by name in a distinct `ServiceBinding`.  Partial failures **MUST** be aggregated and reported on the binding status's `Ready` condition.  A `ServiceBinding` **SHOULD** reflect the secret projected into the workload as `.status.binding.name`.
 
 When updating the status of the `ServiceBinding`, the controller **MUST** set the value of `.status.observedGeneration` to the value of `.metadata.generation`.  The `.metadata.generation` field is always the current generation of the `ServiceBinding`, which is incremented by the API server when writes are made to the `ServiceBinding` spec field.  Therefore, consumers **SHOULD** compare the value of the observed and current generations to know if the status reflects the current resource definition.
 
@@ -417,11 +417,11 @@ The `$SERVICE_BINDING_ROOT` environment variable **MUST NOT** be reset if it is 
 
 If a `.spec.type` is set, the `type` entry in the workload projection **MUST** be set to its value overriding any existing value.  If a `.spec.provider` is set, the `provider` entry in the workload projection **MUST** be set to its value overriding any existing value.
 
-The `ServiceBinding` status **MUST** be updated for the result of an error when the implementation is unable to retry the binding, or user interaction is required to recover from the error. For example, when updating a workload resource to project a binding a conflict **SHOULD NOT** be reflected because retrying may allow the update to succeed. A not found error fetching the workload resource **SHOULD** be reflected as the error is not recoverable until the target workload resource is created. An implementation **MAY** record an event as a result of any error.
+The `ServiceBinding` status **MUST** be updated for the result of an error when the implementation is unable to retry the binding, or user interaction is required to recover from the error.  For example, when updating a workload resource to project a binding a conflict **SHOULD NOT** be reflected because retrying may allow the update to succeed.  A not found error fetching the workload resource **SHOULD** be reflected as the error is not recoverable until the target workload resource is created.  An implementation **MAY** record an event as a result of any error.
 
 ### Ready Condition Status
 
-If the service binding is completed successfully, the `Ready` condition status **MUST** be set to `True`. If the service binding cannot be completed, including cases where the service or workload resource are not found or do not conform to the specification requirements, the `Ready` condition status **MUST** be set to `False`. If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
+If the service binding is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the service binding cannot be completed, including cases where the service or workload resource are not found or do not conform to the specification requirements, the `Ready` condition status **MUST** be set to `False`.  If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
 
 # Direct Secret Reference
 
@@ -465,9 +465,9 @@ A workload resource mapping describes how to apply [service binding](#service-bi
 
 A workload resource mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A workload resource mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` fragments.
 
-A `MappingTemplate` fragment **MUST** define at least one `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` fragment **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` fragment **MAY** define `containers`, as an array of `MappingContainer` fragments. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a `PodSpec`-able resource.  A `MappingTemplate` fragment **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.spec.volumes`).
+A `MappingTemplate` fragment **MUST** define at least one `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` fragment **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource.  If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` fragment **MAY** define `containers`, as an array of `MappingContainer` fragments.  If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a `PodSpec`-able resource.  A `MappingTemplate` fragment **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource.  If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.spec.volumes`).
 
-A `MappingContainer` fragment **MUST** define a `path` entry which is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` fragment **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container. A `MappingTemplate` fragment **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.env`). A `MappingTemplate` fragment **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.volumeMounts`).
+A `MappingContainer` fragment **MUST** define a `path` entry which is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource.  The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` object **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container.  A `MappingTemplate` object **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource.  If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.env`).  A `MappingTemplate` object **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource.  If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.volumeMounts`).
 
 [cwrm-crd]: servicebinding.io_clusterworkloadresourcemappings.yaml
 [container]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/
@@ -479,7 +479,7 @@ A `MappingContainer` fragment **MUST** define a `path` entry which is a string c
 
 ## Restricted JSONPath
 
-> Note: Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
+> Note: Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement.  Other expressions **MAY** use the full JSONPath syntax.
 
 A Restricted JSONPath is a subset of [JSONPath][jsonpath] expressions that **MUST NOT** use type and operators other than fields separated by the child operator.
 
@@ -573,17 +573,17 @@ spec:
 
 ## Runtime Behavior
 
-When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a workload resource it **MUST** be used to map the binding that type. If no mapping is available for the type, the implementation **MUST** treat the workload resource as a `PodSpec`-able type.
+When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a workload resource it **MUST** be used to map the binding that type.  If no mapping is available for the type, the implementation **MUST** treat the workload resource as a `PodSpec`-able type.
 
-If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound. If either key is not defined, the container **SHOULD** be bound.
+If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound.  If either key is not defined, the container **SHOULD** be bound.
 
-An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer` fragments **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
+An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource.  Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer` fragments **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec.  A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
 
 # Role-Based Access Control (RBAC)
 
-Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources. When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into. This section defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler. Cluster operators **MAY** impose additional access controls beyond RBAC.
+Kubernetes clusters often utilize [Role-based access control (RBAC)][rbac] to authorize subjects to perform specific actions on resources.  When operating in a cluster with RBAC enabled, the service binding reconciler needs permission to read resources that provisioned a service and write resources that services are projected into.  This section defines a means for third-party CRD authors and cluster operators to expose resources to the service binding reconciler.  Cluster operators **MAY** impose additional access controls beyond RBAC.
 
-If a service binding reconciler implementation is using Role-Based Access Control (RBAC) it **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `servicebinding.io/controller=true`. This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
+If a service binding reconciler implementation is using Role-Based Access Control (RBAC) it **MUST** define an [aggregated `ClusterRole`][acr] with a label selector matching the label `servicebinding.io/controller=true`.  This `ClusterRole` **MUST** be bound (`RoleBinding` for a single namespace or `ClusterRoleBinding` if cluster-wide) to the subject the service binding reconciler runs as, typically a `ServiceAccount`.
 
 [rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 [acr]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles
