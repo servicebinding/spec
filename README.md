@@ -287,19 +287,16 @@ spec:
   name: # string, optional, default: .metadata.name
   type: # string, optional
   provider: # string, optional
-
+  service: # Provisioned Service resource ObjectReference-like
+    apiVersion: # string
+    kind: # string
+    name: # string
   workload: # ObjectReference-like
     apiVersion: # string
     kind: # string
     name: # string, mutually exclusive with selector
     selector: # metav1.LabelSelector, mutually exclusive with name
     containers: # []string, optional
-
-  service: # Provisioned Service resource ObjectReference-like
-    apiVersion: # string
-    kind: # string
-    name: # string
-
   env: # []EnvMapping, optional
   - name: # string
     key: # string
