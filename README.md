@@ -121,7 +121,7 @@ Extensions and implementations **MAY** define additional mechanisms to consume a
 ```yaml
 status:
   binding:
-    name:  # string
+    name: # string
 ```
 
 ## Example Resource
@@ -251,7 +251,7 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  Multiple `ServiceBinding`s can refer to the same service.  Multiple `ServiceBinding`s can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  Multiple `ServiceBinding` objects can refer to the same service.  Multiple `ServiceBinding` objects can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 Restricting service binding to resources within the same namespace is strongly **RECOMMENDED**.  Implementations that choose to support cross-namespace service binding **SHOULD** provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
@@ -278,35 +278,35 @@ When updating the status of the `ServiceBinding`, the controller **MUST** set th
 apiVersion: servicebinding.io/v1beta1
 kind: ServiceBinding
 metadata:
-  name:                 # string
-  generation:           # int64, defined by the Kubernetes control plane
+  name: # string
+  generation: # int64, defined by the Kubernetes control plane
   ...
 spec:
-  name:                 # string, optional, default: .metadata.name
-  type:                 # string, optional
-  provider:             # string, optional
+  name: # string, optional, default: .metadata.name
+  type: # string, optional
+  provider: # string, optional
 
-  workload:             # ObjectReference-like
-    apiVersion:         # string
-    kind:               # string
-    name:               # string, mutually exclusive with selector
-    selector:           # metav1.LabelSelector, mutually exclusive with name
-    containers:         # []string, optional
+  workload: # ObjectReference-like
+    apiVersion: # string
+    kind: # string
+    name: # string, mutually exclusive with selector
+    selector: # metav1.LabelSelector, mutually exclusive with name
+    containers: # []string, optional
 
-  service:              # Provisioned Service resource ObjectReference-like
-    apiVersion:         # string
-    kind:               # string
-    name:               # string
+  service: # Provisioned Service resource ObjectReference-like
+    apiVersion: # string
+    kind: # string
+    name: # string
 
-  env:                  # []EnvMapping, optional
-  - name:               # string
-    key:                # string
+  env: # []EnvMapping, optional
+  - name: # string
+    key: # string
 
 status:
-  binding:              # LocalObjectReference, optional
-    name:               # string
-  conditions:           # []metav1.Condition containing at least one entry for `Ready`
-  observedGeneration:   # int64
+  binding: # LocalObjectReference, optional
+    name: # string
+  conditions: # []metav1.Condition containing at least one entry for `Ready`
+  observedGeneration: # int64
 ```
 
 ## Minimal Example Resource
@@ -319,17 +319,17 @@ metadata:
 spec:
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
+    kind: Deployment
+    name: online-banking
 
   service:
     apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
+    kind: AccountService
+    name: prod-account-service
 
 status:
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -348,7 +348,7 @@ spec:
 
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
+    kind: Deployment
     selector:
       matchLabels:
         app.kubernetes.io/part-of: online-banking
@@ -356,12 +356,12 @@ spec:
 
   service:
     apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
+    kind: AccountService
+    name: prod-account-service
 
 status:
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -378,27 +378,27 @@ metadata:
 spec:
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
+    kind: Deployment
+    name: online-banking
 
   service:
     apiVersion: com.example/v1alpha1
-    kind:       AccountService
-    name:       prod-account-service
+    kind: AccountService
+    name: prod-account-service
 
   env:
   - name: ACCOUNT_SERVICE_HOST
-    key:  host
+    key: host
   - name: ACCOUNT_SERVICE_USERNAME
-    key:  username
+    key: username
   - name: ACCOUNT_SERVICE_PASSWORD
-    key:  password
+    key: password
 
 status:
   binding:
     name: prod-account-service-projection
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -440,19 +440,19 @@ metadata:
 spec:
   workload:
     apiVersion: apps/v1
-    kind:       Deployment
-    name:       online-banking
+    kind: Deployment
+    name: online-banking
 
   service:
     apiVersion: v1
-    kind:       Secret
-    name:       prod-account-service-secret
+    kind: Secret
+    name: prod-account-service-secret
 
 status:
   binding:
     name: prod-account-service-reference
   conditions:
-  - type:   Ready
+  - type: Ready
     status: 'True'
     reason: 'Projected'
     message: ''
@@ -463,11 +463,11 @@ status:
 
 A workload resource mapping describes how to apply [service binding](#service-binding) transformations to a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type (cluster scoped resource) with API version `servicebinding.io/v1beta1` and kind `ClusterWorkloadResourceMapping`.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
 
-A workload resource mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A workload resource mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` objects.
+A workload resource mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A workload resource mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` fragments.
 
-A `MappingTemplate` object **MUST** define a `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` object **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` object **MAY** define `containers`, as an array of `MappingContainer` objects. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a `PodSpec`-able resource.  A `MappingTemplate` object **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.spec.volumes`).
+A `MappingTemplate` fragment **MUST** define at least one `version` entry that represents a version of the mapped resource.  The `version` entry **MAY** contain a `*` wildcard which indicates that this mapping should be used for any version that does not have a mapping explicitly defined for it.  A `MappingTemplate` fragment **MAY** define `annotations`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a map of annotations in the target resource. If not specified, the default `annotations` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.metadata.annotations`).  A `MappingTemplate` fragment **MAY** define `containers`, as an array of `MappingContainer` fragments. If not specified, the default `MappingContainer` **MUST** be appropriate for mapping to a `PodSpec`-able resource.  A `MappingTemplate` fragment **MAY** define `volumes`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]Volume`][volume] arrays in the target resource. If not specified, the default `volumes` expression **MUST** be appropriate for mapping to a `PodSpec`-able resource (`.spec.template.spec.volumes`).
 
-A `MappingContainer` object **MUST** define a `path` entry which is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` object **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container. A `MappingTemplate` object **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.env`). A `MappingTemplate` object **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.volumeMounts`).
+A `MappingContainer` fragment **MUST** define a `path` entry which is a string containing a [JSONPath][jsonpath] that references container like locations in the target resource. The following expressions **MUST** be applied to each object matched by the path.  A `MappingTemplate` fragment **MAY** define `name`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of a string in the target resource that names the container. A `MappingTemplate` fragment **MAY** define `env`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]EnvVar`][envvar] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.env`). A `MappingTemplate` fragment **MAY** define `volumeMounts`, as a string containing a [Restricted JSONPath](#restricted-jsonpath) that describes the location of [`[]VolumeMount`][volumemount] array in the target resource. If not specified, the default `env` expression **MUST** be appropriate for mapping within an actual `Container` object (`.volumeMounts`).
 
 [cwrm-crd]: servicebinding.io_clusterworkloadresourcemappings.yaml
 [container]: https://kubernetes.io/docs/reference/kubernetes-api/workloads-resources/container/
@@ -479,7 +479,7 @@ A `MappingContainer` object **MUST** define a `path` entry which is a string con
 
 ## Restricted JSONPath
 
-> Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
+> Note: Only expressions labeled as 'Restricted JSONPath' **MUST** conform to this requirement. Other expressions **MAY** use the full JSONPath syntax.
 
 A Restricted JSONPath is a subset of [JSONPath][jsonpath] expressions that **MUST NOT** use type and operators other than fields separated by the child operator.
 
@@ -508,19 +508,19 @@ All other types and operators are disallowed, including but not limited to:
 apiVersion: servicebinding.io/v1beta1
 kind: ClusterWorkloadResourceMapping
 metadata:
-  name:                 # string
-  generation:           # int64, defined by the Kubernetes control plane
+  name: # string
+  generation: # int64, defined by the Kubernetes control plane
   ...
 spec:
-  versions:             # []MappingTemplate
-  - version:              # string
-    annotations:          # string (Restricted JSONPath), optional
-    containers:           # []MappingContainer, optional
-    - path:                 # string (JSONPath)
-      name:                 # string (Restricted JSONPath), optional
-      env:                  # string (Restricted JSONPath), optional
-      volumeMounts:         # string (Restricted JSONPath), optional
-    volumes:              # string (Restricted JSONPath), optional
+  versions: # []MappingTemplate
+  - version: # string
+    annotations: # string (Restricted JSONPath), optional
+    containers: # []MappingContainer, optional
+    - path: # string (JSONPath)
+      name: # string (Restricted JSONPath), optional
+      env: # string (Restricted JSONPath), optional
+      volumeMounts: # string (Restricted JSONPath), optional
+    volumes: # string (Restricted JSONPath), optional
 ```
 
 ## Example Resource
@@ -529,7 +529,7 @@ spec:
 apiVersion: servicebinding.io/v1beta1
 kind: ClusterWorkloadResourceMapping
 metadata:
- name:  cronjobs.batch
+ name: cronjobs.batch
 spec:
   versions:
   - version: "*"
@@ -537,12 +537,12 @@ spec:
     containers:
     - path: .spec.jobTemplate.spec.template.spec.containers[*]
       name: .name
-      env: .env                     # this is the default value
-      volumeMounts: .volumeMounts   # this is the default value
+      env: .env # this is the default value
+      volumeMounts: .volumeMounts # this is the default value
     - path: .spec.jobTemplate.spec.template.spec.initContainers[*]
       name: .name
-      env: .env                     # this is the default value
-      volumeMounts: .volumeMounts   # this is the default value
+      env: .env # this is the default value
+      volumeMounts: .volumeMounts # this is the default value
     volumes: .spec.jobTemplate.spec.template.spec.volumes
 ```
 
@@ -569,7 +569,7 @@ spec:
     volumes: .spec.template.spec.volumes
 ```
 
-Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
+> Note: This example is equivalent to not specifying a mapping or specifying an empty mapping.
 
 ## Runtime Behavior
 
@@ -577,7 +577,7 @@ When a `ClusterWorkloadResourceMapping` is defined in the cluster matching a wor
 
 If a `ServiceBinding` specifies `.spec.workload.containers` and a `MappingContainer` specifies a `name` expression, the resolved name **MUST** limit which containers in the workload are bound. If either key is not defined, the container **SHOULD** be bound.
 
-An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer`s **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
+An implementation **MUST** create empty values at locations referenced by [Restricted JSONPaths](#restricted-jsonpath) that do not exist on the workload resource. Values referenced by JSONPaths in both the `MappingTemplate` and `MappingContainer` fragments **MUST** be mutated by a `ServiceBinding` reconciler as if they were defined directly by a PodTemplateSpec. A reconciler **MUST** preserve fields on the workload resource that fall outside the specific fragments and types defined by the mapping.
 
 # Role-Based Access Control (RBAC)
 
