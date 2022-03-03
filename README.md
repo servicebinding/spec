@@ -253,7 +253,7 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  An implementation **MAY** support other version of this specification which define additional API versions.  Multiple `ServiceBinding` objects can refer to the same service.  Multiple `ServiceBinding` objects can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  An implementation **MAY** support other versions of this specification which define additional API versions.  Multiple `ServiceBinding` objects can refer to the same service.  Multiple `ServiceBinding` objects can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 > Note: Restricting service binding to resources within the same namespace is strongly recommended.  Implementations that choose to support cross-namespace service binding must provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
