@@ -61,6 +61,7 @@ Participation in the Service Binding community is governed by the [Contributor C
   - [Environment Variables Example Resource](#environment-variables-example-resource)
   - [Reconciler Implementation](#reconciler-implementation)
     - [Ready Condition Status](#ready-condition-status)
+    - [ServiceAvailable Condition Status](#serviceavailable-condition-status)
 - [Direct Secret Reference](#direct-secret-reference)
   - [Direct Secret Reference Example Resource](#direct-secret-reference-example-resource)
 - [Workload Resource Mapping](#workload-resource-mapping)
@@ -413,6 +414,10 @@ The `ServiceBinding` status **MUST** be updated for the result of an error when 
 ### Ready Condition Status
 
 If the service binding is completed successfully, the `Ready` condition status **MUST** be set to `True`.  If the service binding cannot be completed, including cases where the service or workload resource are not found or do not conform to the specification requirements, the `Ready` condition status **MUST** be set to `False`.  If the `Ready` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
+
+### ServiceAvailable Condition Status
+
+If the referenced Provisioned Service exists and exposes a binding secret, the `ServiceAvailable` condition status **MUST** be set to `True`.  If the referenced Provisioned Service either does not exist, or it cannot be determined if the resource exists, the `ServiceAvailable` condition status **MUST** be set to `False` with a meaningful message.  If the `ServiceAvailable` condition status is neither actively `True` nor `False` it **SHOULD** be set to `Unknown`.
 
 # Direct Secret Reference
 
