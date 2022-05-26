@@ -26,13 +26,13 @@ type ClusterWorkloadResourceMappingTemplate struct {
 	// Annotations is a Restricted JSONPath that references the annotations map within the workload resource. These
 	// annotations must end up in the resulting Pod, and are generally not the workload resource's annotations.
 	// Defaults to `.spec.template.metadata.annotations`.
-	Annotations string `json:"annotations"`
+	Annotations string `json:"annotations,omitempty"`
 	// Containers is the collection of mappings to container-like fragments of the workload resource. Defaults to
 	// mappings appropriate for a PodSpecable resource.
 	Containers []ClusterWorkloadResourceMappingContainer `json:"containers,omitempty"`
 	// Volumes is a Restricted JSONPath that references the slice of volumes within the workload resource. Defaults to
 	// `.spec.template.spec.volumes`.
-	Volumes string `json:"volumes"`
+	Volumes string `json:"volumes,omitempty"`
 }
 
 // ClusterWorkloadResourceMappingContainer defines the mapping for a specific fragment of an workload resource
