@@ -72,9 +72,7 @@ spec:
                       description: Volumes is a Restricted JSONPath that references the slice of volumes within the workload resource. Defaults to `.spec.template.spec.volumes`.
                       type: string
                   required:
-                  - annotations
                   - version
-                  - volumes
                   type: object
                 type: array
             type: object
