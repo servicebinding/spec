@@ -113,7 +113,12 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
 
 # Provisioned Service
 
-A Provisioned Service resource **MUST** define a `.status.binding` field which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.  The `Secret` **MUST** exist in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type` fields) **SHOULD** reflect this value as `servicebinding.io/{type}`, substituting `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `servicebinding.io/provisioned-service: "true"` as a label.
+A Provisioned Service resource **MUST** create a Secret resource which is referenced in on of these ways:
+
+1. a `.status.binding` field which is a `LocalObjectReference`-able (containing a single field `name`) to a `Secret`.
+2. `.metadata.name` pointing to the Secret
+
+The `Secret` **MUST** exist in the same namespace as the resource.  The `Secret` data **SHOULD** contain a `type` entry with a value that identifies the abstract classification of the binding.  The `Secret` type (`.type` verses `.data.type` fields) **SHOULD** reflect this value as `servicebinding.io/{type}`, substituting `{type}` with the `Secret` data type.  It is **RECOMMENDED** that the `Secret` data also contain a `provider` entry with a value that identifies the provider of the binding.  The `Secret` data **MAY** contain any other entry.  To facilitate discoverability, it is **RECOMMENDED** that a `CustomResourceDefinition` exposing a Provisioned Service add `servicebinding.io/provisioned-service: "true"` as a label.
 
 > Note: While the Provisioned Service referenced `Secret` data should contain a `type` entry, the `type` must be defined as it is projected to a workload.  The relaxation of the requirement for provisioned services allows for a mapping to enrich an existing secret.  For example, `ServiceBinding` has fields to override `type` and `provider` values.
 
