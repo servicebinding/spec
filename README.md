@@ -108,7 +108,7 @@ An implementation is not compliant if it fails to satisfy one or more of the MUS
   <dd>A Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/secret/"><code>Secret</code></a></dd>
 
   <dt><code>PodSpec</code>-able Duck Type</dt>
-  <dd>A Kubernetes resource where <code>.spec.template</code> attribute comforms to a Kubernetes <a href="https://kubernetes.io/docs/concepts/workloads/pods/">Pod's spec</a>.  Examples of resources include DaemonSet, Deployment, Job, and StatefulSet.</dd>
+  <dd>A Kubernetes resource where <code>.spec.template</code> attribute conforms to a Kubernetes <a href="https://kubernetes.io/docs/concepts/workloads/pods/">Pod's spec</a>.  Examples of resources include DaemonSet, Deployment, Job, and StatefulSet.</dd>
 </dl>
 
 # Provisioned Service
