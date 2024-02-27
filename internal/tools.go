@@ -1,3 +1,6 @@
+//go:build tools
+// +build tools
+
 /*
  * Copyright 2020 the original author or authors.
  *
@@ -17,5 +20,5 @@
 package internal
 
 import (
-	_ "sigs.k8s.io/controller-tools/pkg/version"
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 )

@@ -254,7 +254,7 @@ rules:
 
 # Service Binding
 
-A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1beta1` and kind `ServiceBinding`.  An implementation **MAY** support other versions of this specification which define additional API versions.  Multiple `ServiceBinding` objects can refer to the same service.  Multiple `ServiceBinding` objects can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
+A Service Binding describes the connection between a [Provisioned Service](#provisioned-service) and a [Workload Projection](#workload-projection).  It **MUST** be codified as a concrete resource type with API version `servicebinding.io/v1` and kind `ServiceBinding`.  An implementation **MAY** support other versions of this specification which define additional API versions.  Multiple `ServiceBinding` objects can refer to the same service.  Multiple `ServiceBinding` objects can refer to the same workload.  For portability, the schema **MUST** comply to the exemplar CRD found [here][sb-crd].
 
 > Note: Restricting service binding to resources within the same namespace is strongly recommended.  Implementations that choose to support cross-namespace service binding must provide a security model that prevents attacks like privilege escalation and secret enumeration, as well as a deterministic way to declare target namespaces.
 
@@ -278,7 +278,7 @@ When updating the status of the `ServiceBinding`, the controller **MUST** set th
 ## Resource Type Schema
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ServiceBinding
 metadata:
   name: # string
@@ -312,7 +312,7 @@ status:
 ## Minimal Example Resource
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -337,7 +337,7 @@ status:
 ## Label Selector Example Resource
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ServiceBinding
 metadata:
   name: online-banking-frontend-to-account-service
@@ -366,7 +366,7 @@ status:
 ## Environment Variables Example Resource
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -428,7 +428,7 @@ When the `.spec.service.kind` attribute is `Secret` and `.spec.service.apiVersio
 ## Direct Secret Reference Example Resource
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ServiceBinding
 metadata:
   name: account-service
@@ -455,7 +455,7 @@ status:
 
 # Workload Resource Mapping
 
-A workload resource mapping describes how to apply [service binding](#service-binding) transformations to a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type (cluster scoped resource) with API version `servicebinding.io/v1beta1` and kind `ClusterWorkloadResourceMapping`.  An implementation **MAY** support other versions of this specification which define additional API versions.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
+A workload resource mapping describes how to apply [service binding](#service-binding) transformations to a [workload projection](#workload-projection).  It **MUST** be codified as a concrete resource type (cluster scoped resource) with API version `servicebinding.io/v1` and kind `ClusterWorkloadResourceMapping`.  An implementation **MAY** support other versions of this specification which define additional API versions.  For portability, the schema **MUST** comply to the exemplar CRD found [here][cwrm-crd].
 
 A workload resource mapping **MUST** define its name using [CRD syntax][crd-syntax] (`<plural>.<group>`) for the resource that it defines a mapping for.  A workload resource mapping **MUST** define a `.spec.versions` which is an array of `MappingTemplate` fragments.
 
@@ -499,7 +499,7 @@ All other types and operators are disallowed, including but not limited to:
 ## Resource Type Schema
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ClusterWorkloadResourceMapping
 metadata:
   name: # string
@@ -520,7 +520,7 @@ spec:
 ## Example Resource
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ClusterWorkloadResourceMapping
 metadata:
  name: cronjobs.batch
@@ -543,7 +543,7 @@ spec:
 ## `PodSpec`-able (Default) Example Resource
 
 ```yaml
-apiVersion: servicebinding.io/v1beta1
+apiVersion: servicebinding.io/v1
 kind: ClusterWorkloadResourceMapping
 metadata:
   name: deployments.apps
