@@ -206,6 +206,8 @@ The name of a binding entry file name **SHOULD** match `[a-z0-9\-\.]{1,253}`.  T
 
 The collection of files within the directory **MAY** change during the lifetime of the container or between container launches.
 
+Users **SHOULD** ensure each binding has a unique name.  The behavior for name collisions is undefined.  Implementations **MAY** attempt a good faith check for collisions to provide a meaningful error message.
+
 ## Example Directory Structure
 
 ```plain
